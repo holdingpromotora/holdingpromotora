@@ -588,7 +588,7 @@ export default function CadastroPessoaJuridicaPage() {
       console.log('Dados para inserção:', dadosParaInserir);
 
       // Inserir no Supabase
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('pessoas_juridicas')
         .insert([dadosParaInserir])
         .select();
