@@ -1,0 +1,47 @@
+# Arquivos de desenvolvimento
+.env.local
+.env.development
+.env.test
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Arquivos temporários
+.next/
+node_modules/
+*.tsbuildinfo
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de configuração local
+*.bat
+*.ps1
+*.cmd
+ecosystem.config.js
+
+# Documentação
+*.md
+INSTALACAO.md
+INSTRUCOES-DEFINITIVAS.txt
+COMO-USAR.txt
+SERVIDOR.md
+SUPABASE-SETUP.md
+RESUMO_INSTALACAO.md
+
+# Scripts SQL
+*.sql
+
+# Arquivos de teste
+teste-*.ps1
+solucao-*.ps1
+solucao-*.bat
+monitor-*.ps1
+start-*.ps1
+start-*.bat
+iniciar-*.cmd
