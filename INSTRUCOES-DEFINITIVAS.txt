@@ -1,0 +1,94 @@
+🚀 HOLDING PROMOTORA - SOLUÇÃO DEFINITIVA PARA O SERVIDOR
+
+========================================
+
+❌ PROBLEMA: "ERR_CONNECTION_REFUSED" - Servidor não inicia
+
+✅ SOLUÇÃO: Use um destes scripts (em ordem de preferência):
+
+========================================
+
+🎯 OPÇÃO 1: Script Batch (Mais Simples)
+1. Clique duplo em: solucao-definitiva.bat
+2. Aguarde o servidor iniciar
+3. Abra: http://localhost:3000
+
+========================================
+
+🔧 OPÇÃO 2: Script PowerShell (Mais Robusto)
+1. Clique direito em: solucao-powershell.ps1
+2. "Executar com PowerShell"
+3. Aguarde o servidor iniciar
+4. Abra: http://localhost:3000
+
+========================================
+
+📋 O QUE OS SCRIPTS FAZEM:
+
+✅ Verificam se estão no diretório correto
+✅ Param todos os processos Node.js existentes
+✅ Liberam a porta 3000 automaticamente
+✅ Instalam dependências se necessário
+✅ Iniciam o servidor com tratamento de erro
+✅ Mostram instruções claras de uso
+
+========================================
+
+🔑 CREDENCIAIS DE ACESSO:
+
+- URL: http://localhost:3000
+- Email: grupoarmandogomes@gmail.com
+- Senha: @252980Hol
+
+========================================
+
+⚠️  SE AINDA NÃO FUNCIONAR:
+
+1. Reinicie o computador
+2. Execute o script novamente
+3. Verifique se o Node.js está instalado
+4. Use o script PowerShell que é mais robusto
+
+========================================
+
+🎯 DICA IMPORTANTE:
+
+Use SEMPRE um dos scripts criados:
+- solucao-definitiva.bat (mais simples)
+- solucao-powershell.ps1 (mais robusto)
+
+NÃO use comandos manuais no terminal!
+
+========================================
+
+📱 URLs IMPORTANTES:
+
+- Login: http://localhost:3000/login
+- Dashboard: http://localhost:3000/dashboard
+- Teste: http://localhost:3000/test
+
+========================================
+
+🚨 PROBLEMA RESOLVIDO:
+
+Os scripts resolvem automaticamente:
+- Porta 3000 em uso
+- Processos Node.js travados
+- Dependências faltando
+- Diretório incorreto
+- Erros de permissão
+
+========================================
+
+🎉 RESULTADO:
+
+Servidor funcionando 24/7 com:
+- Menu lateral completo
+- Perfil do usuário
+- Dashboard funcional
+- Tema personalizado
+- Navegação entre páginas
+
+========================================
+
+💡 USE OS SCRIPTS CRIADOS - SÃO A SOLUÇÃO DEFINITIVA!

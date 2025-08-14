@@ -1,0 +1,40 @@
+🚀 HOLDING PROMOTORA - COMO USAR O SERVIDOR
+
+========================================
+
+📋 PASSOS SIMPLES:
+
+1. CLIQUE DUPLO no arquivo: iniciar-servidor.cmd
+2. Aguarde o servidor iniciar
+3. Abra o navegador em: http://localhost:3000
+4. Faça login com:
+   - Email: grupoarmandogomes@gmail.com
+   - Senha: @252980Hol
+
+========================================
+
+🔧 SE NÃO FUNCIONAR:
+
+1. Feche todas as janelas do terminal
+2. Reinicie o computador
+3. Execute novamente: iniciar-servidor.cmd
+
+========================================
+
+📱 URLS IMPORTANTES:
+
+- Login: http://localhost:3000/login
+- Dashboard: http://localhost:3000/dashboard
+- Teste: http://localhost:3000/test
+
+========================================
+
+⚠️  PROBLEMAS COMUNS:
+
+- Porta 3000 em uso: Reinicie o computador
+- Erro de dependências: Execute iniciar-servidor.cmd
+- Servidor não inicia: Verifique se Node.js está instalado
+
+========================================
+
+🎯 DICA: Use sempre o arquivo iniciar-servidor.cmd
