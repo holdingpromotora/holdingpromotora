@@ -1,15 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm ci --prefer-offline --no-audit",
   "framework": "nextjs",
-  "outputDirectory": ".next",
-  "regions": ["gru1"],
-  "functions": {
-    "src/app/**/*.tsx": {
-      "maxDuration": 30
-    }
-  },
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "regions": ["gru1"]
 }
