@@ -1,36 +1,103 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Eye, EyeOff, Lock, Mail, Building2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Eye, EyeOff, Lock, Mail, Building2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const router = useRouter();
+  const { login, isAuthenticated, isLoading: authLoading, hasApprovedProfile } = useAuth();
+
+  // Só redirecionar se não estiver carregando e estiver autenticado
+  useEffect(() => {
+    if (!authLoading) {
+      if (isAuthenticated) {
+        if (hasApprovedProfile) {
+          console.log('✅ Usuário já autenticado com perfil aprovado, redirecionando para dashboard...');
+          router.push('/dashboard');
+        } else {
+          console.log('⚠️ Usuário autenticado sem perfil aprovado, redirecionando para página de aprovação...');
+          router.push('/aguardando-aprovacao');
+        }
+      }
+    }
+  }, [isAuthenticated, hasApprovedProfile, authLoading, router]);
+
+  // Se estiver carregando, mostrar loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen holding-gradient flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-holding-highlight border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-holding-white text-xl">Verificando autenticação...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Se já estiver autenticado, não mostrar nada (será redirecionado)
+  if (isAuthenticated) {
+    return null;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError('')
-
-    if (email === 'grupoarmandogomes@gmail.com' && password === '@252980Hol') {
-      setTimeout(() => {
-        setIsLoading(false)
-        router.push('/dashboard')
-      }, 1000)
-    } else {
-      setIsLoading(false)
-      setError('Credenciais inválidas. Verifique seu email e senha.')
+    e.preventDefault();
+    console.log('🔐 Página de login: Iniciando processo de login...');
+    
+    if (!email.trim() || !password.trim()) {
+      setError('Por favor, preencha todos os campos');
+      return;
     }
-  }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const result = await login(email, password);
+      console.log('🔐 Página de login: Resultado do login:', result);
+
+      if (result.success) {
+        if (result.pending) {
+          console.log('⚠️ Usuário pendente - redirecionando para página de aprovação');
+          setError('Seu cadastro está pendente de aprovação. Entre em contato com o administrador.');
+          return;
+        }
+
+        if (result.rejected) {
+          console.log('❌ Usuário rejeitado');
+          setError('Seu cadastro foi rejeitado. Entre em contato com o administrador.');
+          return;
+        }
+
+        console.log('✅ Login bem-sucedido - redirecionando para dashboard');
+        router.push('/dashboard');
+      } else {
+        console.log('❌ Login falhou:', result.error);
+        setError(result.error || 'Falha no login');
+      }
+    } catch (error) {
+      console.error('❌ Erro durante login:', error);
+      setError('Erro interno do servidor');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen holding-gradient flex items-center justify-center p-4">
@@ -58,7 +125,7 @@ export default function LoginPage() {
             </CardDescription>
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
@@ -72,13 +139,13 @@ export default function LoginPage() {
                   type="email"
                   placeholder="seu@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   className="pl-10 bg-holding-accent/20 border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light focus:border-holding-highlight focus:ring-holding-highlight/20"
                   required
                 />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password" className="text-holding-white">
                 Senha
@@ -90,7 +157,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   className="pl-10 pr-10 bg-holding-accent/20 border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light focus:border-holding-highlight focus:ring-holding-highlight/20"
                   required
                 />
@@ -109,13 +176,13 @@ export default function LoginPage() {
                 </Button>
               </div>
             </div>
-            
+
             {error && (
               <div className="text-red-400 text-sm text-center bg-red-500/10 border border-red-500/30 rounded-lg p-3">
                 {error}
               </div>
             )}
-            
+
             <Button
               type="submit"
               disabled={isLoading}
@@ -131,7 +198,7 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-          
+
           <div className="text-center">
             <p className="text-holding-accent-light text-sm">
               Acesso restrito aos usuários autorizados
@@ -140,5 +207,5 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -16,6 +16,8 @@
     "noImplicitAny": false,
     "noImplicitReturns": false,
     "noImplicitThis": false,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
     "plugins": [
       {
         "name": "next"

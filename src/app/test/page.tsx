@@ -1,30 +1,78 @@
-'use client'
+'use client';
 
-import TestSidebar from '@/components/TestSidebar'
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function TestPage() {
-  return (
-    <div className="flex h-screen bg-gray-900">
-      <TestSidebar />
-      <div className="flex-1 p-8">
-        <h1 className="text-4xl font-bold text-white mb-4">
-          🧪 Página de Teste
-        </h1>
-        <p className="text-gray-300 text-lg">
-          Se você está vendo esta página, os componentes estão funcionando!
-        </p>
-        <div className="mt-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
-          <h2 className="text-2xl font-semibold text-white mb-4">
-            ✅ Componentes Funcionando:
-          </h2>
-          <ul className="text-gray-300 space-y-2">
-            <li>• Sidebar com menu lateral</li>
-            <li>• Perfil do usuário</li>
-            <li>• Navegação entre páginas</li>
-            <li>• Layout responsivo</li>
-          </ul>
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen holding-gradient flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-holding-highlight border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-holding-white text-xl">Carregando...</div>
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen holding-gradient flex items-center justify-center p-4">
+      <Card className="w-full max-w-2xl glass-effect border-holding-highlight/30">
+        <CardHeader>
+          <CardTitle className="text-2xl text-holding-white">Página de Teste</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-holding-accent/10 border border-holding-accent/30 rounded-lg p-4">
+            <h3 className="text-holding-highlight font-medium mb-2">Status da Autenticação:</h3>
+            <div className="space-y-2 text-holding-white">
+              <p><strong>Carregando:</strong> {isLoading ? 'Sim' : 'Não'}</p>
+              <p><strong>Autenticado:</strong> {isAuthenticated ? 'Sim' : 'Não'}</p>
+              <p><strong>Usuário:</strong> {user ? JSON.stringify(user, null, 2) : 'Nenhum'}</p>
+            </div>
+          </div>
+
+          {isAuthenticated && (
+            <div className="bg-holding-highlight/10 border border-holding-highlight/30 rounded-lg p-4">
+              <h3 className="text-holding-highlight font-medium mb-2">Informações do Usuário:</h3>
+              <div className="space-y-2 text-holding-white">
+                <p><strong>ID:</strong> {user?.id}</p>
+                <p><strong>Email:</strong> {user?.email}</p>
+                <p><strong>Nome:</strong> {user?.nome}</p>
+                <p><strong>Nível de Acesso:</strong> {user?.nivel_acesso}</p>
+                <p><strong>Permissões:</strong> {user?.permissoes?.length || 0}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-center space-x-4">
+            <Button
+              onClick={() => window.location.href = '/login'}
+              className="button-primary"
+            >
+              Ir para Login
+            </Button>
+            
+            <Button
+              onClick={() => window.location.href = '/dashboard'}
+              className="button-primary"
+            >
+              Ir para Dashboard
+            </Button>
+
+            {isAuthenticated && (
+              <Button
+                onClick={logout}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Logout
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }
