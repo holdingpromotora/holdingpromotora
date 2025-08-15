@@ -9,13 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import {
   Dialog,
   DialogContent,
@@ -101,8 +95,6 @@ export default function PerfisUsuariosPage() {
     email: '',
     perfil_id: '',
   });
-
-
 
   useEffect(() => {
     console.log('🔄 useEffect executado, chamando carregarDados...');
@@ -520,7 +512,9 @@ export default function PerfisUsuariosPage() {
   };
 
   const getIconComponent = (iconName: string) => {
-    const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
+    const iconMap: {
+      [key: string]: React.ComponentType<{ className?: string }>;
+    } = {
       Crown,
       Shield,
       Building,
@@ -541,8 +535,6 @@ export default function PerfisUsuariosPage() {
     );
     return Shield;
   };
-
-
 
   const getNivelAcessoNome = (nivel: string) => {
     const nomeMap: { [key: string]: string } = {
@@ -915,26 +907,22 @@ export default function PerfisUsuariosPage() {
                                     </p>
                                   </div>
                                 </div>
-                                <Select
+                                <select
                                   value={usuario.perfil_id}
-                                  onValueChange={value =>
+                                  onChange={e =>
                                     handleAlterarPerfilUsuario(
                                       usuario.id,
-                                      value
+                                      e.target.value
                                     )
                                   }
+                                  className="w-40 bg-white border-gray-300 text-gray-900 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
-                                  <SelectTrigger className="w-40 bg-white border-gray-300 text-gray-900">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {perfis.map(p => (
-                                      <SelectItem key={p.id} value={p.id}>
-                                        {p.nome}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                  {perfis.map(p => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.nome}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                             ))}
                           {usuarios.filter(u => u.perfil_id === perfil.id)
@@ -1028,39 +1016,35 @@ export default function PerfisUsuariosPage() {
                   >
                     Nível de Acesso
                   </Label>
-                  <Select
+                  <select
                     value={formData.nivel_acesso}
-                    onValueChange={value =>
-                      setFormData(prev => ({ ...prev, nivel_acesso: value }))
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        nivel_acesso: e.target.value,
+                      }))
                     }
+                    className="bg-white border-gray-300 text-gray-900 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                      <SelectValue placeholder="Selecione o nível de acesso" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="master">
-                        Master - Acesso total
-                      </SelectItem>
-                      <SelectItem value="admin">
-                        Administrador - Acesso administrativo
-                      </SelectItem>
-                      <SelectItem value="gerente">
-                        Gerente - Acesso gerencial
-                      </SelectItem>
-                      <SelectItem value="supervisor">
-                        Supervisor - Acesso de supervisão
-                      </SelectItem>
-                      <SelectItem value="operador">
-                        Operador - Acesso operacional
-                      </SelectItem>
-                      <SelectItem value="visualizador">
-                        Visualizador - Apenas visualização
-                      </SelectItem>
-                      <SelectItem value="convidado">
-                        Convidado - Acesso limitado
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="">Selecione o nível de acesso</option>
+                    <option value="master">Master - Acesso total</option>
+                    <option value="admin">
+                      Administrador - Acesso administrativo
+                    </option>
+                    <option value="gerente">Gerente - Acesso gerencial</option>
+                    <option value="supervisor">
+                      Supervisor - Acesso de supervisão
+                    </option>
+                    <option value="operador">
+                      Operador - Acesso operacional
+                    </option>
+                    <option value="visualizador">
+                      Visualizador - Apenas visualização
+                    </option>
+                    <option value="convidado">
+                      Convidado - Acesso limitado
+                    </option>
+                  </select>
                 </div>
               </div>
 
@@ -1094,25 +1078,22 @@ export default function PerfisUsuariosPage() {
                   >
                     Cor do Perfil
                   </Label>
-                  <Select
+                  <select
                     value={formData.cor}
-                    onValueChange={value =>
-                      setFormData(prev => ({ ...prev, cor: value }))
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, cor: e.target.value }))
                     }
+                    className="bg-white border-gray-300 text-gray-900 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                      <SelectValue placeholder="Selecione a cor" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="bg-red-600">Vermelho</SelectItem>
-                      <SelectItem value="bg-purple-600">Roxo</SelectItem>
-                      <SelectItem value="bg-blue-600">Azul</SelectItem>
-                      <SelectItem value="bg-indigo-600">Índigo</SelectItem>
-                      <SelectItem value="bg-green-600">Verde</SelectItem>
-                      <SelectItem value="bg-amber-600">Âmbar</SelectItem>
-                      <SelectItem value="bg-gray-600">Cinza</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="">Selecione a cor</option>
+                    <option value="bg-red-600">Vermelho</option>
+                    <option value="bg-purple-600">Roxo</option>
+                    <option value="bg-blue-600">Azul</option>
+                    <option value="bg-indigo-600">Índigo</option>
+                    <option value="bg-green-600">Verde</option>
+                    <option value="bg-amber-600">Âmbar</option>
+                    <option value="bg-gray-600">Cinza</option>
+                  </select>
                 </div>
                 <div>
                   <Label
@@ -1121,27 +1102,22 @@ export default function PerfisUsuariosPage() {
                   >
                     Ícone
                   </Label>
-                  <Select
+                  <select
                     value={formData.icone}
-                    onValueChange={value =>
-                      setFormData(prev => ({ ...prev, icone: value }))
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, icone: e.target.value }))
                     }
+                    className="bg-white border-gray-300 text-gray-900 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                      <SelectValue placeholder="Selecione o ícone" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <SelectItem value="Crown">Coroa</SelectItem>
-                      <SelectItem value="Shield">Escudo</SelectItem>
-                      <SelectItem value="Building">Prédio</SelectItem>
-                      <SelectItem value="UserCheck">
-                        Usuário Verificado
-                      </SelectItem>
-                      <SelectItem value="User">Usuário</SelectItem>
-                      <SelectItem value="Eye">Olho</SelectItem>
-                      <SelectItem value="EyeOff">Olho Fechado</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="">Selecione o ícone</option>
+                    <option value="Crown">Coroa</option>
+                    <option value="Shield">Escudo</option>
+                    <option value="Building">Prédio</option>
+                    <option value="UserCheck">Usuário Verificado</option>
+                    <option value="User">Usuário</option>
+                    <option value="Eye">Olho</option>
+                    <option value="EyeOff">Olho Fechado</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -1226,26 +1202,22 @@ export default function PerfisUsuariosPage() {
                 >
                   Perfil
                 </Label>
-                <Select
+                <select
                   value={usuarioFormData.perfil_id}
-                  onValueChange={value =>
-                    setUsuarioFormData(prev => ({ ...prev, perfil_id: value }))
+                  onChange={e =>
+                    setUsuarioFormData(prev => ({ ...prev, perfil_id: e.target.value }))
                   }
+                  className="bg-white border-gray-300 text-gray-900 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                    <SelectValue placeholder="Selecione o perfil" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
-                    {perfis
-                      .filter(p => p.ativo)
-                      .map(perfil => (
-                        <SelectItem key={perfil.id} value={perfil.id}>
-                          {perfil.nome} -{' '}
-                          {getNivelAcessoNome(perfil.nivel_acesso)}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+                  <option value="">Selecione o perfil</option>
+                  {perfis
+                    .filter(p => p.ativo)
+                    .map(perfil => (
+                      <option key={perfil.id} value={perfil.id}>
+                        {perfil.nome} - {getNivelAcessoNome(perfil.nivel_acesso)}
+                      </option>
+                    ))}
+                </select>
               </div>
             </div>
 

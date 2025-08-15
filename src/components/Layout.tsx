@@ -69,7 +69,7 @@ export default function Layout({ children }: LayoutProps) {
                       {user.nome}
                     </div>
                     <div className="text-xs text-holding-accent-light capitalize">
-                      {user.nivel_acesso}
+                      {user.perfil_nome || 'Sem perfil'}
                     </div>
                   </div>
                   <Button

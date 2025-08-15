@@ -1283,7 +1283,12 @@ export default function UsuariosPage() {
                         <Input
                           id="cpf"
                           value={String(
-                            usuarioParaEditar.dadosOriginais?.cpf || ''
+                            (
+                              usuarioParaEditar.dadosOriginais as Record<
+                                string,
+                                string
+                              >
+                            )?.cpf || ''
                           )}
                           onChange={e =>
                             setUsuarioParaEditar({
@@ -1309,7 +1314,12 @@ export default function UsuariosPage() {
                         <Input
                           id="rg"
                           value={String(
-                            usuarioParaEditar.dadosOriginais?.rg || ''
+                            (
+                              usuarioParaEditar.dadosOriginais as Record<
+                                string,
+                                string
+                              >
+                            )?.rg || ''
                           )}
                           onChange={e =>
                             setUsuarioParaEditar({
@@ -1336,8 +1346,12 @@ export default function UsuariosPage() {
                           id="dataNascimento"
                           type="date"
                           value={String(
-                            usuarioParaEditar.dadosOriginais?.data_nascimento ||
-                              ''
+                            (
+                              usuarioParaEditar.dadosOriginais as Record<
+                                string,
+                                string
+                              >
+                            )?.data_nascimento || ''
                           )}
                           onChange={e =>
                             setUsuarioParaEditar({
@@ -1362,7 +1376,12 @@ export default function UsuariosPage() {
                         <Input
                           id="telefone"
                           value={String(
-                            usuarioParaEditar.dadosOriginais?.telefone || ''
+                            (
+                              usuarioParaEditar.dadosOriginais as Record<
+                                string,
+                                string
+                              >
+                            )?.telefone || ''
                           )}
                           onChange={e =>
                             setUsuarioParaEditar({
@@ -1392,7 +1411,12 @@ export default function UsuariosPage() {
                         <Input
                           id="cnpj"
                           value={String(
-                            usuarioParaEditar.dadosOriginais?.cnpj || ''
+                            (
+                              usuarioParaEditar.dadosOriginais as Record<
+                                string,
+                                string
+                              >
+                            )?.cnpj || ''
                           )}
                           onChange={e =>
                             setUsuarioParaEditar({
@@ -1418,8 +1442,12 @@ export default function UsuariosPage() {
                         <Input
                           id="nomeFantasia"
                           value={String(
-                            usuarioParaEditar.dadosOriginais?.nome_fantasia ||
-                              ''
+                            (
+                              usuarioParaEditar.dadosOriginais as Record<
+                                string,
+                                string
+                              >
+                            )?.nome_fantasia || ''
                           )}
                           onChange={e =>
                             setUsuarioParaEditar({
@@ -1444,8 +1472,12 @@ export default function UsuariosPage() {
                         <Input
                           id="proprietarioNome"
                           value={String(
-                            usuarioParaEditar.dadosOriginais
-                              ?.proprietario_nome || ''
+                            (
+                              usuarioParaEditar.dadosOriginais as Record<
+                                string,
+                                string
+                              >
+                            )?.proprietario_nome || ''
                           )}
                           onChange={e =>
                             setUsuarioParaEditar({
@@ -1470,8 +1502,12 @@ export default function UsuariosPage() {
                         <Input
                           id="proprietarioCPF"
                           value={String(
-                            usuarioParaEditar.dadosOriginais
-                              ?.proprietario_cpf || ''
+                            (
+                              usuarioParaEditar.dadosOriginais as Record<
+                                string,
+                                string
+                              >
+                            )?.proprietario_cpf || ''
                           )}
                           onChange={e =>
                             setUsuarioParaEditar({
@@ -1781,7 +1817,14 @@ export default function UsuariosPage() {
                     </Label>
                     <Input
                       id="banco"
-                      value={usuarioParaEditar.dadosOriginais?.banco_id || ''}
+                      value={
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.banco_id || ''
+                      }
                       onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
@@ -1804,7 +1847,14 @@ export default function UsuariosPage() {
                     </Label>
                     <Input
                       id="agencia"
-                      value={usuarioParaEditar.dadosOriginais?.agencia || ''}
+                      value={
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.agencia || ''
+                      }
                       onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
@@ -1828,7 +1878,12 @@ export default function UsuariosPage() {
                     <Input
                       id="conta"
                       value={
-                        usuarioParaEditar.dadosOriginais?.conta_digito || ''
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.conta_digito || ''
                       }
                       onChange={e =>
                         setUsuarioParaEditar({
@@ -1852,7 +1907,14 @@ export default function UsuariosPage() {
                       Tipo de Conta
                     </Label>
                     <select
-                      value={usuarioParaEditar.dadosOriginais?.tipo_conta || ''}
+                      value={
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.tipo_conta || ''
+                      }
                       onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
@@ -1878,7 +1940,14 @@ export default function UsuariosPage() {
                       Tipo PIX
                     </Label>
                     <select
-                      value={usuarioParaEditar.dadosOriginais?.tipo_pix || ''}
+                      value={
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.tipo_pix || ''
+                      }
                       onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
@@ -1907,7 +1976,14 @@ export default function UsuariosPage() {
                     </Label>
                     <Input
                       id="chavePix"
-                      value={usuarioParaEditar.dadosOriginais?.chave_pix || ''}
+                      value={
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.chave_pix || ''
+                      }
                       onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,

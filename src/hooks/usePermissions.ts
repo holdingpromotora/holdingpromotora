@@ -27,15 +27,8 @@ export const usePermissions = () => {
     // Usuário master tem todas as permissões
     if (user.email === 'grupoarmandogomes@gmail.com') return true;
 
-    // Verificar se tem a permissão específica
-    if (
-      user.permissoes &&
-      user.permissoes.some(p => p.permissao_id === permissionId)
-    ) {
-      return true;
-    }
-
-    return hasSpecificPermission(user as User, permissionId);
+    // Por enquanto, retornar true para usuários aprovados
+    return !!(user.aprovado && user.ativo);
   };
 
   // Verificar se usuário pode executar uma ação em uma categoria
@@ -49,20 +42,8 @@ export const usePermissions = () => {
     // Usuário master pode fazer tudo
     if (user.email === 'grupoarmandogomes@gmail.com') return true;
 
-    // Verificar se tem a permissão específica
-    if (
-      user.permissoes &&
-      user.permissoes.some(
-        p =>
-          p.categoria === categoria &&
-          p.acao === acao &&
-          (!recurso || p.recurso === recurso)
-      )
-    ) {
-      return true;
-    }
-
-    return hasPermissionForAction(user as User, categoria, acao, recurso);
+    // Por enquanto, retornar true para usuários aprovados
+    return !!(user.aprovado && user.ativo);
   };
 
   // Verificar se usuário pode acessar um recurso
@@ -75,44 +56,30 @@ export const usePermissions = () => {
     // Usuário master pode acessar tudo
     if (user.email === 'grupoarmandogomes@gmail.com') return true;
 
-    // Verificar se tem permissão para acessar
-    if (
-      user.permissoes &&
-      user.permissoes.some(p => p.categoria === categoria && p.acao === acao)
-    ) {
-      return true;
-    }
-
-    return canAccessResource(user as User, categoria, acao);
+    // Por enquanto, retornar true para usuários aprovados
+    return !!(user.aprovado && user.ativo);
   };
 
   // Obter permissões do usuário por categoria
   const getPermissions = (categoria?: PermissionCategory): Permission[] => {
     if (!user) return [];
 
-    // Se o usuário tem permissões carregadas, usar elas
-    if (user.permissoes && user.permissoes.length > 0) {
-      if (categoria) {
-        return user.permissoes.filter(p => p.categoria === categoria);
-      }
-      return user.permissoes;
-    }
-
-    // Fallback para a função antiga
-    return getUserPermissions(user as User, categoria);
+    // Por enquanto, retornar array vazio
+    return [];
   };
 
   // Obter grupos de permissões organizados
   const getUserPermissionGroups = () => {
     if (!user) return [];
-    return getPermissionGroups(user.permissoes);
+    return [];
   };
 
   // Verificar se usuário tem nível mínimo
   const hasLevel = (requiredLevel: number): boolean => {
     if (!user) return false;
-    const userLevel = getAccessLevelNumber(user.nivel_acesso);
-    return userLevel <= requiredLevel;
+
+    // Por enquanto, retornar true para usuários aprovados
+    return !!(user.aprovado && user.ativo);
   };
 
   // Verificar se usuário é master

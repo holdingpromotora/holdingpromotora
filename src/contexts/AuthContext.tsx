@@ -16,13 +16,11 @@ export const useAuth = () => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false);
 
   const isAuthenticated = !!user;
-  const hasApprovedProfile = user?.aprovado && user?.ativo && user?.perfil_id;
+  const hasApprovedProfile = !!(user?.aprovado && user?.ativo && user?.perfil_id);
 
   useEffect(() => {
-    setIsClient(true);
     console.log('🔄 AuthContext: Iniciando verificação de usuário...');
 
     const checkUser = async () => {
