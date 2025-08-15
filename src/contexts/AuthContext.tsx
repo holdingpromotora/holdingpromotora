@@ -1,13 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, LoginCredentials, AuthContextType } from '@/types/auth';
-import { supabase } from '@/lib/supabase';
-import {
-  getUserPermissions,
-  hasUserPermission,
-  hasUserPermissionAction,
-} from '@/lib/permissions-config';
+import { User, AuthContextType } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -22,13 +16,15 @@ export const useAuth = () => {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   const isAuthenticated = !!user;
   const hasApprovedProfile = user?.aprovado && user?.ativo && user?.perfil_id;
 
   useEffect(() => {
+    setIsClient(true);
     console.log('🔄 AuthContext: Iniciando verificação de usuário...');
-    
+
     const checkUser = async () => {
       try {
         // Verificar se há usuário logado no localStorage
@@ -41,13 +37,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 '✅ AuthContext: Usuário encontrado no localStorage:',
                 userData
               );
-              
+
               // Validar se o usuário ainda é válido
               if (userData && userData.email && userData.id !== undefined) {
                 setUser(userData);
                 console.log('✅ AuthContext: Usuário válido definido');
               } else {
-                console.warn('⚠️ AuthContext: Dados do usuário inválidos, removendo...');
+                console.warn(
+                  '⚠️ AuthContext: Dados do usuário inválidos, removendo...'
+                );
                 localStorage.removeItem('holding_user');
                 setUser(null);
               }
@@ -86,7 +84,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
 
       // Verificar se é o usuário master original
-      if (email === 'grupoarmandogomes@gmail.com' && password === '@252980Hol') {
+      if (
+        email === 'grupoarmandogomes@gmail.com' &&
+        password === '@252980Hol'
+      ) {
         const userData: User = {
           id: 0,
           email: 'grupoarmandogomes@gmail.com',
@@ -97,15 +98,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ativo: true,
           status: 'aprovado',
         };
-        
-        console.log('✅ AuthContext: Login bem-sucedido para usuário master original');
+
+        console.log(
+          '✅ AuthContext: Login bem-sucedido para usuário master original'
+        );
         setUser(userData);
-        
+
         if (typeof window !== 'undefined') {
           localStorage.setItem('holding_user', JSON.stringify(userData));
           console.log('💾 AuthContext: Usuário master salvo no localStorage');
         }
-        
+
         return { success: true, user: userData };
       }
 
@@ -121,15 +124,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ativo: true,
           status: 'aprovado',
         };
-        
+
         console.log('✅ AuthContext: Login bem-sucedido para usuário master');
         setUser(userData);
-        
+
         if (typeof window !== 'undefined') {
           localStorage.setItem('holding_user', JSON.stringify(userData));
           console.log('💾 AuthContext: Usuário salvo no localStorage');
         }
-        
+
         return { success: true, user: userData };
       }
 
@@ -145,15 +148,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ativo: true,
           status: 'aprovado',
         };
-        
+
         console.log('✅ AuthContext: Login bem-sucedido para usuário normal');
         setUser(userData);
-        
+
         if (typeof window !== 'undefined') {
           localStorage.setItem('holding_user', JSON.stringify(userData));
           console.log('💾 AuthContext: Usuário salvo no localStorage');
         }
-        
+
         return { success: true, user: userData };
       }
 
@@ -169,15 +172,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ativo: false,
           status: 'pendente',
         };
-        
+
         console.log('⚠️ AuthContext: Login para usuário pendente');
         setUser(userData);
-        
+
         if (typeof window !== 'undefined') {
           localStorage.setItem('holding_user', JSON.stringify(userData));
           console.log('💾 AuthContext: Usuário pendente salvo no localStorage');
         }
-        
+
         return { success: true, user: userData, pending: true };
       }
 
@@ -193,15 +196,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ativo: false,
           status: 'rejeitado',
         };
-        
+
         console.log('❌ AuthContext: Login para usuário rejeitado');
         setUser(userData);
-        
+
         if (typeof window !== 'undefined') {
           localStorage.setItem('holding_user', JSON.stringify(userData));
-          console.log('💾 AuthContext: Usuário rejeitado salvo no localStorage');
+          console.log(
+            '💾 AuthContext: Usuário rejeitado salvo no localStorage'
+          );
         }
-        
+
         return { success: true, user: userData, rejected: true };
       }
 
@@ -233,4 +238,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
+}

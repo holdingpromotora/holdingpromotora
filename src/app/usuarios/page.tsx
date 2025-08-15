@@ -6,13 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,12 +31,9 @@ import {
   Building2,
   User,
   Search,
-  Filter,
   CheckCircle,
   Clock,
   AlertCircle,
-  Plus,
-  Eye,
   Edit,
   Trash2,
   ArrowLeft,
@@ -63,7 +54,7 @@ interface Usuario {
   email: string;
   dataCadastro: string;
   ultimoAcesso?: string;
-  dadosOriginais?: any; // Para armazenar dados completos do banco
+  dadosOriginais?: Record<string, unknown>; // Para armazenar dados completos do banco
 }
 
 export default function UsuariosPage() {
@@ -72,6 +63,7 @@ export default function UsuariosPage() {
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [tipoFilter, setTipoFilter] = useState<string>('todos');
   const [isLoading, setIsLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   // Estados para ações
   const [usuarioParaEditar, setUsuarioParaEditar] = useState<Usuario | null>(
@@ -85,10 +77,16 @@ export default function UsuariosPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Carregar usuários reais do banco de dados
   useEffect(() => {
-    carregarUsuarios();
-  }, []);
+    if (isClient) {
+      carregarUsuarios();
+    }
+  }, [isClient]);
 
   const carregarUsuarios = async () => {
     try {
@@ -266,16 +264,12 @@ export default function UsuariosPage() {
       console.log('Iniciando atualização para usuário:', usuarioParaEditar.id);
       console.log('Tipo de usuário:', usuarioParaEditar.tipo);
 
-      // Preparar dados para atualização, removendo campos undefined
-      const dadosAtualizacao: any = {
-        updated_at: new Date().toISOString(),
-      };
-
       if (usuarioParaEditar.tipo === 'PF') {
         // Validar dados antes de enviar
-        const tipoPixValido = ['cpf', 'cnpj', 'telefone', 'email'].includes(
-          usuarioParaEditar.dadosOriginais?.tipo_pix
-        );
+        const tipoPixAtual = usuarioParaEditar.dadosOriginais?.tipo_pix;
+        const tipoPixValido =
+          typeof tipoPixAtual === 'string' &&
+          ['cpf', 'cnpj', 'telefone', 'email'].includes(tipoPixAtual);
 
         // Validação mais rigorosa do tipo de conta
         const tipoContaAtual = usuarioParaEditar.dadosOriginais?.tipo_conta;
@@ -287,7 +281,10 @@ export default function UsuariosPage() {
         let tipoContaFinal = tipoContaAtual;
 
         // Se o valor atual não for válido, usar padrão
-        if (!valoresContaValidos.includes(tipoContaAtual)) {
+        if (
+          typeof tipoContaAtual !== 'string' ||
+          !valoresContaValidos.includes(tipoContaAtual)
+        ) {
           console.log('⚠️ Tipo de conta inválido detectado, usando padrão');
           tipoContaFinal = 'corrente';
           // Atualizar o objeto para usar o valor válido
@@ -300,7 +297,9 @@ export default function UsuariosPage() {
           });
         }
 
-        const tipoContaValido = valoresContaValidos.includes(tipoContaFinal);
+        const tipoContaValido =
+          typeof tipoContaFinal === 'string' &&
+          valoresContaValidos.includes(tipoContaFinal);
 
         console.log('🔍 Valores válidos para conta:', valoresContaValidos);
         console.log('🔍 Tipo de conta final:', tipoContaFinal);
@@ -370,9 +369,10 @@ export default function UsuariosPage() {
         console.log('Pessoa física atualizada com sucesso:', data[0]);
       } else {
         // Validar dados antes de enviar
-        const tipoPixValido = ['cpf', 'cnpj', 'telefone', 'email'].includes(
-          usuarioParaEditar.dadosOriginais?.tipo_pix
-        );
+        const tipoPixAtual = usuarioParaEditar.dadosOriginais?.tipo_pix;
+        const tipoPixValido =
+          typeof tipoPixAtual === 'string' &&
+          ['cpf', 'cnpj', 'telefone', 'email'].includes(tipoPixAtual);
 
         // Validação mais rigorosa do tipo de conta
         const tipoContaAtual = usuarioParaEditar.dadosOriginais?.tipo_conta;
@@ -387,7 +387,10 @@ export default function UsuariosPage() {
         let tipoContaFinal = tipoContaAtual;
 
         // Se o valor atual não for válido, usar padrão
-        if (!valoresContaValidos.includes(tipoContaAtual)) {
+        if (
+          typeof tipoContaAtual !== 'string' ||
+          !valoresContaValidos.includes(tipoContaAtual)
+        ) {
           console.log(
             '⚠️ Tipo de conta inválido detectado (PJ), usando padrão'
           );
@@ -402,7 +405,9 @@ export default function UsuariosPage() {
           });
         }
 
-        const tipoContaValido = valoresContaValidos.includes(tipoContaFinal);
+        const tipoContaValido =
+          typeof tipoContaFinal === 'string' &&
+          valoresContaValidos.includes(tipoContaFinal);
 
         console.log('🔍 Valores válidos para conta (PJ):', valoresContaValidos);
         console.log('🔍 Tipo de conta final (PJ):', tipoContaFinal);
@@ -906,30 +911,26 @@ export default function UsuariosPage() {
                   />
                 </div>
 
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-auto min-w-[140px] border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg lg:rounded-xl py-2 lg:py-3 text-sm lg:text-base">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os Status</SelectItem>
-                    <SelectItem value="ativo">Ativo</SelectItem>
-                    <SelectItem value="pendente">Pendente</SelectItem>
-                    <SelectItem value="inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                  className="w-full sm:w-auto min-w-[140px] border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg lg:rounded-xl py-2 lg:py-3 text-sm lg:text-base flex h-10 items-center justify-between px-3 ring-offset-background focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="todos">Todos os Status</option>
+                  <option value="ativo">Ativo</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="inativo">Inativo</option>
+                </select>
 
-                <Select value={tipoFilter} onValueChange={setTipoFilter}>
-                  <SelectTrigger className="w-full sm:w-auto min-w-[140px] border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg lg:rounded-xl py-2 lg:py-3 text-sm lg:text-base">
-                    <SelectValue placeholder="Tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os Tipos</SelectItem>
-                    <SelectItem value="Pessoa Física">Pessoa Física</SelectItem>
-                    <SelectItem value="Pessoa Jurídica">
-                      Pessoa Jurídica
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  value={tipoFilter}
+                  onChange={e => setTipoFilter(e.target.value)}
+                  className="w-full sm:w-auto min-w-[140px] border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg lg:rounded-xl py-2 lg:py-3 text-sm lg:text-base flex h-10 items-center justify-between px-3 ring-offset-background focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="todos">Todos os Tipos</option>
+                  <option value="Pessoa Física">Pessoa Física</option>
+                  <option value="Pessoa Jurídica">Pessoa Jurídica</option>
+                </select>
               </div>
 
               <div className="flex items-center space-x-3">
@@ -1281,7 +1282,9 @@ export default function UsuariosPage() {
                         </Label>
                         <Input
                           id="cpf"
-                          value={usuarioParaEditar.dadosOriginais?.cpf || ''}
+                          value={String(
+                            usuarioParaEditar.dadosOriginais?.cpf || ''
+                          )}
                           onChange={e =>
                             setUsuarioParaEditar({
                               ...usuarioParaEditar,
@@ -1305,7 +1308,9 @@ export default function UsuariosPage() {
                         </Label>
                         <Input
                           id="rg"
-                          value={usuarioParaEditar.dadosOriginais?.rg || ''}
+                          value={String(
+                            usuarioParaEditar.dadosOriginais?.rg || ''
+                          )}
                           onChange={e =>
                             setUsuarioParaEditar({
                               ...usuarioParaEditar,
@@ -1330,10 +1335,10 @@ export default function UsuariosPage() {
                         <Input
                           id="dataNascimento"
                           type="date"
-                          value={
+                          value={String(
                             usuarioParaEditar.dadosOriginais?.data_nascimento ||
-                            ''
-                          }
+                              ''
+                          )}
                           onChange={e =>
                             setUsuarioParaEditar({
                               ...usuarioParaEditar,
@@ -1356,9 +1361,9 @@ export default function UsuariosPage() {
                         </Label>
                         <Input
                           id="telefone"
-                          value={
+                          value={String(
                             usuarioParaEditar.dadosOriginais?.telefone || ''
-                          }
+                          )}
                           onChange={e =>
                             setUsuarioParaEditar({
                               ...usuarioParaEditar,
@@ -1386,7 +1391,9 @@ export default function UsuariosPage() {
                         </Label>
                         <Input
                           id="cnpj"
-                          value={usuarioParaEditar.dadosOriginais?.cnpj || ''}
+                          value={String(
+                            usuarioParaEditar.dadosOriginais?.cnpj || ''
+                          )}
                           onChange={e =>
                             setUsuarioParaEditar({
                               ...usuarioParaEditar,
@@ -1410,10 +1417,10 @@ export default function UsuariosPage() {
                         </Label>
                         <Input
                           id="nomeFantasia"
-                          value={
+                          value={String(
                             usuarioParaEditar.dadosOriginais?.nome_fantasia ||
-                            ''
-                          }
+                              ''
+                          )}
                           onChange={e =>
                             setUsuarioParaEditar({
                               ...usuarioParaEditar,
@@ -1436,10 +1443,10 @@ export default function UsuariosPage() {
                         </Label>
                         <Input
                           id="proprietarioNome"
-                          value={
+                          value={String(
                             usuarioParaEditar.dadosOriginais
                               ?.proprietario_nome || ''
-                          }
+                          )}
                           onChange={e =>
                             setUsuarioParaEditar({
                               ...usuarioParaEditar,
@@ -1462,10 +1469,10 @@ export default function UsuariosPage() {
                         </Label>
                         <Input
                           id="proprietarioCPF"
-                          value={
+                          value={String(
                             usuarioParaEditar.dadosOriginais
                               ?.proprietario_cpf || ''
-                          }
+                          )}
                           onChange={e =>
                             setUsuarioParaEditar({
                               ...usuarioParaEditar,
@@ -1490,8 +1497,12 @@ export default function UsuariosPage() {
                         <Input
                           id="proprietarioTelefone"
                           value={
-                            usuarioParaEditar.dadosOriginais
-                              ?.proprietario_telefone || ''
+                            (
+                              usuarioParaEditar.dadosOriginais as Record<
+                                string,
+                                string
+                              >
+                            )?.proprietario_telefone || ''
                           }
                           onChange={e =>
                             setUsuarioParaEditar({
@@ -1523,7 +1534,14 @@ export default function UsuariosPage() {
                     </Label>
                     <Input
                       id="cep"
-                      value={usuarioParaEditar.dadosOriginais?.cep || ''}
+                      value={
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.cep || ''
+                      }
                       onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
@@ -1547,7 +1565,14 @@ export default function UsuariosPage() {
                     </Label>
                     <Input
                       id="endereco"
-                      value={usuarioParaEditar.dadosOriginais?.endereco || ''}
+                      value={
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.endereco || ''
+                      }
                       onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
@@ -1570,7 +1595,14 @@ export default function UsuariosPage() {
                     </Label>
                     <Input
                       id="numero"
-                      value={usuarioParaEditar.dadosOriginais?.numero || ''}
+                      value={
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.numero || ''
+                      }
                       onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
@@ -1594,7 +1626,12 @@ export default function UsuariosPage() {
                     <Input
                       id="complemento"
                       value={
-                        usuarioParaEditar.dadosOriginais?.complemento || ''
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.complemento || ''
                       }
                       onChange={e =>
                         setUsuarioParaEditar({
@@ -1618,7 +1655,14 @@ export default function UsuariosPage() {
                     </Label>
                     <Input
                       id="bairro"
-                      value={usuarioParaEditar.dadosOriginais?.bairro || ''}
+                      value={
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.bairro || ''
+                      }
                       onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
@@ -1641,7 +1685,14 @@ export default function UsuariosPage() {
                     </Label>
                     <Input
                       id="cidade"
-                      value={usuarioParaEditar.dadosOriginais?.cidade || ''}
+                      value={
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.cidade || ''
+                      }
                       onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
@@ -1662,51 +1713,55 @@ export default function UsuariosPage() {
                     >
                       Estado
                     </Label>
-                    <Select
-                      value={usuarioParaEditar.dadosOriginais?.estado || ''}
-                      onValueChange={value =>
+                    <select
+                      value={
+                        (
+                          usuarioParaEditar.dadosOriginais as Record<
+                            string,
+                            string
+                          >
+                        )?.estado || ''
+                      }
+                      onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
                           dadosOriginais: {
                             ...usuarioParaEditar.dadosOriginais,
-                            estado: value,
+                            estado: e.target.value,
                           },
                         })
                       }
+                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500">
-                        <SelectValue placeholder="Selecione o estado" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300">
-                        <SelectItem value="AC">Acre</SelectItem>
-                        <SelectItem value="AL">Alagoas</SelectItem>
-                        <SelectItem value="AP">Amapá</SelectItem>
-                        <SelectItem value="AM">Amazonas</SelectItem>
-                        <SelectItem value="BA">Bahia</SelectItem>
-                        <SelectItem value="CE">Ceará</SelectItem>
-                        <SelectItem value="DF">Distrito Federal</SelectItem>
-                        <SelectItem value="ES">Espírito Santo</SelectItem>
-                        <SelectItem value="GO">Goiás</SelectItem>
-                        <SelectItem value="MA">Maranhão</SelectItem>
-                        <SelectItem value="MT">Mato Grosso</SelectItem>
-                        <SelectItem value="MS">Mato Grosso do Sul</SelectItem>
-                        <SelectItem value="MG">Minas Gerais</SelectItem>
-                        <SelectItem value="PA">Pará</SelectItem>
-                        <SelectItem value="PB">Paraíba</SelectItem>
-                        <SelectItem value="PR">Paraná</SelectItem>
-                        <SelectItem value="PE">Pernambuco</SelectItem>
-                        <SelectItem value="PI">Piauí</SelectItem>
-                        <SelectItem value="RJ">Rio de Janeiro</SelectItem>
-                        <SelectItem value="RN">Rio Grande do Norte</SelectItem>
-                        <SelectItem value="RS">Rio Grande do Sul</SelectItem>
-                        <SelectItem value="RO">Rondônia</SelectItem>
-                        <SelectItem value="RR">Roraima</SelectItem>
-                        <SelectItem value="SC">Santa Catarina</SelectItem>
-                        <SelectItem value="SP">São Paulo</SelectItem>
-                        <SelectItem value="SE">Sergipe</SelectItem>
-                        <SelectItem value="TO">Tocantins</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <option value="">Selecione o estado</option>
+                      <option value="AC">Acre</option>
+                      <option value="AL">Alagoas</option>
+                      <option value="AP">Amapá</option>
+                      <option value="AM">Amazonas</option>
+                      <option value="BA">Bahia</option>
+                      <option value="CE">Ceará</option>
+                      <option value="DF">Distrito Federal</option>
+                      <option value="ES">Espírito Santo</option>
+                      <option value="GO">Goiás</option>
+                      <option value="MA">Maranhão</option>
+                      <option value="MT">Mato Grosso</option>
+                      <option value="MS">Mato Grosso do Sul</option>
+                      <option value="MG">Minas Gerais</option>
+                      <option value="PA">Pará</option>
+                      <option value="PB">Paraíba</option>
+                      <option value="PR">Paraná</option>
+                      <option value="PE">Pernambuco</option>
+                      <option value="PI">Piauí</option>
+                      <option value="RJ">Rio de Janeiro</option>
+                      <option value="RN">Rio Grande do Norte</option>
+                      <option value="RS">Rio Grande do Sul</option>
+                      <option value="RO">Rondônia</option>
+                      <option value="RR">Roraima</option>
+                      <option value="SC">Santa Catarina</option>
+                      <option value="SP">São Paulo</option>
+                      <option value="SE">Sergipe</option>
+                      <option value="TO">Tocantins</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -1796,26 +1851,23 @@ export default function UsuariosPage() {
                     >
                       Tipo de Conta
                     </Label>
-                    <Select
+                    <select
                       value={usuarioParaEditar.dadosOriginais?.tipo_conta || ''}
-                      onValueChange={value =>
+                      onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
                           dadosOriginais: {
                             ...usuarioParaEditar.dadosOriginais,
-                            tipo_conta: value,
+                            tipo_conta: e.target.value,
                           },
                         })
                       }
+                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500">
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300">
-                        <SelectItem value="corrente">Corrente</SelectItem>
-                        <SelectItem value="poupanca">Poupança</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <option value="">Selecione o tipo</option>
+                      <option value="corrente">Corrente</option>
+                      <option value="poupanca">Poupança</option>
+                    </select>
                   </div>
 
                   <div>
@@ -1825,28 +1877,25 @@ export default function UsuariosPage() {
                     >
                       Tipo PIX
                     </Label>
-                    <Select
+                    <select
                       value={usuarioParaEditar.dadosOriginais?.tipo_pix || ''}
-                      onValueChange={value =>
+                      onChange={e =>
                         setUsuarioParaEditar({
                           ...usuarioParaEditar,
                           dadosOriginais: {
                             ...usuarioParaEditar.dadosOriginais,
-                            tipo_pix: value,
+                            tipo_pix: e.target.value,
                           },
                         })
                       }
+                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500">
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-300">
-                        <SelectItem value="cpf">CPF</SelectItem>
-                        <SelectItem value="cnpj">CNPJ</SelectItem>
-                        <SelectItem value="telefone">Telefone</SelectItem>
-                        <SelectItem value="email">E-mail</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <option value="">Selecione o tipo</option>
+                      <option value="cpf">CPF</option>
+                      <option value="cnpj">CNPJ</option>
+                      <option value="telefone">Telefone</option>
+                      <option value="email">E-mail</option>
+                    </select>
                   </div>
 
                   <div>
@@ -1883,24 +1932,24 @@ export default function UsuariosPage() {
                   >
                     Status do Usuário
                   </Label>
-                  <Select
+                  <select
                     value={usuarioParaEditar.status}
-                    onValueChange={(value: 'ativo' | 'pendente' | 'inativo') =>
+                    onChange={e => {
+                      const value = e.target.value as
+                        | 'ativo'
+                        | 'pendente'
+                        | 'inativo';
                       setUsuarioParaEditar({
                         ...usuarioParaEditar,
                         status: value,
-                      })
-                    }
+                      });
+                    }}
+                    className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <SelectTrigger className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-300">
-                      <SelectItem value="ativo">Ativo</SelectItem>
-                      <SelectItem value="pendente">Pendente</SelectItem>
-                      <SelectItem value="inativo">Inativo</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="ativo">Ativo</option>
+                    <option value="pendente">Pendente</option>
+                    <option value="inativo">Inativo</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -1944,8 +1993,8 @@ export default function UsuariosPage() {
               Confirmar Exclusão
             </AlertDialogTitle>
             <AlertDialogDescription className="text-holding-accent-light">
-              Tem certeza que deseja excluir o usuário "
-              {usuarioParaExcluir?.nome}"? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir o usuário &quot;
+              {usuarioParaExcluir?.nome}&quot;? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

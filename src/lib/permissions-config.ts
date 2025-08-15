@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Permission, PermissionCategory, PermissionAction, ACCESS_LEVELS } from '@/types/permissions';
+import { PermissionCategory, PermissionAction, ACCESS_LEVELS } from '@/types/permissions';
 
 // Configuração do sistema de permissões
 export const PERMISSIONS_CONFIG = {

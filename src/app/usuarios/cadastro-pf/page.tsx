@@ -6,13 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import {
   User,
   CreditCard,
@@ -649,21 +643,18 @@ export default function CadastroPessoaFisicaPage() {
                     <Building className="w-4 h-4" />
                     <span>Banco</span>
                   </Label>
-                  <Select
+                  <select
                     value={formData.bancoId}
-                    onValueChange={valor => handleInputChange('bancoId', valor)}
+                    onChange={e => handleInputChange('bancoId', e.target.value)}
+                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <SelectTrigger className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white">
-                      <SelectValue placeholder="Selecione o banco" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-holding-secondary border-holding-accent/30">
-                      {bancos.map(banco => (
-                        <SelectItem key={banco.id} value={banco.id.toString()}>
-                          {banco.codigo} - {banco.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <option value="">Selecione o banco</option>
+                    {bancos.map(banco => (
+                      <option key={banco.id} value={banco.id.toString()}>
+                        {banco.codigo} - {banco.nome}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -701,21 +692,21 @@ export default function CadastroPessoaFisicaPage() {
                     <CreditCardIcon className="w-4 h-4" />
                     <span>Tipo de Conta</span>
                   </Label>
-                  <Select
+                  <select
                     value={formData.tipoConta}
-                    onValueChange={valor => {
-                      console.log('🔄 Tipo de conta selecionado:', valor);
-                      handleInputChange('tipoConta', valor);
+                    onChange={e => {
+                      console.log(
+                        '🔄 Tipo de conta selecionado:',
+                        e.target.value
+                      );
+                      handleInputChange('tipoConta', e.target.value);
                     }}
+                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <SelectTrigger className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white">
-                      <SelectValue placeholder="Selecione o tipo de conta" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-holding-secondary border-holding-accent/30">
-                      <SelectItem value="corrente">Corrente</SelectItem>
-                      <SelectItem value="poupanca">Poupança</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="">Selecione o tipo de conta</option>
+                    <option value="corrente">Corrente</option>
+                    <option value="poupanca">Poupança</option>
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -724,22 +715,19 @@ export default function CadastroPessoaFisicaPage() {
                       <Key className="w-4 h-4" />
                       <span>Tipo do PIX</span>
                     </Label>
-                    <Select
+                    <select
                       value={formData.tipoPix}
-                      onValueChange={valor => {
-                        console.log('🔄 Tipo PIX selecionado:', valor);
-                        handleTipoPixChange(valor);
+                      onChange={e => {
+                        console.log('🔄 Tipo PIX selecionado:', e.target.value);
+                        handleTipoPixChange(e.target.value);
                       }}
+                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <SelectTrigger className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white">
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-holding-secondary border-holding-accent/30">
-                        <SelectItem value="cpf">CPF</SelectItem>
-                        <SelectItem value="telefone">Telefone</SelectItem>
-                        <SelectItem value="email">E-mail</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <option value="">Selecione o tipo</option>
+                      <option value="cpf">CPF</option>
+                      <option value="telefone">Telefone</option>
+                      <option value="email">E-mail</option>
+                    </select>
                   </div>
 
                   <div>

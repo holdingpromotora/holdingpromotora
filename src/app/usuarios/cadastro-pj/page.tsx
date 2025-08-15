@@ -5,13 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import {
   Building2,
   CreditCard,
@@ -243,7 +237,7 @@ export default function CadastroPessoaJuridicaPage() {
           `API indisponível. Dados simulados preenchidos para CNPJ ${formData.cnpj}.`
         );
         setShowSuccessDialog(true);
-      } catch (fallbackError) {
+      } catch {
         setDialogMessage(
           'Erro ao buscar CNPJ. Os campos podem ser preenchidos manualmente.'
         );
@@ -588,7 +582,12 @@ export default function CadastroPessoaJuridicaPage() {
       console.log('Dados para inserção:', dadosParaInserir);
 
       // Inserir no Supabase
-      let { data, error } = await supabase
+      let { data } = await supabase
+        .from('pessoas_juridicas')
+        .insert([dadosParaInserir])
+        .select();
+
+      const { error } = await supabase
         .from('pessoas_juridicas')
         .insert([dadosParaInserir])
         .select();
@@ -998,21 +997,18 @@ export default function CadastroPessoaJuridicaPage() {
                     <Building className="w-4 h-4" />
                     <span>Banco</span>
                   </Label>
-                  <Select
+                  <select
                     value={formData.bancoId}
-                    onValueChange={valor => handleInputChange('bancoId', valor)}
+                    onChange={e => handleInputChange('bancoId', e.target.value)}
+                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <SelectTrigger className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white">
-                      <SelectValue placeholder="Selecione o banco" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-holding-secondary border-holding-accent/30">
-                      {bancos.map(banco => (
-                        <SelectItem key={banco.id} value={banco.id.toString()}>
-                          {banco.codigo} - {banco.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <option value="">Selecione o banco</option>
+                    {bancos.map(banco => (
+                      <option key={banco.id} value={banco.id.toString()}>
+                        {banco.codigo} - {banco.nome}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1052,20 +1048,17 @@ export default function CadastroPessoaJuridicaPage() {
                     <CreditCardIcon className="w-4 h-4" />
                     <span>Tipo de Conta</span>
                   </Label>
-                  <Select
+                  <select
                     value={formData.tipoConta}
-                    onValueChange={valor =>
-                      handleInputChange('tipoConta', valor)
+                    onChange={e =>
+                      handleInputChange('tipoConta', e.target.value)
                     }
+                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <SelectTrigger className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white">
-                      <SelectValue placeholder="Selecione o tipo de conta" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-holding-secondary border-holding-accent/30">
-                      <SelectItem value="Corrente">Corrente</SelectItem>
-                      <SelectItem value="Poupança">Poupança</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="">Selecione o tipo de conta</option>
+                    <option value="corrente">Corrente</option>
+                    <option value="poupanca">Poupança</option>
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1074,22 +1067,19 @@ export default function CadastroPessoaJuridicaPage() {
                       <Key className="w-4 h-4" />
                       <span>Tipo do PIX</span>
                     </Label>
-                    <Select
+                    <select
                       value={formData.tipoPix}
-                      onValueChange={valor =>
-                        handleInputChange('tipoPix', valor)
+                      onChange={e =>
+                        handleInputChange('tipoPix', e.target.value)
                       }
+                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <SelectTrigger className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white">
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-holding-secondary border-holding-accent/30">
-                        <SelectItem value="CNPJ">CNPJ</SelectItem>
-                        <SelectItem value="CPF">CPF</SelectItem>
-                        <SelectItem value="Telefone">Telefone</SelectItem>
-                        <SelectItem value="E-mail">E-mail</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <option value="">Selecione o tipo</option>
+                      <option value="cnpj">CNPJ</option>
+                      <option value="cpf">CPF</option>
+                      <option value="telefone">Telefone</option>
+                      <option value="email">E-mail</option>
+                    </select>
                   </div>
 
                   <div>

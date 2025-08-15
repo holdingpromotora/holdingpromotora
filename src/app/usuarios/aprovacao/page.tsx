@@ -1,43 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+
 import {
   Users,
-  UserPlus,
   CheckCircle,
   XCircle,
   Clock,
-  Search,
-  Filter,
   Eye,
-  Edit,
-  Trash2,
-  ArrowLeft,
-  Save,
   User,
-  Shield,
+  ArrowLeft,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -68,9 +43,6 @@ export default function AprovacaoUsuariosPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [perfis, setPerfis] = useState<PerfilUsuario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('todos');
-  const [filterPerfil, setFilterPerfil] = useState<string>('todos');
 
   // Carregar dados existentes
   useEffect(() => {
@@ -268,18 +240,6 @@ export default function AprovacaoUsuariosPage() {
     }
   };
 
-  const usuariosFiltrados = usuarios.filter(usuario => {
-    const matchSearch =
-      usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      usuario.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus =
-      filterStatus === 'todos' || usuario.status === filterStatus;
-    const matchPerfil =
-      filterPerfil === 'todos' || usuario.perfil_id === filterPerfil;
-
-    return matchSearch && matchStatus && matchPerfil;
-  });
-
   const estatisticas = {
     total: usuarios.length,
     pendentes: usuarios.filter(u => u.status === 'pendente').length,
@@ -419,74 +379,9 @@ export default function AprovacaoUsuariosPage() {
             </Card>
           </div>
 
-          {/* Filtros */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
-                <Label htmlFor="search" className="text-gray-700">
-                  Buscar
-                </Label>
-                <Input
-                  id="search"
-                  placeholder="Nome ou email..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="status" className="text-gray-700">
-                  Status
-                </Label>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os Status</SelectItem>
-                    <SelectItem value="pendente">Pendente</SelectItem>
-                    <SelectItem value="aprovado">Aprovado</SelectItem>
-                    <SelectItem value="rejeitado">Rejeitado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="perfil" className="text-gray-700">
-                  Perfil
-                </Label>
-                <Select value={filterPerfil} onValueChange={setFilterPerfil}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos os Perfis</SelectItem>
-                    {perfis.map(perfil => (
-                      <SelectItem key={perfil.id} value={perfil.id}>
-                        {perfil.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-end">
-                <Button
-                  onClick={carregarDados}
-                  variant="outline"
-                  className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
-                >
-                  <Filter className="w-4 h-4 mr-2" />
-                  Atualizar
-                </Button>
-              </div>
-            </div>
-          </div>
-
           {/* Lista de Usuários */}
           <div className="space-y-4">
-            {usuariosFiltrados.map(usuario => (
+            {usuarios.map(usuario => (
               <Card
                 key={usuario.id}
                 className="bg-white border-gray-200 hover:border-gray-300 transition-all duration-300"
@@ -560,24 +455,20 @@ export default function AprovacaoUsuariosPage() {
 
                       {/* Alterar perfil */}
                       <div className="min-w-[200px]">
-                        <Select
+                        <select
                           value={usuario.perfil_id}
-                          onValueChange={value =>
-                            handleAlterarPerfil(usuario.id, value)
+                          onChange={e =>
+                            handleAlterarPerfil(usuario.id, e.target.value)
                           }
+                          className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecionar perfil" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">Sem perfil</SelectItem>
-                            {perfis.map(perfil => (
-                              <SelectItem key={perfil.id} value={perfil.id}>
-                                {perfil.nome}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          <option value="">Sem perfil</option>
+                          {perfis.map(perfil => (
+                            <option key={perfil.id} value={perfil.id}>
+                              {perfil.nome}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       {/* Toggle ativo/inativo */}
@@ -599,7 +490,7 @@ export default function AprovacaoUsuariosPage() {
               </Card>
             ))}
 
-            {usuariosFiltrados.length === 0 && (
+            {usuarios.length === 0 && (
               <Card className="bg-white border-gray-200">
                 <CardContent className="p-12 text-center">
                   <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />

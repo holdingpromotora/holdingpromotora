@@ -8,32 +8,37 @@ export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated, hasApprovedProfile, isLoading } = useAuth();
   const [redirecting, setRedirecting] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    if (!isLoading) {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && isClient) {
       if (isAuthenticated) {
         if (hasApprovedProfile) {
           console.log(
             '✅ Usuário autenticado com perfil aprovado, redirecionando para dashboard...'
           );
           setRedirecting(true);
-          router.push('/dashboard');
+          router.replace('/dashboard');
         } else {
           console.log(
             '⚠️ Usuário autenticado sem perfil aprovado, redirecionando para página de aprovação...'
           );
           setRedirecting(true);
-          router.push('/aguardando-aprovacao');
+          router.replace('/aguardando-aprovacao');
         }
       } else {
         console.log('❌ Usuário não autenticado, redirecionando para login...');
         setRedirecting(true);
-        router.push('/login');
+        router.replace('/login');
       }
     }
-  }, [isAuthenticated, hasApprovedProfile, isLoading, router]);
+  }, [isAuthenticated, hasApprovedProfile, isLoading, router, isClient]);
 
-  if (isLoading || redirecting) {
+  if (isLoading || redirecting || !isClient) {
     return (
       <div className="min-h-screen holding-gradient flex items-center justify-center">
         <div className="text-center">

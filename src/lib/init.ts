@@ -31,7 +31,7 @@ export async function checkSystemStatus() {
 
     // Verificar conexão com Supabase
     const supabaseModule = await import('./supabase');
-    const { data, error } = await supabaseModule.supabase
+      const { error } = await supabaseModule.supabase
       .from('tipos_acesso')
       .select('count')
       .limit(1);

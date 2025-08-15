@@ -1,6 +1,6 @@
 import type { Config } from 'tailwindcss';
 
-const config = {
+const config: Config = {
   darkMode: ['class'],
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -97,6 +97,13 @@ const config = {
     },
   },
   plugins: [require('tailwindcss-animate')],
+  // Configurações para evitar problemas de hidratação
+  corePlugins: {
+    preflight: true,
+  },
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
 };
 
 export default config;

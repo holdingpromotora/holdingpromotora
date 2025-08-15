@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { PermissionCategory, PermissionAction } from '@/types/permissions';
 
@@ -24,6 +24,15 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   showFallback = true,
 }) => {
   const { can, canDo, canAccess } = usePermissions();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return <>{children}</>;
+  }
 
   // Verificar permissão específica
   if (permission && !can(permission)) {
@@ -141,8 +150,7 @@ export const PermissionButton: React.FC<{
   disabled = false,
   className = '',
   onClick,
-  variant = 'default',
-  size = 'default',
+
   ...props
 }) => {
   const { can, canDo, canAccess } = usePermissions();

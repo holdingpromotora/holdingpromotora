@@ -8,13 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import {
   Dialog,
   DialogContent,
@@ -531,35 +525,33 @@ export default function GerenciarUsuariosPage() {
                   <Label className="text-gray-700 font-medium mb-2 block">
                     Status
                   </Label>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">Todos os Status</SelectItem>
-                      <SelectItem value="pendente">Pendentes</SelectItem>
-                      <SelectItem value="aprovado">Aprovados</SelectItem>
-                      <SelectItem value="rejeitado">Rejeitados</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={filterStatus}
+                    onChange={e => setFilterStatus(e.target.value)}
+                    className="bg-white border-gray-300 text-gray-900 flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="todos">Todos os Status</option>
+                    <option value="pendente">Pendentes</option>
+                    <option value="aprovado">Aprovados</option>
+                    <option value="rejeitado">Rejeitados</option>
+                  </select>
                 </div>
                 <div>
                   <Label className="text-gray-700 font-medium mb-2 block">
                     Perfil
                   </Label>
-                  <Select value={filterPerfil} onValueChange={setFilterPerfil}>
-                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">Todos os Perfis</SelectItem>
-                      {perfis.map(perfil => (
-                        <SelectItem key={perfil.id} value={perfil.id}>
-                          {perfil.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <select
+                    value={filterPerfil}
+                    onChange={e => setFilterPerfil(e.target.value)}
+                    className="bg-white border-gray-300 text-gray-900 flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="todos">Todos os Perfis</option>
+                    {perfis.map(perfil => (
+                      <option key={perfil.id} value={perfil.id}>
+                        {perfil.nome}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
@@ -788,23 +780,23 @@ export default function GerenciarUsuariosPage() {
                   >
                     Perfil
                   </Label>
-                  <Select
+                  <select
                     value={formData.perfil_id}
-                    onValueChange={value =>
-                      setFormData(prev => ({ ...prev, perfil_id: value }))
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        perfil_id: e.target.value,
+                      }))
                     }
+                    className="bg-white border-gray-300 text-gray-900 flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                      <SelectValue placeholder="Selecione o perfil" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      {perfis.map(perfil => (
-                        <SelectItem key={perfil.id} value={perfil.id}>
-                          {perfil.nome} - {perfil.nivel_acesso}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <option value="">Selecione o perfil</option>
+                    {perfis.map(perfil => (
+                      <option key={perfil.id} value={perfil.id}>
+                        {perfil.nome} - {perfil.nivel_acesso}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
             </div>

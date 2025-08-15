@@ -11,7 +11,7 @@ export async function createTables() {
     console.log('🔄 Verificando e criando tabelas do sistema...');
 
     // Verificar se a tabela bancos existe, se não, criar
-    const { data: bancosExistentes, error: bancosError } = await supabase
+    const { error: bancosError } = await supabase
       .from('bancos')
       .select('count')
       .limit(1);
@@ -24,7 +24,7 @@ export async function createTables() {
     }
 
     // Verificar se a tabela pessoas_fisicas existe, se não, criar
-    const { data: pessoasExistentes, error: pessoasError } = await supabase
+    const { error: pessoasError } = await supabase
       .from('pessoas_fisicas')
       .select('count')
       .limit(1);
@@ -37,7 +37,7 @@ export async function createTables() {
     }
 
     // Verificar se a tabela pessoas_juridicas existe, se não, criar
-    const { data: pessoasJuridicasExistentes, error: pessoasJuridicasError } =
+    const { error: pessoasJuridicasError } =
       await supabase.from('pessoas_juridicas').select('count').limit(1);
 
     if (pessoasJuridicasError && pessoasJuridicasError.code === 'PGRST116') {
@@ -48,7 +48,7 @@ export async function createTables() {
     }
 
     // Inserir bancos se não existirem
-    const { data: bancosData, error: bancosInsertError } = await supabase
+    const { data: bancosData } = await supabase
       .from('bancos')
       .select('*');
 

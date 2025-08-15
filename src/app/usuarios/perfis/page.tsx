@@ -44,7 +44,6 @@ import {
   Eye,
   UserCheck,
   UserX,
-  Settings,
   Key,
   Crown,
   Building,
@@ -52,8 +51,6 @@ import {
   EyeOff,
   Lock,
   Unlock,
-  Link,
-  Unlink,
 } from 'lucide-react';
 
 interface PerfilUsuario {
@@ -91,9 +88,7 @@ export default function PerfisUsuariosPage() {
   const [editingPerfil, setEditingPerfil] = useState<PerfilUsuario | null>(
     null
   );
-  const [selectedPerfil, setSelectedPerfil] = useState<PerfilUsuario | null>(
-    null
-  );
+
   const [formData, setFormData] = useState({
     nome: '',
     descricao: '',
@@ -107,16 +102,7 @@ export default function PerfisUsuariosPage() {
     perfil_id: '',
   });
 
-  // Permissões disponíveis por categoria
-  const permissoesDisponiveis = {
-    dashboard: ['visualizar', 'gerenciar'],
-    usuarios: ['visualizar', 'criar', 'editar', 'excluir', 'gerenciar'],
-    cadastros: ['visualizar', 'criar', 'editar', 'excluir', 'gerenciar'],
-    relatorios: ['visualizar', 'criar', 'exportar', 'gerenciar'],
-    sistema: ['visualizar', 'configurar', 'gerenciar'],
-    financeiro: ['visualizar', 'editar', 'gerenciar'],
-    marketing: ['visualizar', 'criar', 'editar', 'gerenciar'],
-  };
+
 
   useEffect(() => {
     console.log('🔄 useEffect executado, chamando carregarDados...');
@@ -534,7 +520,7 @@ export default function PerfisUsuariosPage() {
   };
 
   const getIconComponent = (iconName: string) => {
-    const iconMap: { [key: string]: React.ComponentType<any> } = {
+    const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
       Crown,
       Shield,
       Building,
@@ -556,18 +542,7 @@ export default function PerfisUsuariosPage() {
     return Shield;
   };
 
-  const getNivelAcessoColor = (nivel: string) => {
-    const colorMap: { [key: string]: string } = {
-      master: 'bg-red-100 text-red-800',
-      admin: 'bg-purple-100 text-purple-800',
-      gerente: 'bg-blue-100 text-blue-800',
-      supervisor: 'bg-indigo-100 text-indigo-800',
-      operador: 'bg-green-100 text-green-800',
-      visualizador: 'bg-amber-100 text-amber-800',
-      convidado: 'bg-gray-100 text-gray-800',
-    };
-    return colorMap[nivel] || 'bg-gray-100 text-gray-800';
-  };
+
 
   const getNivelAcessoNome = (nivel: string) => {
     const nomeMap: { [key: string]: string } = {

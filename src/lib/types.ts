@@ -132,8 +132,8 @@ export interface Auditoria {
   acao: string
   tabela: string
   registro_id: string
-  dados_anteriores?: any
-  dados_novos?: any
+  dados_anteriores?: Record<string, unknown>
+  dados_novos?: Record<string, unknown>
   ip_address: string
   user_agent: string
   created_at: string

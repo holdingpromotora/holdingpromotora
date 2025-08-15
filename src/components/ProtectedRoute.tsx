@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Shield } from 'lucide-react';
@@ -14,26 +14,30 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({
   children,
   requiredLevel = 'visualizador',
-  requiredPermissions = [],
 }: ProtectedRouteProps) {
   const router = useRouter();
   const { isAuthenticated, hasApprovedProfile, isLoading, user } = useAuth();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    if (!isLoading) {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && isClient) {
       if (!isAuthenticated) {
         console.log('❌ Usuário não autenticado, redirecionando para login...');
-        router.push('/login');
+        router.replace('/login');
       } else if (!hasApprovedProfile) {
         console.log(
           '⚠️ Usuário sem perfil aprovado, redirecionando para página de aprovação...'
         );
-        router.push('/aguardando-aprovacao');
+        router.replace('/aguardando-aprovacao');
       }
     }
-  }, [isAuthenticated, hasApprovedProfile, isLoading, router]);
+  }, [isAuthenticated, hasApprovedProfile, isLoading, router, isClient]);
 
-  if (isLoading) {
+  if (isLoading || !isClient) {
     return (
       <div className="min-h-screen holding-gradient flex items-center justify-center">
         <div className="text-center">

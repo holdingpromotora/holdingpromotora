@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, User } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { initializeApp } from '@/lib/init';
 
 interface LayoutProps {
@@ -14,9 +14,11 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
+  const [isClient, setIsClient] = useState(false);
   const { user, logout } = useAuth();
 
   useEffect(() => {
+    setIsClient(true);
     console.log('🔄 Layout: Iniciando...');
     setCurrentTime(new Date().toLocaleString('pt-BR'));
 
@@ -58,7 +60,7 @@ export default function Layout({ children }: LayoutProps) {
             </h1>
             <div className="flex items-center space-x-4">
               <div className="text-sm text-holding-accent-light">
-                Último acesso: {currentTime}
+                Último acesso: {isClient ? currentTime : 'Carregando...'}
               </div>
               {user && (
                 <div className="flex items-center space-x-3">

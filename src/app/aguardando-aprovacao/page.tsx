@@ -3,7 +3,7 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, User, Shield, LogOut, RefreshCw } from 'lucide-react';
@@ -11,13 +11,18 @@ import { Clock, User, Shield, LogOut, RefreshCw } from 'lucide-react';
 export default function AguardandoAprovacaoPage() {
   const { user, hasApprovedProfile, logout } = useAuth();
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     // Se o usuário já tem perfil aprovado, redirecionar para dashboard
-    if (hasApprovedProfile) {
-      router.push('/dashboard');
+    if (isClient && hasApprovedProfile) {
+      router.replace('/dashboard');
     }
-  }, [hasApprovedProfile, router]);
+  }, [hasApprovedProfile, router, isClient]);
 
   const handleLogout = () => {
     logout();
@@ -27,6 +32,17 @@ export default function AguardandoAprovacaoPage() {
   const handleRefresh = () => {
     window.location.reload();
   };
+
+  if (!isClient) {
+    return (
+      <div className="min-h-screen holding-gradient flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-holding-highlight border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-holding-white text-xl">Carregando...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return null;
@@ -62,7 +78,7 @@ export default function AguardandoAprovacaoPage() {
                   <p className="text-gray-600">{user.email}</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-white rounded-lg border border-gray-200">
                   <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -73,7 +89,7 @@ export default function AguardandoAprovacaoPage() {
                     {user.status || 'pendente'}
                   </p>
                 </div>
-                
+
                 <div className="text-center p-4 bg-white rounded-lg border border-gray-200">
                   <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
                     <Shield className="w-4 h-4 text-gray-600" />
@@ -116,7 +132,7 @@ export default function AguardandoAprovacaoPage() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Verificar Status
               </Button>
-              
+
               <Button
                 onClick={handleLogout}
                 variant="outline"
@@ -130,7 +146,8 @@ export default function AguardandoAprovacaoPage() {
             {/* Contato */}
             <div className="text-center text-sm text-gray-500">
               <p>
-                Em caso de dúvidas, entre em contato com o administrador do sistema
+                Em caso de dúvidas, entre em contato com o administrador do
+                sistema
               </p>
             </div>
           </CardContent>

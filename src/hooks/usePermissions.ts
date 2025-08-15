@@ -1,4 +1,5 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useState, useEffect } from 'react';
 import {
   Permission,
   PermissionCategory,
@@ -13,10 +14,15 @@ import {
 
 export const usePermissions = () => {
   const { user } = useAuth();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Verificar se usuário tem uma permissão específica
   const can = (permissionId: string): boolean => {
-    if (!user) return false;
+    if (!user || !isClient) return false;
 
     // Usuário master tem todas as permissões
     if (user.email === 'grupoarmandogomes@gmail.com') return true;
@@ -29,7 +35,7 @@ export const usePermissions = () => {
       return true;
     }
 
-    return hasSpecificPermission(user as any, permissionId);
+    return hasSpecificPermission(user as User, permissionId);
   };
 
   // Verificar se usuário pode executar uma ação em uma categoria
@@ -38,7 +44,7 @@ export const usePermissions = () => {
     acao: PermissionAction,
     recurso?: string
   ): boolean => {
-    if (!user) return false;
+    if (!user || !isClient) return false;
 
     // Usuário master pode fazer tudo
     if (user.email === 'grupoarmandogomes@gmail.com') return true;
@@ -56,7 +62,7 @@ export const usePermissions = () => {
       return true;
     }
 
-    return hasPermissionForAction(user as any, categoria, acao, recurso);
+    return hasPermissionForAction(user as User, categoria, acao, recurso);
   };
 
   // Verificar se usuário pode acessar um recurso
@@ -64,7 +70,7 @@ export const usePermissions = () => {
     categoria: PermissionCategory,
     acao: PermissionAction = 'visualizar'
   ): boolean => {
-    if (!user) return false;
+    if (!user || !isClient) return false;
 
     // Usuário master pode acessar tudo
     if (user.email === 'grupoarmandogomes@gmail.com') return true;
@@ -77,7 +83,7 @@ export const usePermissions = () => {
       return true;
     }
 
-    return canAccessResource(user as any, categoria, acao);
+    return canAccessResource(user as User, categoria, acao);
   };
 
   // Obter permissões do usuário por categoria
@@ -93,7 +99,7 @@ export const usePermissions = () => {
     }
 
     // Fallback para a função antiga
-    return getUserPermissions(user as any, categoria);
+    return getUserPermissions(user as User, categoria);
   };
 
   // Obter grupos de permissões organizados

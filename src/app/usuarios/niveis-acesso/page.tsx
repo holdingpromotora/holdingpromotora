@@ -5,13 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -38,15 +32,11 @@ import {
   Plus,
   Edit,
   Trash2,
-  Eye,
-  EyeOff,
   CheckCircle,
   XCircle,
   ArrowLeft,
   Settings,
   Key,
-  Lock,
-  Unlock,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -612,15 +602,7 @@ export default function NiveisAcessoPage() {
     setNivelAcessoForm(prev => ({ ...prev, permissoes: [] }));
   };
 
-  const getPermissaoNome = (id: string) => {
-    return (
-      permissoes.find(p => p.id === id)?.nome || 'Permissão não encontrada'
-    );
-  };
 
-  const getPermissaoDescricao = (id: string) => {
-    return permissoes.find(p => p.id === id)?.descricao || '';
-  };
 
   const getCategoriaNome = (categoria: string) => {
     const categorias: { [key: string]: string } = {
@@ -856,8 +838,8 @@ export default function NiveisAcessoPage() {
                           Excluir Tipo de Acesso
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                          Tem certeza que deseja excluir o tipo de acesso "
-                          {tipo.nome}"? Esta ação não pode ser desfeita.
+                          Tem certeza que deseja excluir o tipo de acesso &quot;
+                          {tipo.nome}&quot;? Esta ação não pode ser desfeita.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -953,8 +935,8 @@ export default function NiveisAcessoPage() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Excluir Permissão</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Tem certeza que deseja excluir a permissão "
-                          {permissao.nome}"? Esta ação não pode ser desfeita.
+                          Tem certeza que deseja excluir a permissão &quot;
+                          {permissao.nome}&quot;? Esta ação não pode ser desfeita.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -1050,7 +1032,7 @@ export default function NiveisAcessoPage() {
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                           Tem certeza que deseja excluir o nível de acesso para
-                          "{nivel.tipoAcessoNome}"? Esta ação não pode ser
+                          &quot;{nivel.tipoAcessoNome}&quot;? Esta ação não pode ser
                           desfeita.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
@@ -1114,26 +1096,23 @@ export default function NiveisAcessoPage() {
             </div>
             <div>
               <Label htmlFor="nivel">Nível de Prioridade</Label>
-              <Select
+              <select
                 value={tipoAcessoForm.nivel.toString()}
-                onValueChange={value =>
+                onChange={e =>
                   setTipoAcessoForm(prev => ({
                     ...prev,
-                    nivel: parseInt(value),
+                    nivel: parseInt(e.target.value),
                   }))
                 }
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o nível" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 - Máxima Prioridade</SelectItem>
-                  <SelectItem value="2">2 - Alta Prioridade</SelectItem>
-                  <SelectItem value="3">3 - Média Prioridade</SelectItem>
-                  <SelectItem value="4">4 - Baixa Prioridade</SelectItem>
-                  <SelectItem value="5">5 - Mínima Prioridade</SelectItem>
-                </SelectContent>
-              </Select>
+                <option value="">Selecione o nível</option>
+                <option value="1">1 - Máxima Prioridade</option>
+                <option value="2">2 - Alta Prioridade</option>
+                <option value="3">3 - Média Prioridade</option>
+                <option value="4">4 - Baixa Prioridade</option>
+                <option value="5">5 - Mínima Prioridade</option>
+              </select>
             </div>
           </div>
           <DialogFooter>
@@ -1200,24 +1179,21 @@ export default function NiveisAcessoPage() {
             </div>
             <div>
               <Label htmlFor="categoria">Categoria</Label>
-              <Select
-                value={permissaoForm.categoria}
-                onValueChange={value =>
-                  setPermissaoForm(prev => ({ ...prev, categoria: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="usuarios">Usuários</SelectItem>
-                  <SelectItem value="sistema">Sistema</SelectItem>
-                  <SelectItem value="relatorios">Relatórios</SelectItem>
-                  <SelectItem value="proprios">Registros Próprios</SelectItem>
-                  <SelectItem value="financeiro">Financeiro</SelectItem>
-                  <SelectItem value="marketing">Marketing</SelectItem>
-                </SelectContent>
-              </Select>
+                              <select
+                  value={permissaoForm.categoria}
+                  onChange={e =>
+                    setPermissaoForm(prev => ({ ...prev, categoria: e.target.value }))
+                  }
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">Selecione a categoria</option>
+                  <option value="usuarios">Usuários</option>
+                  <option value="sistema">Sistema</option>
+                  <option value="relatorios">Relatórios</option>
+                  <option value="proprios">Registros Próprios</option>
+                  <option value="financeiro">Financeiro</option>
+                  <option value="marketing">Marketing</option>
+                </select>
             </div>
           </div>
           <DialogFooter>
@@ -1262,23 +1238,20 @@ export default function NiveisAcessoPage() {
           <div className="space-y-6">
             <div>
               <Label htmlFor="tipoAcesso">Tipo de Acesso</Label>
-              <Select
+              <select
                 value={nivelAcessoForm.tipoAcessoId}
-                onValueChange={value =>
-                  setNivelAcessoForm(prev => ({ ...prev, tipoAcessoId: value }))
+                onChange={e =>
+                  setNivelAcessoForm(prev => ({ ...prev, tipoAcessoId: e.target.value }))
                 }
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo de acesso" />
-                </SelectTrigger>
-                <SelectContent>
-                  {tiposAcesso.map(tipo => (
-                    <SelectItem key={tipo.id} value={tipo.id}>
-                      {tipo.nome} (Nível {tipo.nivel})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">Selecione o tipo de acesso</option>
+                {tiposAcesso.map(tipo => (
+                  <option key={tipo.id} value={tipo.id}>
+                    {tipo.nome} (Nível {tipo.nivel})
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

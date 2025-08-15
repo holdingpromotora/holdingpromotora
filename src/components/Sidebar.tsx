@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -13,9 +13,7 @@ import {
   LogOut,
   LayoutDashboard,
   FileText,
-  Database,
   UserPlus,
-  Building2,
   Calculator,
   BarChart3,
   ChevronDown,
@@ -33,8 +31,13 @@ interface SidebarProps {
 export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   const [usuariosSubmenuOpen, setUsuariosSubmenuOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -45,6 +48,16 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     setUsuariosSubmenuOpen(!usuariosSubmenuOpen);
   };
 
+  if (!isClient) {
+    return (
+      <div className="bg-holding-dark border-r border-holding-accent/30 w-64">
+        <div className="flex items-center justify-center h-screen">
+          <div className="w-8 h-8 border-4 border-holding-highlight border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`bg-holding-dark border-r border-holding-accent/30 transition-all duration-300 ${
@@ -52,20 +65,22 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       }`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-holding-accent/30">
-        {!isCollapsed && (
-          <h2 className="text-xl font-bold text-holding-white">Holding</h2>
-        )}
-        <button
-          onClick={onToggle}
-          className="p-2 rounded-lg text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white transition-all duration-200"
-        >
-          {isCollapsed ? (
-            <ChevronRight className="w-5 h-5" />
-          ) : (
-            <ChevronLeft className="w-5 h-5" />
+      <div className="p-4 border-b border-holding-accent/30">
+        <div className="flex items-center justify-between">
+          {!isCollapsed && (
+            <h2 className="text-xl font-bold text-holding-white">Holding</h2>
           )}
-        </button>
+          <button
+            onClick={onToggle}
+            className="p-2 rounded-lg text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white transition-all duration-200"
+          >
+            {isCollapsed ? (
+              <ChevronRight className="w-5 h-5" />
+            ) : (
+              <ChevronLeft className="w-5 h-5" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Navigation */}

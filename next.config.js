@@ -2,6 +2,7 @@
 const nextConfig = {
   experimental: {
     optimizeCss: true,
+    optimizePackageImports: ['lucide-react'],
   },
   webpack: (config, { dev, isServer }) => {
     // Otimizações para CSS
@@ -21,6 +22,17 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
+  // Configurações para melhorar hidratação
+  reactStrictMode: true,
+  // Configurações para evitar problemas de hidratação
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  // Configurações para melhorar performance
+  poweredByHeader: false,
+  compress: true,
+  generateEtags: false,
+  // Configurações para melhorar navegação
   async headers() {
     return [
       {
@@ -38,10 +50,14 @@ const nextConfig = {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin',
           },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
         ],
       },
-    ]
+    ];
   },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

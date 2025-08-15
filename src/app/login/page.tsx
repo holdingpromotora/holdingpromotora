@@ -21,31 +21,47 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isClient, setIsClient] = useState(false);
   const router = useRouter();
-  const { login, isAuthenticated, isLoading: authLoading, hasApprovedProfile } = useAuth();
+  const {
+    login,
+    isAuthenticated,
+    isLoading: authLoading,
+    hasApprovedProfile,
+  } = useAuth();
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Só redirecionar se não estiver carregando e estiver autenticado
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && isClient) {
       if (isAuthenticated) {
         if (hasApprovedProfile) {
-          console.log('✅ Usuário já autenticado com perfil aprovado, redirecionando para dashboard...');
-          router.push('/dashboard');
+          console.log(
+            '✅ Usuário já autenticado com perfil aprovado, redirecionando para dashboard...'
+          );
+          router.replace('/dashboard');
         } else {
-          console.log('⚠️ Usuário autenticado sem perfil aprovado, redirecionando para página de aprovação...');
-          router.push('/aguardando-aprovacao');
+          console.log(
+            '⚠️ Usuário autenticado sem perfil aprovado, redirecionando para página de aprovação...'
+          );
+          router.replace('/aguardando-aprovacao');
         }
       }
     }
-  }, [isAuthenticated, hasApprovedProfile, authLoading, router]);
+  }, [isAuthenticated, hasApprovedProfile, authLoading, router, isClient]);
 
   // Se estiver carregando, mostrar loading
-  if (authLoading) {
+  if (authLoading || !isClient) {
     return (
       <div className="min-h-screen holding-gradient flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-holding-highlight border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <div className="text-holding-white text-xl">Verificando autenticação...</div>
+          <div className="text-holding-white text-xl">
+            Verificando autenticação...
+          </div>
         </div>
       </div>
     );
@@ -59,7 +75,7 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('🔐 Página de login: Iniciando processo de login...');
-    
+
     if (!email.trim() || !password.trim()) {
       setError('Por favor, preencha todos os campos');
       return;
@@ -74,14 +90,20 @@ export default function LoginPage() {
 
       if (result.success) {
         if (result.pending) {
-          console.log('⚠️ Usuário pendente - redirecionando para página de aprovação');
-          setError('Seu cadastro está pendente de aprovação. Entre em contato com o administrador.');
+          console.log(
+            '⚠️ Usuário pendente - redirecionando para página de aprovação'
+          );
+          setError(
+            'Seu cadastro está pendente de aprovação. Entre em contato com o administrador.'
+          );
           return;
         }
 
         if (result.rejected) {
           console.log('❌ Usuário rejeitado');
-          setError('Seu cadastro foi rejeitado. Entre em contato com o administrador.');
+          setError(
+            'Seu cadastro foi rejeitado. Entre em contato com o administrador.'
+          );
           return;
         }
 
