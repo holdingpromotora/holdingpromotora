@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/lib/supabase';
 
 import {
   Dialog,
@@ -48,15 +49,13 @@ import {
 } from 'lucide-react';
 
 interface PerfilUsuario {
-  id: string;
+  id: number;
   nome: string;
   descricao: string;
-  nivel_acesso: string;
-  permissoes: string[];
+  nivel: number;
   cor: string;
   icone: string;
   ativo: boolean;
-  usuarios_vinculados: number;
   created_at: string;
   updated_at: string;
 }
@@ -102,243 +101,81 @@ export default function PerfisUsuariosPage() {
   }, []);
 
   const carregarDados = async () => {
-    console.log('🔄 Carregando dados dos perfis...');
+    console.log('🔄 Carregando dados reais dos perfis...');
     setIsLoading(true);
     try {
-      // Simular carregamento de perfis
-      setTimeout(() => {
-        console.log('⏰ Timeout executado, criando dados mock...');
-        const mockPerfis: PerfilUsuario[] = [
-          {
-            id: '1',
-            nome: 'Master',
-            descricao: 'Acesso total ao sistema com todas as permissões',
-            nivel_acesso: 'master',
-            permissoes: [
-              'dashboard:visualizar',
-              'dashboard:gerenciar',
-              'usuarios:visualizar',
-              'usuarios:criar',
-              'usuarios:editar',
-              'usuarios:excluir',
-              'usuarios:gerenciar',
-              'cadastros:visualizar',
-              'cadastros:criar',
-              'cadastros:editar',
-              'cadastros:excluir',
-              'cadastros:gerenciar',
-              'relatorios:visualizar',
-              'relatorios:criar',
-              'relatorios:exportar',
-              'relatorios:gerenciar',
-              'sistema:visualizar',
-              'sistema:configurar',
-              'sistema:gerenciar',
-              'financeiro:visualizar',
-              'financeiro:editar',
-              'financeiro:gerenciar',
-              'marketing:visualizar',
-              'marketing:criar',
-              'marketing:editar',
-              'marketing:gerenciar',
-            ],
-            cor: 'bg-red-600',
-            icone: 'Crown',
-            ativo: true,
-            usuarios_vinculados: 1,
-            created_at: '2024-01-01',
-            updated_at: '2024-01-15',
-          },
-          {
-            id: '2',
-            nome: 'Administrador',
-            descricao:
-              'Acesso administrativo completo com limitações de sistema',
-            nivel_acesso: 'admin',
-            permissoes: [
-              'dashboard:visualizar',
-              'dashboard:gerenciar',
-              'usuarios:visualizar',
-              'usuarios:criar',
-              'usuarios:editar',
-              'usuarios:excluir',
-              'usuarios:gerenciar',
-              'cadastros:visualizar',
-              'cadastros:criar',
-              'cadastros:editar',
-              'cadastros:excluir',
-              'cadastros:gerenciar',
-              'relatorios:visualizar',
-              'relatorios:criar',
-              'relatorios:exportar',
-              'relatorios:gerenciar',
-              'sistema:visualizar',
-              'financeiro:visualizar',
-              'financeiro:editar',
-              'financeiro:gerenciar',
-              'marketing:visualizar',
-              'marketing:criar',
-              'marketing:editar',
-              'marketing:gerenciar',
-            ],
-            cor: 'bg-purple-600',
-            icone: 'Shield',
-            ativo: true,
-            usuarios_vinculados: 2,
-            created_at: '2024-01-01',
-            updated_at: '2024-01-15',
-          },
-          {
-            id: '3',
-            nome: 'Gerente',
-            descricao:
-              'Acesso gerencial com controle sobre equipes e operações',
-            nivel_acesso: 'gerente',
-            permissoes: [
-              'dashboard:visualizar',
-              'usuarios:visualizar',
-              'usuarios:criar',
-              'usuarios:editar',
-              'cadastros:visualizar',
-              'cadastros:criar',
-              'cadastros:editar',
-              'relatorios:visualizar',
-              'relatorios:criar',
-              'relatorios:exportar',
-              'sistema:visualizar',
-              'financeiro:visualizar',
-              'marketing:visualizar',
-              'marketing:criar',
-              'marketing:editar',
-            ],
-            cor: 'bg-blue-600',
-            icone: 'Building',
-            ativo: true,
-            usuarios_vinculados: 3,
-            created_at: '2024-01-01',
-            updated_at: '2024-01-15',
-          },
-          {
-            id: '4',
-            nome: 'Supervisor',
-            descricao: 'Acesso de supervisão com controle limitado',
-            nivel_acesso: 'supervisor',
-            permissoes: [
-              'dashboard:visualizar',
-              'usuarios:visualizar',
-              'cadastros:visualizar',
-              'cadastros:criar',
-              'cadastros:editar',
-              'relatorios:visualizar',
-              'relatorios:criar',
-              'marketing:visualizar',
-            ],
-            cor: 'bg-indigo-600',
-            icone: 'UserCheck',
-            ativo: true,
-            usuarios_vinculados: 2,
-            created_at: '2024-01-01',
-            updated_at: '2024-01-15',
-          },
-          {
-            id: '5',
-            nome: 'Operador',
-            descricao: 'Acesso operacional para execução de tarefas',
-            nivel_acesso: 'operador',
-            permissoes: [
-              'dashboard:visualizar',
-              'cadastros:visualizar',
-              'cadastros:criar',
-              'cadastros:editar',
-              'relatorios:visualizar',
-            ],
-            cor: 'bg-green-600',
-            icone: 'User',
-            ativo: true,
-            usuarios_vinculados: 5,
-            created_at: '2024-01-01',
-            updated_at: '2024-01-15',
-          },
-          {
-            id: '6',
-            nome: 'Visualizador',
-            descricao: 'Acesso apenas para visualização de dados',
-            nivel_acesso: 'visualizador',
-            permissoes: [
-              'dashboard:visualizar',
-              'cadastros:visualizar',
-              'relatorios:visualizar',
-            ],
-            cor: 'bg-amber-600',
-            icone: 'Eye',
-            ativo: true,
-            usuarios_vinculados: 8,
-            created_at: '2024-01-01',
-            updated_at: '2024-01-15',
-          },
-          {
-            id: '7',
-            nome: 'Convidado',
-            descricao: 'Acesso limitado para convidados',
-            nivel_acesso: 'convidado',
-            permissoes: ['dashboard:visualizar'],
-            cor: 'bg-gray-600',
-            icone: 'EyeOff',
-            ativo: true,
-            usuarios_vinculados: 2,
-            created_at: '2024-01-01',
-            updated_at: '2024-01-15',
-          },
-        ];
+      // Carregar perfis do banco de dados
+      const { data: perfisData, error: perfisError } = await supabase
+        .from('tipos_acesso')
+        .select('*')
+        .order('nivel', { ascending: true });
 
-        const mockUsuarios: Usuario[] = [
-          {
-            id: 1,
-            nome: 'João Silva',
-            email: 'joao@holding.com',
-            perfil_id: '1',
-            perfil_nome: 'Master',
-            ativo: true,
-            ultimo_acesso: '2024-01-15 10:30:00',
-          },
-          {
-            id: 2,
-            nome: 'Maria Santos',
-            email: 'maria@holding.com',
-            perfil_id: '2',
-            perfil_nome: 'Administrador',
-            ativo: true,
-            ultimo_acesso: '2024-01-15 09:15:00',
-          },
-          {
-            id: 3,
-            nome: 'Pedro Costa',
-            email: 'pedro@holding.com',
-            perfil_id: '3',
-            perfil_nome: 'Gerente',
-            ativo: true,
-            ultimo_acesso: '2024-01-14 16:45:00',
-          },
-          {
-            id: 4,
-            nome: 'Ana Oliveira',
-            email: 'ana@holding.com',
-            perfil_id: '6',
-            perfil_nome: 'Visualizador',
-            ativo: false,
-            ultimo_acesso: '2024-01-10 14:20:00',
-          },
-        ];
+      if (perfisError) {
+        console.error('❌ Erro ao carregar perfis:', perfisError);
+        throw perfisError;
+      }
 
-        console.log('✅ Dados carregados:', {
-          perfis: mockPerfis,
-          usuarios: mockUsuarios,
-        });
-        setPerfis(mockPerfis);
-        setUsuarios(mockUsuarios);
-        setIsLoading(false);
-        console.log('✅ Estado atualizado, isLoading: false');
-      }, 1000);
+      console.log('✅ Perfis carregados:', perfisData);
+
+      // Carregar usuários do banco de dados
+      const { data: usuariosData, error: usuariosError } = await supabase
+        .from('usuarios')
+        .select(
+          `
+          id,
+          nome,
+          email,
+          nivel_acesso,
+          ativo,
+          ultimo_acesso
+        `
+        )
+        .order('nome');
+
+      if (usuariosError) {
+        console.error('❌ Erro ao carregar usuários:', usuariosError);
+        throw usuariosError;
+      }
+
+      console.log('✅ Usuários carregados:', usuariosData);
+
+      // Mapear dados para a interface
+      const perfisMapeados: PerfilUsuario[] =
+        perfisData?.map(perfil => ({
+          id: perfil.id,
+          nome: perfil.nome,
+          descricao: perfil.descricao || '',
+          nivel: perfil.nivel,
+          cor: perfil.cor || 'bg-blue-600',
+          icone: perfil.icone || 'Shield',
+          ativo: perfil.ativo,
+          created_at: perfil.created_at,
+          updated_at: perfil.updated_at,
+        })) || [];
+
+      const usuariosMapeados: Usuario[] =
+        usuariosData?.map(usuario => ({
+          id: usuario.id,
+          nome: usuario.nome,
+          email: usuario.email,
+          perfil_id: usuario.nivel_acesso,
+          perfil_nome:
+            perfisMapeados.find(
+              p => p.nivel.toString() === usuario.nivel_acesso
+            )?.nome || 'Sem perfil',
+          ativo: usuario.ativo,
+          ultimo_acesso: usuario.ultimo_acesso,
+        })) || [];
+
+      console.log('✅ Dados mapeados:', {
+        perfis: perfisMapeados,
+        usuarios: usuariosMapeados,
+      });
+
+      setPerfis(perfisMapeados);
+      setUsuarios(usuariosMapeados);
+      setIsLoading(false);
+      console.log('✅ Estado atualizado, isLoading: false');
     } catch (error) {
       console.error('❌ Erro ao carregar dados:', error);
       setIsLoading(false);
@@ -349,15 +186,13 @@ export default function PerfisUsuariosPage() {
     if (!formData.nome.trim()) return;
 
     const novoPerfil: PerfilUsuario = {
-      id: Date.now().toString(),
+      id: Date.now(),
       nome: formData.nome,
       descricao: formData.descricao,
-      nivel_acesso: formData.nivel_acesso,
-      permissoes: [],
+      nivel: parseInt(formData.nivel_acesso) || 6,
       cor: formData.cor,
       icone: formData.icone,
       ativo: true,
-      usuarios_vinculados: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -378,7 +213,7 @@ export default function PerfisUsuariosPage() {
     setFormData({
       nome: perfil.nome,
       descricao: perfil.descricao,
-      nivel_acesso: perfil.nivel_acesso,
+      nivel_acesso: perfil.nivel.toString(),
       cor: perfil.cor,
       icone: perfil.icone,
     });
@@ -407,9 +242,11 @@ export default function PerfisUsuariosPage() {
     setShowModal(false);
   };
 
-  const handleExcluirPerfil = (id: string) => {
+  const handleExcluirPerfil = (id: number) => {
     // Verificar se há usuários vinculados
-    const usuariosVinculados = usuarios.filter(u => u.perfil_id === id);
+    const usuariosVinculados = usuarios.filter(
+      u => u.perfil_id === id.toString()
+    );
     if (usuariosVinculados.length > 0) {
       alert(
         `Não é possível excluir o perfil. Existem ${usuariosVinculados.length} usuário(s) vinculado(s).`
@@ -420,7 +257,7 @@ export default function PerfisUsuariosPage() {
     setPerfis(prev => prev.filter(perfil => perfil.id !== id));
   };
 
-  const togglePerfilAtivo = (id: string) => {
+  const togglePerfilAtivo = (id: number) => {
     setPerfis(prev =>
       prev.map(perfil =>
         perfil.id === id
@@ -448,21 +285,15 @@ export default function PerfisUsuariosPage() {
       email: usuarioFormData.email,
       perfil_id: usuarioFormData.perfil_id,
       perfil_nome:
-        perfis.find(p => p.id === usuarioFormData.perfil_id)?.nome || '',
+        perfis.find(p => p.nivel.toString() === usuarioFormData.perfil_id)
+          ?.nome || '',
       ativo: true,
       ultimo_acesso: new Date().toISOString(),
     };
 
     setUsuarios(prev => [...prev, novoUsuario]);
 
-    // Atualizar contador de usuários vinculados ao perfil
-    setPerfis(prev =>
-      prev.map(perfil =>
-        perfil.id === usuarioFormData.perfil_id
-          ? { ...perfil, usuarios_vinculados: perfil.usuarios_vinculados + 1 }
-          : perfil
-      )
-    );
+    // Não é necessário atualizar contador pois é calculado dinamicamente
 
     setUsuarioFormData({
       nome: '',
@@ -477,8 +308,10 @@ export default function PerfisUsuariosPage() {
     novoPerfilId: string
   ) => {
     const usuario = usuarios.find(u => u.id === usuarioId);
-    const perfilAntigo = perfis.find(p => p.id === usuario?.perfil_id);
-    const novoPerfil = perfis.find(p => p.id === novoPerfilId);
+    const perfilAntigo = perfis.find(
+      p => p.nivel.toString() === usuario?.perfil_id
+    );
+    const novoPerfil = perfis.find(p => p.nivel.toString() === novoPerfilId);
 
     if (!usuario || !perfilAntigo || !novoPerfil) return;
 
@@ -491,24 +324,7 @@ export default function PerfisUsuariosPage() {
       )
     );
 
-    // Atualizar contadores de perfis
-    setPerfis(prev =>
-      prev.map(perfil => {
-        if (perfil.id === perfilAntigo.id) {
-          return {
-            ...perfil,
-            usuarios_vinculados: perfil.usuarios_vinculados - 1,
-          };
-        }
-        if (perfil.id === novoPerfil.id) {
-          return {
-            ...perfil,
-            usuarios_vinculados: perfil.usuarios_vinculados + 1,
-          };
-        }
-        return perfil;
-      })
-    );
+    // Não é necessário atualizar contadores pois são calculados dinamicamente
   };
 
   const getIconComponent = (iconName: string) => {
@@ -538,15 +354,16 @@ export default function PerfisUsuariosPage() {
 
   const getNivelAcessoNome = (nivel: string) => {
     const nomeMap: { [key: string]: string } = {
-      master: 'Master',
-      admin: 'Administrador',
-      gerente: 'Gerente',
-      supervisor: 'Supervisor',
-      operador: 'Operador',
-      visualizador: 'Visualizador',
-      convidado: 'Convidado',
+      '1': 'Master',
+      '2': 'Administrador',
+      '3': 'Gerente',
+      '4': 'Supervisor',
+      '5': 'Operador',
+      '6': 'Visualizador',
+      '7': 'Convidado',
     };
-    return nomeMap[nivel] || nivel;
+
+    return nomeMap[nivel] || `Nível ${nivel}`;
   };
 
   console.log('🔄 Renderizando página de perfis:', {
@@ -659,7 +476,7 @@ export default function PerfisUsuariosPage() {
                         Níveis de Acesso
                       </p>
                       <p className="text-3xl font-bold text-holding-white">
-                        {new Set(perfis.map(p => p.nivel_acesso)).size}
+                        {new Set(perfis.map(p => p.nivel)).size}
                       </p>
                     </div>
                   </div>
@@ -761,7 +578,7 @@ export default function PerfisUsuariosPage() {
                                 {perfil.ativo ? 'Ativo' : 'Inativo'}
                               </Badge>
                               <Badge className="bg-blue-100 text-blue-800 border-blue-200 px-3 py-1 text-sm font-medium">
-                                {getNivelAcessoNome(perfil.nivel_acesso)}
+                                {getNivelAcessoNome(perfil.nivel.toString())}
                               </Badge>
                             </div>
                           </div>
@@ -839,44 +656,33 @@ export default function PerfisUsuariosPage() {
                             Usuários Vinculados
                           </p>
                           <p className="text-gray-900 text-lg font-bold">
-                            {perfil.usuarios_vinculados}
+                            {
+                              usuarios.filter(
+                                u => u.perfil_id === perfil.nivel.toString()
+                              ).length
+                            }
                           </p>
                         </div>
                         <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                           <p className="text-gray-600 text-xs uppercase tracking-wide font-medium mb-1">
                             Permissões
                           </p>
-                          <p className="text-gray-900 text-lg font-bold">
-                            {perfil.permissoes.length}
-                          </p>
+                          <p className="text-gray-900 text-lg font-bold">N/A</p>
                         </div>
                       </div>
 
                       <div>
                         <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
                           <Key className="w-4 h-4 mr-2 text-blue-600" />
-                          Permissões Principais
+                          Nível de Acesso
                         </h4>
                         <div className="flex flex-wrap gap-2">
-                          {perfil.permissoes
-                            .slice(0, 6)
-                            .map((permissao, index) => (
-                              <Badge
-                                key={index}
-                                variant="outline"
-                                className="text-xs px-2 py-1 border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-                              >
-                                {permissao}
-                              </Badge>
-                            ))}
-                          {perfil.permissoes.length > 6 && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs px-2 py-1 border-blue-300 text-blue-700"
-                            >
-                              +{perfil.permissoes.length - 6} mais
-                            </Badge>
-                          )}
+                          <Badge
+                            variant="outline"
+                            className="text-xs px-2 py-1 border-gray-300 text-gray-700"
+                          >
+                            Nível {perfil.nivel}
+                          </Badge>
                         </div>
                       </div>
 
@@ -888,7 +694,9 @@ export default function PerfisUsuariosPage() {
                         </h4>
                         <div className="space-y-3">
                           {usuarios
-                            .filter(u => u.perfil_id === perfil.id)
+                            .filter(
+                              u => u.perfil_id === perfil.nivel.toString()
+                            )
                             .map(usuario => (
                               <div
                                 key={usuario.id}
@@ -925,8 +733,9 @@ export default function PerfisUsuariosPage() {
                                 </select>
                               </div>
                             ))}
-                          {usuarios.filter(u => u.perfil_id === perfil.id)
-                            .length === 0 && (
+                          {usuarios.filter(
+                            u => u.perfil_id === perfil.nivel.toString()
+                          ).length === 0 && (
                             <div className="text-center py-6">
                               <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <User className="w-6 h-6 text-gray-400" />
@@ -1205,7 +1014,10 @@ export default function PerfisUsuariosPage() {
                 <select
                   value={usuarioFormData.perfil_id}
                   onChange={e =>
-                    setUsuarioFormData(prev => ({ ...prev, perfil_id: e.target.value }))
+                    setUsuarioFormData(prev => ({
+                      ...prev,
+                      perfil_id: e.target.value,
+                    }))
                   }
                   className="bg-white border-gray-300 text-gray-900 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -1214,7 +1026,8 @@ export default function PerfisUsuariosPage() {
                     .filter(p => p.ativo)
                     .map(perfil => (
                       <option key={perfil.id} value={perfil.id}>
-                        {perfil.nome} - {getNivelAcessoNome(perfil.nivel_acesso)}
+                        {perfil.nome} -{' '}
+                        {getNivelAcessoNome(perfil.nivel.toString())}
                       </option>
                     ))}
                 </select>

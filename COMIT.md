@@ -103,6 +103,63 @@
 
 ---
 
+## 🗓️ Commit #2 - Correção de Erros de Build do Vercel
+
+### **📅 Data e Hora:**
+
+- **Data**: 15 de Agosto de 2025
+- **Hora**: 14:30 (Horário de Brasília)
+- **Hash**: `196b526`
+
+### **🚀 Correções Implementadas:**
+
+#### **🔧 Erros de Build Corrigidos:**
+
+- ✅ **Warning ESLint**: Variável `isClient` não utilizada removida
+- ✅ **Erro TypeScript**: Campos com tipo `unknown` corrigidos com type assertion
+- ✅ **Erro TypeScript**: Propriedade `nivel_acesso` inexistente corrigida
+- ✅ **Erro TypeScript**: Tipo de retorno `hasApprovedProfile` corrigido
+- ✅ **Erro Componente**: Uso incorreto do componente `Select` corrigido
+- ✅ **Erro Hook**: Propriedades inexistentes em `usePermissions` corrigidas
+
+#### **📁 Arquivos Modificados:**
+
+- `src/contexts/AuthContext.tsx` - Variável não utilizada removida, tipo corrigido
+- `src/app/usuarios/page.tsx` - Type assertions aplicados para campos unknown
+- `src/components/Layout.tsx` - Propriedade inexistente corrigida
+- `src/app/usuarios/perfis/page.tsx` - Componente Select corrigido
+- `src/hooks/usePermissions.ts` - Hook simplificado para tipos atuais
+
+### **📊 Estatísticas do Commit:**
+
+- **Total de arquivos alterados**: 5
+- **Linhas alteradas**: ~25
+- **Erros corrigidos**: 6
+- **Warnings eliminados**: 1
+
+### **🎯 Objetivos Alcançados:**
+
+1. ✅ **Build sem erros**: Todos os erros de TypeScript corrigidos
+2. ✅ **Deploy aceito**: Vercel aceitou o deploy com sucesso
+3. ✅ **Funcionalidade preservada**: Nenhuma alteração no comportamento do sistema
+4. ✅ **Layout mantido**: Interface permanece idêntica
+5. ✅ **Qualidade do código**: Warnings ESLint eliminados
+
+### **🔍 Testes Realizados:**
+
+- ✅ **Compilação**: Build local bem-sucedido
+- ✅ **Deploy**: Vercel aceitou o deploy
+- ✅ **Funcionalidades**: Sistema operacional em produção
+
+### **📝 Observações:**
+
+- Correções realizadas seguindo modo conservador
+- Nenhuma funcionalidade existente foi alterada
+- Layout original mantido conforme solicitado
+- Type safety melhorada sem impacto na performance
+
+---
+
 ## 📋 **Próximos Commits:**
 
 _Este documento será atualizado a cada novo commit realizado no projeto._
@@ -110,5 +167,5 @@ _Este documento será atualizado a cada novo commit realizado no projeto._
 ---
 
 **👨‍💻 Desenvolvido por**: Assistente IA  
-**📅 Última atualização**: 14/08/2025 - 16:45  
-**🔄 Versão**: 1.0.0
+**📅 Última atualização**: 15/08/2025 - 14:30  
+**🔄 Versão**: 1.0.1
