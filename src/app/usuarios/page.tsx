@@ -94,11 +94,59 @@ export default function UsuariosPage() {
 
       console.log('Iniciando carregamento de usuários...');
 
-      // Carregar pessoas físicas
+      // 1. Carregar usuários aprovados da tabela usuarios
+      const { data: usuariosAprovados, error: errorUsuarios } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('aprovado', true)
+        .eq('ativo', true);
+
+      if (errorUsuarios) {
+        console.error('Erro ao carregar usuários aprovados:', errorUsuarios);
+      } else {
+        console.log(
+          'Usuários aprovados carregados:',
+          usuariosAprovados?.length || 0
+        );
+      }
+
+      // 2. Sincronizar status ativo nas tabelas pessoas_fisicas e pessoas_juridicas
+      if (usuariosAprovados && usuariosAprovados.length > 0) {
+        console.log('🔄 Sincronizando status ativo...');
+        
+        // Sincronizar pessoas jurídicas
+        for (const usuario of usuariosAprovados) {
+          const { error: updateError } = await supabase
+            .from('pessoas_juridicas')
+            .update({ ativo: true })
+            .eq('proprietario_email', usuario.email);
+          
+          if (updateError) {
+            console.log(`Usuário ${usuario.email} não encontrado em pessoas_juridicas`);
+          } else {
+            console.log(`✅ Status ativo sincronizado para ${usuario.email}`);
+          }
+        }
+
+        // Sincronizar pessoas físicas
+        for (const usuario of usuariosAprovados) {
+          const { error: updateError } = await supabase
+            .from('pessoas_fisicas')
+            .update({ ativo: true })
+            .eq('email', usuario.email);
+          
+          if (updateError) {
+            console.log(`Usuário ${usuario.email} não encontrado em pessoas_fisicas`);
+          } else {
+            console.log(`✅ Status ativo sincronizado para ${usuario.email}`);
+          }
+        }
+      }
+
+      // 3. Carregar pessoas físicas (todas, não apenas ativas)
       const { data: pessoasFisicas, error: errorPF } = await supabase
         .from('pessoas_fisicas')
-        .select('*')
-        .eq('ativo', true);
+        .select('*');
 
       if (errorPF) {
         console.error('Erro ao carregar pessoas físicas:', errorPF);
@@ -106,11 +154,10 @@ export default function UsuariosPage() {
         console.log('Pessoas físicas carregadas:', pessoasFisicas?.length || 0);
       }
 
-      // Carregar pessoas jurídicas
+      // 4. Carregar pessoas jurídicas (todas, não apenas ativas)
       const { data: pessoasJuridicas, error: errorPJ } = await supabase
         .from('pessoas_juridicas')
-        .select('*')
-        .eq('ativo', true);
+        .select('*');
 
       if (errorPJ) {
         console.error('Erro ao carregar pessoas jurídicas:', errorPJ);
@@ -124,52 +171,113 @@ export default function UsuariosPage() {
       // Converter dados para formato unificado
       const usuariosUnificados: Usuario[] = [];
 
-      // Adicionar pessoas físicas
-      if (pessoasFisicas) {
-        pessoasFisicas.forEach(pf => {
-          const usuario: Usuario = {
-            id: pf.id.toString(),
-            nome: pf.nome || 'Nome não informado',
-            tipo: 'PF' as const,
-            status: 'ativo' as const, // Por enquanto todos ativos
-            email: pf.email || 'Email não informado',
-            dataCadastro: pf.created_at || new Date().toISOString(),
-            ultimoAcesso: pf.updated_at || undefined,
-            dadosOriginais: pf, // Guardar dados completos para edição
+      // 5. Adicionar usuários aprovados da tabela usuarios
+      if (usuariosAprovados) {
+        usuariosAprovados.forEach(usuario => {
+          // Determinar tipo de pessoa baseado no email
+          let tipo: 'PF' | 'PJ' = 'PF';
+          let nome = usuario.nome || 'Nome não informado';
+
+          // Verificar se é pessoa jurídica
+          const pessoaJuridica = pessoasJuridicas?.find(
+            pj => pj.proprietario_email === usuario.email
+          );
+          if (pessoaJuridica) {
+            tipo = 'PJ';
+            nome =
+              pessoaJuridica.razao_social ||
+              usuario.nome ||
+              'Razão social não informada';
+          }
+
+          const usuarioUnificado: Usuario = {
+            id: `usuario_${usuario.id}_${Date.now()}`, // Prefixo único + timestamp para garantir unicidade
+            nome: nome,
+            tipo: tipo,
+            status: 'ativo' as const,
+            email: usuario.email || 'Email não informado',
+            dataCadastro:
+              usuario.data_cadastro ||
+              usuario.created_at ||
+              new Date().toISOString(),
+            ultimoAcesso:
+              usuario.ultimo_acesso || usuario.updated_at || undefined,
+            dadosOriginais: usuario,
           };
 
-          console.log('Pessoa física convertida:', usuario);
-          usuariosUnificados.push(usuario);
+          console.log('Usuário aprovado convertido:', usuarioUnificado);
+          usuariosUnificados.push(usuarioUnificado);
         });
       }
 
-      // Adicionar pessoas jurídicas
+      // 6. Adicionar pessoas físicas (apenas se não estiverem na tabela usuarios)
+      if (pessoasFisicas) {
+        pessoasFisicas.forEach(pf => {
+          // Verificar se já existe na lista de usuários aprovados OU na lista unificada
+          const jaExiste = usuariosAprovados?.some(u => u.email === pf.email) ||
+                          usuariosUnificados.some(u => u.email === pf.email);
+          if (!jaExiste) {
+            const usuario: Usuario = {
+              id: `pf_${pf.id}_${Date.now()}`, // Prefixo único + timestamp para garantir unicidade
+              nome: pf.nome || 'Nome não informado',
+              tipo: 'PF' as const,
+              status: pf.ativo ? 'ativo' : 'inativo',
+              email: pf.email || 'Email não informado',
+              dataCadastro: pf.created_at || new Date().toISOString(),
+              ultimoAcesso: pf.updated_at || undefined,
+              dadosOriginais: pf,
+            };
+
+            console.log('Pessoa física convertida:', usuario);
+            usuariosUnificados.push(usuario);
+          }
+        });
+      }
+
+      // 7. Adicionar pessoas jurídicas (apenas se não estiverem na tabela usuarios)
       if (pessoasJuridicas) {
         pessoasJuridicas.forEach(pj => {
-          const usuario: Usuario = {
-            id: pj.id.toString(),
-            nome: pj.razao_social || 'Razão social não informada',
-            tipo: 'PJ' as const,
-            status: 'ativo' as const, // Por enquanto todos ativos
-            email: pj.proprietario_email || 'Email não informado',
-            dataCadastro: pj.created_at || new Date().toISOString(),
-            ultimoAcesso: pj.updated_at || undefined,
-            dadosOriginais: pj, // Guardar dados completos para edição
-          };
+          // Verificar se já existe na lista de usuários aprovados OU na lista unificada
+          const jaExiste = usuariosAprovados?.some(u => u.email === pj.proprietario_email) ||
+                          usuariosUnificados.some(u => u.email === pj.proprietario_email);
+          if (!jaExiste) {
+            const usuario: Usuario = {
+              id: `pj_${pj.id}_${Date.now()}`, // Prefixo único + timestamp para garantir unicidade
+              nome: pj.razao_social || 'Razão social não informada',
+              tipo: 'PJ' as const,
+              status: pj.ativo ? 'ativo' : 'inativo',
+              email: pj.proprietario_email || 'Email não informado',
+              dataCadastro: pj.created_at || new Date().toISOString(),
+              ultimoAcesso: pj.updated_at || undefined,
+              dadosOriginais: pj,
+            };
 
-          console.log('Pessoa jurídica convertida:', usuario);
-          usuariosUnificados.push(usuario);
+            console.log('Pessoa jurídica convertida:', usuario);
+            usuariosUnificados.push(usuario);
+          }
         });
       }
 
       console.log('Total de usuários unificados:', usuariosUnificados.length);
+      
+      // Verificar duplicatas por email
+      const emails = usuariosUnificados.map(u => u.email);
+      const emailsUnicos = Array.from(new Set(emails));
+      console.log('Emails únicos:', emailsUnicos.length);
+      console.log('Total emails:', emails.length);
+      
+      if (emails.length !== emailsUnicos.length) {
+        console.warn('⚠️ DUPLICATAS DETECTADAS!');
+        const duplicatas = emails.filter((email, index) => emails.indexOf(email) !== index);
+        console.warn('Emails duplicados:', duplicatas);
+      }
 
       // Adicionar dados mock se não houver dados reais
       if (usuariosUnificados.length === 0) {
         console.log('Nenhum usuário encontrado, usando dados mock...');
         const mockUsuarios: Usuario[] = [
           {
-            id: '1',
+            id: 'fallback_pf_1',
             nome: 'João Silva Santos',
             tipo: 'PF',
             status: 'ativo',
@@ -178,7 +286,7 @@ export default function UsuariosPage() {
             ultimoAcesso: '2024-01-20 14:30',
           },
           {
-            id: '2',
+            id: 'fallback_pf_2',
             nome: 'Maria Oliveira Costa',
             tipo: 'PF',
             status: 'pendente',
@@ -186,7 +294,7 @@ export default function UsuariosPage() {
             dataCadastro: '2024-01-18',
           },
           {
-            id: '3',
+            id: 'fallback_pj_1',
             nome: 'Empresa ABC Ltda',
             tipo: 'PJ',
             status: 'ativo',
@@ -204,7 +312,7 @@ export default function UsuariosPage() {
       // Fallback para dados mock em caso de erro
       const mockUsuarios: Usuario[] = [
         {
-          id: '1',
+          id: 'fallback_pf_1',
           nome: 'João Silva Santos',
           tipo: 'PF',
           status: 'ativo',
@@ -213,7 +321,7 @@ export default function UsuariosPage() {
           ultimoAcesso: '2024-01-20 14:30',
         },
         {
-          id: '2',
+          id: 'fallback_pf_2',
           nome: 'Maria Oliveira Costa',
           tipo: 'PF',
           status: 'pendente',
@@ -221,7 +329,7 @@ export default function UsuariosPage() {
           dataCadastro: '2024-01-18',
         },
         {
-          id: '3',
+          id: 'fallback_pj_1',
           nome: 'Empresa ABC Ltda',
           tipo: 'PJ',
           status: 'ativo',
@@ -610,9 +718,9 @@ export default function UsuariosPage() {
   // Função para obter o ícone baseado no tipo de usuário
   const getTipoIcon = (tipo: string) => {
     switch (tipo) {
-      case 'Pessoa Física':
+      case 'PF':
         return <User className="w-6 h-6 text-blue-600" />;
-      case 'Pessoa Jurídica':
+      case 'PJ':
         return <Building2 className="w-6 h-6 text-emerald-600" />;
       default:
         return <User className="w-6 h-6 text-slate-600" />;

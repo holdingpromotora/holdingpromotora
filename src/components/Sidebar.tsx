@@ -205,18 +205,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 <Key className="w-4 h-4" />
                 <span>Níveis de Acesso</span>
               </Link>
-
-              <Link
-                href="/usuarios/perfis"
-                className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${
-                  pathname === '/usuarios/perfis'
-                    ? 'bg-holding-highlight/50 text-white'
-                    : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                <span>Perfis</span>
-              </Link>
             </div>
           )}
         </div>

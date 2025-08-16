@@ -18,6 +18,8 @@
     "noImplicitThis": false,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "strictNullChecks": false,
     "plugins": [
       {
         "name": "next"

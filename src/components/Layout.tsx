@@ -37,12 +37,65 @@ export default function Layout({ children }: LayoutProps) {
     console.log('✅ Layout: Inicialização concluída');
   }, []);
 
+  // Adicionar useEffect para monitorar mudanças no usuário
+  useEffect(() => {
+    console.log('👤 Layout: Usuário alterado:', user);
+    if (user) {
+      console.log(
+        '✅ Layout: Usuário ativo:',
+        user.email,
+        'Perfil:',
+        user.perfil_nome
+      );
+      console.log('✅ Layout: Usuário aprovado:', user.aprovado);
+      console.log('✅ Layout: Usuário ativo:', user.ativo);
+    } else {
+      console.log('❌ Layout: Nenhum usuário ativo');
+    }
+  }, [user]);
+
+  // Adicionar useEffect para monitorar mudanças no localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkLocalStorage = () => {
+        const savedUser = localStorage.getItem('holding_user');
+        console.log(
+          '💾 Layout: Verificando localStorage:',
+          savedUser ? 'Usuário encontrado' : 'Nenhum usuário'
+        );
+      };
+
+      // Verificar a cada 3 segundos
+      const interval = setInterval(checkLocalStorage, 3000);
+
+      return () => clearInterval(interval);
+    }
+  }, []);
+
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
   const handleLogout = () => {
-    logout();
+    console.log('🚪 Layout: Logout solicitado');
+    console.log('🚪 Layout: Usuário atual:', user);
+    
+    // Verificar se é um logout acidental
+    if (user && user.id !== undefined) {
+      console.log('⚠️ Layout: Logout solicitado para usuário válido:', user.email);
+      
+      // Confirmar logout apenas se for usuário válido
+      if (confirm('Tem certeza que deseja fazer logout?')) {
+        console.log('✅ Layout: Logout confirmado pelo usuário');
+        logout();
+      } else {
+        console.log('❌ Layout: Logout cancelado pelo usuário');
+        return;
+      }
+    } else {
+      console.log('✅ Layout: Logout para usuário inválido, executando...');
+      logout();
+    }
   };
 
   return (

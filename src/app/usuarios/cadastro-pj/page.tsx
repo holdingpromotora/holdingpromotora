@@ -1,27 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-import {
-  Building2,
-  CreditCard,
-  Calendar,
-  Mail,
-  Phone,
-  MapPin,
-  Building,
-  CreditCard as CreditCardIcon,
-  Key,
-  Save,
-  Search,
-  User,
-} from 'lucide-react';
-import { supabase, createTables } from '@/lib/supabase';
-import Layout from '@/components/Layout';
+import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +17,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { supabase } from '@/lib/supabase';
+import { createTables } from '@/lib/supabase';
+import {
+  Building2,
+  CreditCard,
+  Search,
+  MapPin,
+  User,
+  Key,
+  Mail,
+  Phone,
+  Calendar,
+  Banknote,
+  Building,
+  Users,
+  Shield,
+  CheckCircle,
+  AlertCircle,
+} from 'lucide-react';
 
 interface Banco {
   id: number;
@@ -84,6 +88,7 @@ export default function CadastroPessoaJuridicaPage() {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState('');
   const [isLoadingCNPJ, setIsLoadingCNPJ] = useState(false);
+  const router = useRouter();
 
   // Carregar bancos do Supabase
   useEffect(() => {
@@ -483,32 +488,82 @@ export default function CadastroPessoaJuridicaPage() {
 
   // Preencher automaticamente usuário quando email mudar
   useEffect(() => {
+    console.log(
+      '📧 useEffect: Email alterado para:',
+      formData.proprietarioEmail
+    );
     if (formData.proprietarioEmail) {
       setFormData(prev => ({ ...prev, usuario: formData.proprietarioEmail }));
+      console.log(
+        '✅ Usuário definido automaticamente como:',
+        formData.proprietarioEmail
+      );
     }
   }, [formData.proprietarioEmail]);
 
-  // Preencher automaticamente chave PIX
+  // Preencher automaticamente chave PIX quando tipoPix ou campos relacionados mudarem
   useEffect(() => {
+    console.log('🔄 useEffect PIX: Executando...');
+    console.log('🔄 useEffect PIX: tipoPix atual:', formData.tipoPix);
+    console.log('🔄 useEffect PIX: cnpj atual:', formData.cnpj);
+    console.log(
+      '🔄 useEffect PIX: proprietarioCpf atual:',
+      formData.proprietarioCpf
+    );
+    console.log(
+      '🔄 useEffect PIX: proprietarioTelefone atual:',
+      formData.proprietarioTelefone
+    );
+    console.log(
+      '🔄 useEffect PIX: proprietarioEmail atual:',
+      formData.proprietarioEmail
+    );
+
     if (formData.tipoPix) {
+      console.log('🔄 Tipo PIX alterado para:', formData.tipoPix);
       let chave = '';
+
       switch (formData.tipoPix) {
         case 'CNPJ':
-          chave = formData.cnpj;
+          chave = formData.cnpj || '';
+          console.log('📋 Preenchendo com CNPJ:', chave);
           break;
         case 'CPF':
-          chave = formData.proprietarioCpf;
+          chave = formData.proprietarioCpf || '';
+          console.log('📋 Preenchendo com CPF:', chave);
           break;
         case 'Telefone':
-          chave = formData.proprietarioTelefone;
+          chave = formData.proprietarioTelefone || '';
+          console.log('📋 Preenchendo com Telefone:', chave);
           break;
         case 'E-mail':
-          chave = formData.proprietarioEmail;
+          chave = formData.proprietarioEmail || '';
+          console.log('📋 Preenchendo com E-mail:', chave);
           break;
         default:
           chave = '';
+          console.log('❌ Tipo PIX não reconhecido:', formData.tipoPix);
       }
-      setFormData(prev => ({ ...prev, chavePix: chave }));
+
+      console.log('✅ Chave PIX definida como:', chave);
+
+      if (chave) {
+        setFormData(prev => {
+          console.log(
+            '🔄 Atualizando chavePix de:',
+            prev.chavePix,
+            'para:',
+            chave
+          );
+          return { ...prev, chavePix: chave };
+        });
+      } else {
+        console.log('⚠️ Chave PIX vazia, não atualizando');
+      }
+    } else {
+      console.log('ℹ️ Tipo PIX não selecionado');
+      // Limpar chave PIX se nenhum tipo estiver selecionado
+      setFormData(prev => ({ ...prev, chavePix: '' }));
     }
   }, [
     formData.tipoPix,
@@ -520,6 +575,8 @@ export default function CadastroPessoaJuridicaPage() {
 
   const handleInputChange = (campo: string, valor: string) => {
     let valorFormatado = valor;
+
+    console.log(`🔄 handleInputChange: Campo ${campo} recebeu valor:`, valor);
 
     // Aplicar máscaras
     switch (campo) {
@@ -538,17 +595,39 @@ export default function CadastroPessoaJuridicaPage() {
       case 'contaDigito':
         valorFormatado = aplicarMascaraConta(valor.replace(/\D/g, ''));
         break;
+      case 'tipoPix':
+        // Para tipoPix, usar o valor exato sem formatação
+        valorFormatado = valor;
+        console.log('🎯 Tipo PIX alterado para:', valor);
+        break;
+      default:
+        // Para outros campos, usar o valor original
+        valorFormatado = valor;
+        break;
     }
 
-    setFormData(prev => ({ ...prev, [campo]: valorFormatado }));
+    console.log(
+      `🔄 handleInputChange: Campo ${campo} formatado para:`,
+      valorFormatado
+    );
+
+    // Atualizar o estado
+    setFormData(prev => {
+      const newState = { ...prev, [campo]: valorFormatado };
+      console.log(`🔄 Estado atualizado para campo ${campo}:`, newState[campo]);
+      return newState;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 Iniciando salvamento do formulário...');
 
     try {
       // Primeiro, garantir que as tabelas existam
-      await createTables();
+      console.log('📋 Verificando tabelas...');
+      const tablesResult = await createTables();
+      console.log('📋 Resultado da verificação de tabelas:', tablesResult);
 
       // Preparar dados para inserção
       const dadosParaInserir = {
@@ -576,44 +655,57 @@ export default function CadastroPessoaJuridicaPage() {
         chave_pix: formData.chavePix,
         usuario: formData.usuario,
         senha_hash: formData.senha, // Em produção, deve ser criptografada
-        ativo: true,
+        ativo: false, // Inicialmente inativo até aprovação
       };
 
-      console.log('Dados para inserção:', dadosParaInserir);
+      console.log('📋 Dados para inserção:', dadosParaInserir);
 
       // Inserir no Supabase
-      let { data } = await supabase
+      console.log('💾 Tentando inserção no banco de dados...');
+      const { data: initialData, error: initialError } = await supabase
         .from('pessoas_juridicas')
         .insert([dadosParaInserir])
         .select();
 
-      const { error } = await supabase
-        .from('pessoas_juridicas')
-        .insert([dadosParaInserir])
-        .select();
+      let data = initialData;
+      const error = initialError;
 
       if (error) {
-        console.error('Erro detalhado ao salvar:', error);
+        console.error('❌ Erro detalhado ao salvar:', error);
+        console.error('❌ Código do erro:', error.code);
+        console.error('❌ Mensagem do erro:', error.message);
+        console.error('❌ Detalhes do erro:', error.details);
 
         // Verificar se é erro de tabela não existente
         if (error.code === 'PGRST116') {
+          console.log('📋 Tabela não encontrada. Tentando criar...');
           setDialogMessage('Tabela não encontrada. Tentando criar...');
+
           // Tentar criar a tabela novamente
-          await createTables();
+          const retryTablesResult = await createTables();
+          console.log(
+            '📋 Resultado da segunda tentativa de criar tabelas:',
+            retryTablesResult
+          );
 
           // Tentar inserir novamente
+          console.log('💾 Segunda tentativa de inserção...');
           const { data: retryData, error: retryError } = await supabase
             .from('pessoas_juridicas')
             .insert([dadosParaInserir])
             .select();
 
           if (retryError) {
-            console.error('Erro na segunda tentativa:', retryError);
+            console.error('❌ Erro na segunda tentativa:', retryError);
             setDialogMessage(`Erro ao salvar: ${retryError.message}`);
             setShowErrorDialog(true);
             return;
           }
 
+          console.log(
+            '✅ Inserção bem-sucedida na segunda tentativa:',
+            retryData
+          );
           data = retryData;
         } else {
           setDialogMessage(`Erro ao salvar: ${error.message}`);
@@ -622,39 +714,65 @@ export default function CadastroPessoaJuridicaPage() {
         }
       }
 
-      console.log('Pessoa jurídica cadastrada com sucesso:', data);
-      setDialogMessage('Pessoa jurídica cadastrada com sucesso!');
-      setShowSuccessDialog(true);
+      console.log('✅ Pessoa jurídica cadastrada com sucesso:', data);
 
-      // Limpar formulário
-      setFormData({
-        cnpj: '',
-        razaoSocial: '',
-        nomeFantasia: '',
-        cep: '',
-        endereco: '',
-        numero: '',
-        complemento: '',
-        bairro: '',
-        cidade: '',
-        estado: '',
-        proprietarioNome: '',
-        proprietarioRg: '',
-        proprietarioCpf: '',
-        proprietarioDataNascimento: '',
-        proprietarioEmail: '',
-        proprietarioTelefone: '',
-        bancoId: '',
-        agencia: '',
-        contaDigito: '',
-        tipoConta: '',
-        tipoPix: '',
-        chavePix: '',
-        usuario: '',
-        senha: '',
-      });
+      // Verificar se a inserção foi bem-sucedida
+      if (data && data.length > 0) {
+        const pessoaJuridica = data[0];
+        console.log('✅ Dados inseridos:', pessoaJuridica);
+
+        // Verificar se o trigger criou o usuário automaticamente
+        console.log(
+          '🔄 Verificando se o usuário foi criado automaticamente...'
+        );
+
+        // Aguardar um momento para o trigger executar
+        setTimeout(async () => {
+          try {
+            const { data: usuariosData, error: usuariosError } = await supabase
+              .from('usuarios')
+              .select('*')
+              .eq('email', formData.proprietarioEmail)
+              .eq('aprovado', false)
+              .eq('ativo', false);
+
+            if (usuariosError) {
+              console.error(
+                '❌ Erro ao verificar usuário criado:',
+                usuariosError
+              );
+            } else if (usuariosData && usuariosData.length > 0) {
+              console.log(
+                '✅ Usuário criado automaticamente:',
+                usuariosData[0]
+              );
+              console.log('✅ Usuário enviado para aprovação com sucesso!');
+            } else {
+              console.log('⚠️ Usuário não foi criado automaticamente');
+            }
+          } catch (error) {
+            console.error('❌ Erro ao verificar criação do usuário:', error);
+          }
+        }, 2000);
+
+        // IMPORTANTE: Não limpar o formulário aqui, apenas mostrar o popup
+        setDialogMessage(
+          'Pessoa jurídica cadastrada com sucesso! Aguardando aprovação.'
+        );
+        setShowSuccessDialog(true);
+
+        // Garantir que o sistema permaneça aberto
+        console.log('✅ Sistema permanecerá aberto após cadastro');
+      } else {
+        console.error('❌ Nenhum dado retornado da inserção');
+        setDialogMessage('Erro: Nenhum dado foi retornado da inserção');
+        setShowErrorDialog(true);
+        return;
+      }
+
+      console.log('✅ Formulário processado com sucesso');
     } catch (error) {
-      console.error('Erro ao processar formulário:', error);
+      console.error('❌ Erro ao processar formulário:', error);
       setDialogMessage(
         `Erro ao processar formulário: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
       );
@@ -714,6 +832,10 @@ export default function CadastroPessoaJuridicaPage() {
                         <Search className="w-4 h-4" />
                       )}
                     </Button>
+                  </div>
+                  {/* Debug: mostrar valor atual do CNPJ */}
+                  <div className="text-xs text-holding-accent-light mt-1">
+                    Debug CNPJ: {formData.cnpj || 'Vazio'}
                   </div>
                 </div>
 
@@ -920,6 +1042,10 @@ export default function CadastroPessoaJuridicaPage() {
                       className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
                       required
                     />
+                    {/* Debug: mostrar valor atual do CPF */}
+                    <div className="text-xs text-holding-accent-light mt-1">
+                      Debug CPF: {formData.proprietarioCpf || 'Vazio'}
+                    </div>
                   </div>
                 </div>
 
@@ -1029,7 +1155,7 @@ export default function CadastroPessoaJuridicaPage() {
 
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <CreditCardIcon className="w-4 h-4" />
+                      <Banknote className="w-4 h-4" />
                       <span>Conta com Dígito</span>
                     </Label>
                     <Input
@@ -1045,7 +1171,7 @@ export default function CadastroPessoaJuridicaPage() {
 
                 <div>
                   <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                    <CreditCardIcon className="w-4 h-4" />
+                    <Banknote className="w-4 h-4" />
                     <span>Tipo de Conta</span>
                   </Label>
                   <select
@@ -1075,11 +1201,15 @@ export default function CadastroPessoaJuridicaPage() {
                       className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="">Selecione o tipo</option>
-                      <option value="cnpj">CNPJ</option>
-                      <option value="cpf">CPF</option>
-                      <option value="telefone">Telefone</option>
-                      <option value="email">E-mail</option>
+                      <option value="CNPJ">CNPJ</option>
+                      <option value="CPF">CPF</option>
+                      <option value="Telefone">Telefone</option>
+                      <option value="E-mail">E-mail</option>
                     </select>
+                    {/* Debug: mostrar valor atual do tipo de PIX */}
+                    <div className="text-xs text-holding-accent-light mt-1">
+                      Debug: {formData.tipoPix || 'Não selecionado'}
+                    </div>
                   </div>
 
                   <div>
@@ -1096,6 +1226,10 @@ export default function CadastroPessoaJuridicaPage() {
                       className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
                       readOnly
                     />
+                    {/* Debug: mostrar valor atual da chave PIX */}
+                    <div className="text-xs text-holding-accent-light mt-1">
+                      Debug: {formData.chavePix || 'Vazio'}
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -1148,7 +1282,7 @@ export default function CadastroPessoaJuridicaPage() {
               type="submit"
               className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white px-8 py-3"
             >
-              <Save className="w-5 h-5 mr-2" />
+              <Banknote className="w-5 h-5 mr-2" />
               Cadastrar Pessoa Jurídica
             </Button>
           </div>
@@ -1165,16 +1299,66 @@ export default function CadastroPessoaJuridicaPage() {
                 <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
                   <div className="w-6 h-6 bg-green-500 rounded-full"></div>
                 </div>
-                <span>Sucesso!</span>
+                <span>Cadastro Realizado com Sucesso!</span>
               </AlertDialogTitle>
               <AlertDialogDescription className="text-holding-accent-light">
                 {dialogMessage ||
-                  'Cadastro realizado com sucesso! A pessoa jurídica foi salva no banco de dados.'}
+                  'Pessoa jurídica cadastrada com sucesso! Aguardando aprovação.'}
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogAction onClick={() => setShowSuccessDialog(false)}>
-                Continuar
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+              <AlertDialogAction
+                onClick={() => {
+                  setShowSuccessDialog(false);
+                  // Limpar formulário para novo cadastro
+                  setFormData({
+                    cnpj: '',
+                    razaoSocial: '',
+                    nomeFantasia: '',
+                    cep: '',
+                    endereco: '',
+                    numero: '',
+                    complemento: '',
+                    bairro: '',
+                    cidade: '',
+                    estado: '',
+                    proprietarioNome: '',
+                    proprietarioRg: '',
+                    proprietarioCpf: '',
+                    proprietarioDataNascimento: '',
+                    proprietarioEmail: '',
+                    proprietarioTelefone: '',
+                    bancoId: '',
+                    agencia: '',
+                    contaDigito: '',
+                    tipoConta: '',
+                    tipoPix: '',
+                    chavePix: '',
+                    usuario: '',
+                    senha: '',
+                  });
+                  console.log('✅ Formulário limpo para novo cadastro');
+                  console.log('✅ Sistema permanecerá aberto');
+                }}
+                className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white"
+              >
+                Cadastrar Nova Pessoa Jurídica
+              </AlertDialogAction>
+              <AlertDialogAction
+                onClick={() => {
+                  setShowSuccessDialog(false);
+                  // Redirecionar para o início do sistema (dashboard) sem fechar
+                  console.log(
+                    '✅ Redirecionando para dashboard sem fechar sistema'
+                  );
+                  if (typeof window !== 'undefined') {
+                    // Usar router.push em vez de window.location para não recarregar a página
+                    router.push('/dashboard');
+                  }
+                }}
+                className="bg-holding-secondary hover:bg-holding-accent/20 text-holding-white border-holding-accent/30"
+              >
+                Retornar ao Início
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

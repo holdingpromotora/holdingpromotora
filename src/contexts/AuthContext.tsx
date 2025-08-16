@@ -18,7 +18,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const isAuthenticated = !!user;
-  const hasApprovedProfile = !!(user?.aprovado && user?.ativo && user?.perfil_id);
+  const hasApprovedProfile = !!(
+    user?.aprovado &&
+    user?.ativo &&
+    user?.perfil_id
+  );
 
   useEffect(() => {
     console.log('🔄 AuthContext: Iniciando verificação de usuário...');
@@ -74,6 +78,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     checkUser();
+  }, []);
+
+  // Adicionar useEffect para monitorar mudanças no usuário
+  useEffect(() => {
+    console.log('👤 AuthContext: Usuário alterado:', user);
+    if (user) {
+      console.log('✅ AuthContext: Usuário ativo:', user.email);
+      console.log('✅ AuthContext: Usuário aprovado:', user.aprovado);
+      console.log('✅ AuthContext: Usuário ativo:', user.ativo);
+    } else {
+      console.log('❌ AuthContext: Nenhum usuário ativo');
+    }
+  }, [user]);
+
+  // Adicionar useEffect para monitorar mudanças no localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkLocalStorage = () => {
+        const savedUser = localStorage.getItem('holding_user');
+        console.log(
+          '💾 AuthContext: Verificando localStorage:',
+          savedUser ? 'Usuário encontrado' : 'Nenhum usuário'
+        );
+      };
+
+      // Verificar a cada 5 segundos
+      const interval = setInterval(checkLocalStorage, 5000);
+
+      return () => clearInterval(interval);
+    }
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -221,8 +255,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     console.log('🚪 AuthContext: Fazendo logout...');
+    console.log('🚪 AuthContext: Usuário atual antes do logout:', user);
+    
+    // Verificar se é um logout acidental
+    if (user && user.id !== undefined) {
+      console.log('⚠️ AuthContext: Logout solicitado para usuário válido:', user.email);
+    }
+    
     setUser(null);
-    localStorage.removeItem('holding_user');
+    
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('holding_user');
+      console.log('💾 AuthContext: Usuário removido do localStorage');
+    }
+    
     console.log('✅ AuthContext: Logout realizado');
   };
 

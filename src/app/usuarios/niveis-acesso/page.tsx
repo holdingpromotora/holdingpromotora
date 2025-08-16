@@ -49,6 +49,15 @@ interface TipoAcesso {
   dataCriacao: string;
 }
 
+interface TipoAcessoDB {
+  id: number;
+  nome: string;
+  descricao: string | null;
+  nivel: number;
+  ativo: boolean;
+  created_at: string;
+}
+
 interface Permissao {
   id: string;
   nome: string;
@@ -111,42 +120,44 @@ export default function NiveisAcessoPage() {
   const carregarDados = async () => {
     setIsLoading(true);
     try {
-      // Carregar dados mockados para demonstração
-      const mockTiposAcesso: TipoAcesso[] = [
-        {
-          id: '1',
-          nome: 'Master',
-          descricao: 'Acesso total ao sistema',
-          nivel: 1,
-          ativo: true,
-          dataCriacao: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          nome: 'Submaster',
-          descricao: 'Acesso administrativo limitado',
-          nivel: 2,
-          ativo: true,
-          dataCriacao: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          nome: 'Parceiro',
-          descricao: 'Acesso a funcionalidades específicas',
-          nivel: 3,
-          ativo: true,
-          dataCriacao: new Date().toISOString(),
-        },
-        {
-          id: '4',
-          nome: 'Colaborador',
-          descricao: 'Acesso básico ao sistema',
-          nivel: 4,
-          ativo: true,
-          dataCriacao: new Date().toISOString(),
-        },
-      ];
+      // Carregar tipos de acesso do banco de dados
+      const responseTipos = await fetch('/api/niveis-acesso');
+      if (responseTipos.ok) {
+        const dataTipos = await responseTipos.json();
+        // Converter dados do banco para o formato da interface
+        const tiposConvertidos: TipoAcesso[] = dataTipos.map(
+          (tipo: TipoAcessoDB) => ({
+            id: tipo.id.toString(),
+            nome: tipo.nome,
+            descricao: tipo.descricao || '',
+            nivel: tipo.nivel,
+            ativo: tipo.ativo,
+            dataCriacao: tipo.created_at || new Date().toISOString(),
+          })
+        );
+        setTiposAcesso(tiposConvertidos);
 
+        // Níveis de acesso serão baseados nos tipos de acesso carregados
+        const niveisBaseadosTipos: NivelAcesso[] = tiposConvertidos.map(
+          tipo => ({
+            id: tipo.id,
+            tipoAcessoId: tipo.id,
+            tipoAcessoNome: tipo.nome,
+            permissoes: [], // Por enquanto vazio, será implementado depois
+            ativo: tipo.ativo,
+            dataCriacao: tipo.dataCriacao,
+          })
+        );
+
+        setNiveisAcesso(niveisBaseadosTipos);
+      } else {
+        console.error(
+          'Erro ao carregar tipos de acesso:',
+          responseTipos.statusText
+        );
+      }
+
+      // Manter permissões mockadas por enquanto (serão implementadas depois)
       const mockPermissoes: Permissao[] = [
         // Permissões de Usuários
         {
@@ -301,98 +312,7 @@ export default function NiveisAcessoPage() {
         },
       ];
 
-      const mockNiveisAcesso: NivelAcesso[] = [
-        {
-          id: '1',
-          tipoAcessoId: '1',
-          tipoAcessoNome: 'Master',
-          permissoes: [
-            '1',
-            '2',
-            '3',
-            '4',
-            '5',
-            '6',
-            '7',
-            '8',
-            '9',
-            '10',
-            '11',
-            '12',
-            '13',
-            '14',
-            '15',
-            '16',
-            '17',
-            '18',
-            '19',
-            '20',
-          ],
-          ativo: true,
-          dataCriacao: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          tipoAcessoId: '2',
-          tipoAcessoNome: 'Submaster',
-          permissoes: [
-            '1',
-            '2',
-            '3',
-            '4',
-            '5',
-            '9',
-            '10',
-            '11',
-            '12',
-            '13',
-            '14',
-            '15',
-            '16',
-            '17',
-            '18',
-            '19',
-            '20',
-          ],
-          ativo: true,
-          dataCriacao: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          tipoAcessoId: '3',
-          tipoAcessoNome: 'Parceiro',
-          permissoes: [
-            '1',
-            '2',
-            '3',
-            '9',
-            '11',
-            '12',
-            '13',
-            '14',
-            '15',
-            '16',
-            '17',
-            '18',
-            '19',
-            '20',
-          ],
-          ativo: true,
-          dataCriacao: new Date().toISOString(),
-        },
-        {
-          id: '4',
-          tipoAcessoId: '4',
-          tipoAcessoNome: 'Colaborador',
-          permissoes: ['1', '9', '11', '14', '17'],
-          ativo: true,
-          dataCriacao: new Date().toISOString(),
-        },
-      ];
-
-      setTiposAcesso(mockTiposAcesso);
       setPermissoes(mockPermissoes);
-      setNiveisAcesso(mockNiveisAcesso);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -401,21 +321,62 @@ export default function NiveisAcessoPage() {
   };
 
   // Funções para Tipos de Acesso
-  const handleCriarTipoAcesso = () => {
+  const handleCriarTipoAcesso = async () => {
     if (!tipoAcessoForm.nome.trim()) return;
 
-    const novoTipo: TipoAcesso = {
-      id: Date.now().toString(),
-      nome: tipoAcessoForm.nome,
-      descricao: tipoAcessoForm.descricao,
-      nivel: tipoAcessoForm.nivel,
-      ativo: true,
-      dataCriacao: new Date().toISOString(),
-    };
+    try {
+      const response = await fetch('/api/niveis-acesso', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nome: tipoAcessoForm.nome,
+          descricao: tipoAcessoForm.descricao,
+          nivel: tipoAcessoForm.nivel,
+        }),
+      });
 
-    setTiposAcesso(prev => [...prev, novoTipo]);
-    setTipoAcessoForm({ nome: '', descricao: '', nivel: 1 });
-    setShowTipoAcessoModal(false);
+      if (response.ok) {
+        const novoTipo = await response.json();
+        const tipoConvertido: TipoAcesso = {
+          id: novoTipo.id.toString(),
+          nome: novoTipo.nome,
+          descricao: novoTipo.descricao || '',
+          nivel: novoTipo.nivel,
+          ativo: novoTipo.ativo,
+          dataCriacao: novoTipo.created_at || new Date().toISOString(),
+        };
+
+        setTiposAcesso(prev => [...prev, tipoConvertido]);
+        setTipoAcessoForm({ nome: '', descricao: '', nivel: 1 });
+        setShowTipoAcessoModal(false);
+
+        // Recarregar dados para atualizar a lista
+        carregarDados();
+      } else {
+        const errorData = await response.json();
+        console.error('Erro ao criar tipo de acesso:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData,
+        });
+
+        let mensagemErro = 'Erro ao criar tipo de acesso';
+
+        if (errorData.code === 'DUPLICATE_NAME') {
+          mensagemErro = `Erro: O nome "${tipoAcessoForm.nome}" já existe. Escolha um nome diferente.`;
+        } else if (errorData.details) {
+          mensagemErro = `Erro: ${errorData.details}`;
+        } else if (errorData.error) {
+          mensagemErro = `Erro: ${errorData.error}`;
+        }
+
+        alert(mensagemErro);
+      }
+    } catch (error) {
+      console.error('Erro ao criar tipo de acesso:', error);
+    }
   };
 
   const handleEditarTipoAcesso = (tipo: TipoAcesso) => {
@@ -602,8 +563,6 @@ export default function NiveisAcessoPage() {
     setNivelAcessoForm(prev => ({ ...prev, permissoes: [] }));
   };
 
-
-
   const getCategoriaNome = (categoria: string) => {
     const categorias: { [key: string]: string } = {
       usuarios: 'Usuários',
@@ -689,10 +648,10 @@ export default function NiveisAcessoPage() {
                   <Shield className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
                 </div>
                 <div>
-                  <p className="text-white/80 text-xs lg:text-sm font-medium">
+                  <p className="text-white text-xs lg:text-sm font-medium">
                     Tipos de Acesso
                   </p>
-                  <p className="text-xl lg:text-3xl font-bold text-white">
+                  <p className="text-2xl lg:text-4xl font-bold text-white">
                     {tiposAcesso.length}
                   </p>
                 </div>
@@ -710,7 +669,7 @@ export default function NiveisAcessoPage() {
                   <Key className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
                 </div>
                 <div>
-                  <p className="text-white/80 text-xs lg:text-sm font-medium">
+                  <p className="text-white text-xs lg:text-sm font-medium">
                     Permissões
                   </p>
                   <p className="text-xl lg:text-3xl font-bold text-white">
@@ -731,7 +690,7 @@ export default function NiveisAcessoPage() {
                   <Settings className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
                 </div>
                 <div>
-                  <p className="text-white/80 text-xs lg:text-sm font-medium">
+                  <p className="text-white text-xs lg:text-sm font-medium">
                     Níveis Configurados
                   </p>
                   <p className="text-xl lg:text-3xl font-bold text-white">
@@ -752,7 +711,7 @@ export default function NiveisAcessoPage() {
                   <Users className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
                 </div>
                 <div>
-                  <p className="text-white/80 text-xs lg:text-sm font-medium">
+                  <p className="text-white text-xs lg:text-sm font-medium">
                     Usuários Ativos
                   </p>
                   <p className="text-xl lg:text-3xl font-bold text-white">24</p>
@@ -936,7 +895,8 @@ export default function NiveisAcessoPage() {
                         <AlertDialogTitle>Excluir Permissão</AlertDialogTitle>
                         <AlertDialogDescription>
                           Tem certeza que deseja excluir a permissão &quot;
-                          {permissao.nome}&quot;? Esta ação não pode ser desfeita.
+                          {permissao.nome}&quot;? Esta ação não pode ser
+                          desfeita.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -1032,8 +992,8 @@ export default function NiveisAcessoPage() {
                         </AlertDialogTitle>
                         <AlertDialogDescription>
                           Tem certeza que deseja excluir o nível de acesso para
-                          &quot;{nivel.tipoAcessoNome}&quot;? Esta ação não pode ser
-                          desfeita.
+                          &quot;{nivel.tipoAcessoNome}&quot;? Esta ação não pode
+                          ser desfeita.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -1070,7 +1030,9 @@ export default function NiveisAcessoPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="nome">Nome</Label>
+              <Label htmlFor="nome" className="text-slate-700">
+                Nome
+              </Label>
               <Input
                 id="nome"
                 value={tipoAcessoForm.nome}
@@ -1081,7 +1043,9 @@ export default function NiveisAcessoPage() {
               />
             </div>
             <div>
-              <Label htmlFor="descricao">Descrição</Label>
+              <Label htmlFor="descricao" className="text-slate-700">
+                Descrição
+              </Label>
               <Input
                 id="descricao"
                 value={tipoAcessoForm.descricao}
@@ -1095,7 +1059,9 @@ export default function NiveisAcessoPage() {
               />
             </div>
             <div>
-              <Label htmlFor="nivel">Nível de Prioridade</Label>
+              <Label htmlFor="nivel" className="text-slate-700">
+                Nível de Prioridade
+              </Label>
               <select
                 value={tipoAcessoForm.nivel.toString()}
                 onChange={e =>
@@ -1104,7 +1070,7 @@ export default function NiveisAcessoPage() {
                     nivel: parseInt(e.target.value),
                   }))
                 }
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-700"
               >
                 <option value="">Selecione o nível</option>
                 <option value="1">1 - Máxima Prioridade</option>
@@ -1112,6 +1078,11 @@ export default function NiveisAcessoPage() {
                 <option value="3">3 - Média Prioridade</option>
                 <option value="4">4 - Baixa Prioridade</option>
                 <option value="5">5 - Mínima Prioridade</option>
+                <option value="6">6 - Muito Baixa</option>
+                <option value="7">7 - Extremamente Baixa</option>
+                <option value="8">8 - Mínima</option>
+                <option value="9">9 - Ultra Mínima</option>
+                <option value="10">10 - Mínima Absoluta</option>
               </select>
             </div>
           </div>
@@ -1119,6 +1090,7 @@ export default function NiveisAcessoPage() {
             <Button
               variant="outline"
               onClick={() => setShowTipoAcessoModal(false)}
+              className="text-slate-700 border-slate-300 hover:bg-slate-50"
             >
               Cancelar
             </Button>
@@ -1179,21 +1151,24 @@ export default function NiveisAcessoPage() {
             </div>
             <div>
               <Label htmlFor="categoria">Categoria</Label>
-                              <select
-                  value={permissaoForm.categoria}
-                  onChange={e =>
-                    setPermissaoForm(prev => ({ ...prev, categoria: e.target.value }))
-                  }
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="">Selecione a categoria</option>
-                  <option value="usuarios">Usuários</option>
-                  <option value="sistema">Sistema</option>
-                  <option value="relatorios">Relatórios</option>
-                  <option value="proprios">Registros Próprios</option>
-                  <option value="financeiro">Financeiro</option>
-                  <option value="marketing">Marketing</option>
-                </select>
+              <select
+                value={permissaoForm.categoria}
+                onChange={e =>
+                  setPermissaoForm(prev => ({
+                    ...prev,
+                    categoria: e.target.value,
+                  }))
+                }
+                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Selecione a categoria</option>
+                <option value="usuarios">Usuários</option>
+                <option value="sistema">Sistema</option>
+                <option value="relatorios">Relatórios</option>
+                <option value="proprios">Registros Próprios</option>
+                <option value="financeiro">Financeiro</option>
+                <option value="marketing">Marketing</option>
+              </select>
             </div>
           </div>
           <DialogFooter>
@@ -1241,7 +1216,10 @@ export default function NiveisAcessoPage() {
               <select
                 value={nivelAcessoForm.tipoAcessoId}
                 onChange={e =>
-                  setNivelAcessoForm(prev => ({ ...prev, tipoAcessoId: e.target.value }))
+                  setNivelAcessoForm(prev => ({
+                    ...prev,
+                    tipoAcessoId: e.target.value,
+                  }))
                 }
                 className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >

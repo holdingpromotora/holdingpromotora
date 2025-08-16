@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,18 +36,11 @@ export default function DashboardPage() {
 
   const estatisticas = [
     {
-      titulo: 'Total de Usuários',
+      titulo: 'Usuários Ativos',
       valor: '156',
       icone: Users,
       cor: 'from-blue-500 to-blue-600',
       descricao: '+12% este mês',
-    },
-    {
-      titulo: 'Perfis Ativos',
-      valor: '8',
-      icone: Shield,
-      cor: 'from-green-500 to-green-600',
-      descricao: 'Todos funcionando',
     },
     {
       titulo: 'Níveis de Acesso',
