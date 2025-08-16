@@ -13,7 +13,7 @@ export async function initializeApp() {
     } else {
       console.warn(
         '⚠️ Sistema não pôde ser inicializado completamente:',
-        result.error
+        result.warning || 'Erro desconhecido'
       );
       // Não falhar se houver erro, apenas logar
     }
@@ -85,7 +85,10 @@ export async function resetSystem() {
     if (result.success) {
       console.log('✅ Sistema reinicializado com sucesso!');
     } else {
-      console.warn('⚠️ Sistema não pôde ser reinicializado:', result.error);
+      console.warn(
+        '⚠️ Sistema não pôde ser reinicializado:',
+        result.warning || 'Erro desconhecido'
+      );
     }
 
     return result;

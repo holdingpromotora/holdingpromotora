@@ -45,11 +45,13 @@ export async function POST() {
             RETURN novo_usuario_id;
         END;
         $$ LANGUAGE plpgsql;
-      `
+      `,
     });
 
     if (functionError) {
-      console.log('Função RPC não disponível, tentando criar via SQL direto...');
+      console.log(
+        'Função RPC não disponível, tentando criar via SQL direto...'
+      );
     }
 
     // 2. Recriar trigger para pessoas jurídicas
@@ -77,7 +79,7 @@ export async function POST() {
             AFTER INSERT ON pessoas_juridicas
             FOR EACH ROW
             EXECUTE FUNCTION trigger_criar_usuario_pj();
-      `
+      `,
     });
 
     // 3. Recriar trigger para pessoas físicas
@@ -105,7 +107,7 @@ export async function POST() {
             AFTER INSERT ON pessoas_fisicas
             FOR EACH ROW
             EXECUTE FUNCTION trigger_criar_usuario_pf();
-      `
+      `,
     });
 
     // 4. Recriar função para verificar aprovações pendentes
@@ -140,7 +142,7 @@ export async function POST() {
             ORDER BY u.data_cadastro DESC;
         END;
         $$ LANGUAGE plpgsql;
-      `
+      `,
     });
 
     console.log('✅ Triggers recriados');
@@ -170,7 +172,7 @@ export async function POST() {
       tipo_pix: 'CPF',
       chave_pix: '987.654.321-00',
       usuario: 'teste2@empresa.com',
-      senha_hash: 'senha456'
+      senha_hash: 'senha456',
     };
 
     // Inserir pessoa jurídica (deve disparar o trigger)
@@ -182,11 +184,14 @@ export async function POST() {
 
     if (pjError) {
       console.error('Erro ao inserir pessoa jurídica de teste:', pjError);
-      return NextResponse.json({
-        success: false,
-        error: 'Erro ao inserir pessoa jurídica de teste',
-        details: pjError
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Erro ao inserir pessoa jurídica de teste',
+          details: pjError,
+        },
+        { status: 500 }
+      );
     }
 
     console.log('✅ Pessoa jurídica de teste inserida:', pjData);
@@ -204,14 +209,16 @@ export async function POST() {
 
     // Verificar se a função RPC funciona agora
     let rpcResult = null;
-    let rpcError = null;
-    
+    let rpcErrorTest = null;
+
     try {
-      const { data, error } = await supabase.rpc('verificar_aprovacoes_pendentes');
+      const { data, error } = await supabase.rpc(
+        'verificar_aprovacoes_pendentes'
+      );
       rpcResult = data;
-      rpcError = error;
+      rpcErrorTest = error;
     } catch (error) {
-      rpcError = error;
+      rpcErrorTest = error;
     }
 
     return NextResponse.json({
@@ -223,24 +230,26 @@ export async function POST() {
         trigger_funcionou: usuariosData && usuariosData.length > 0,
         rpc: {
           resultado: rpcResult,
-          erro: rpcError
+          erro: rpcErrorTest,
         },
         erros: {
           function: functionError,
           trigger_pj: triggerPJError,
           trigger_pf: triggerPFError,
-          rpc: rpcError
-        }
-      }
+          rpc: rpcErrorTest,
+        },
+      },
     });
-
   } catch (error) {
     console.error('Erro ao recriar triggers:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Erro interno do servidor',
-      details: error
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Erro interno do servidor',
+        details: error,
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -252,14 +261,19 @@ export async function GET() {
     const { data: triggersData, error: triggersError } = await supabase
       .from('information_schema.triggers')
       .select('trigger_name, event_manipulation, event_object_table')
-      .in('trigger_name', ['trigger_criar_usuario_pf', 'trigger_criar_usuario_pj']);
+      .in('trigger_name', [
+        'trigger_criar_usuario_pf',
+        'trigger_criar_usuario_pj',
+      ]);
 
     // Verificar se a função RPC existe
     let rpcResult = null;
     let rpcError = null;
-    
+
     try {
-      const { data, error } = await supabase.rpc('verificar_aprovacoes_pendentes');
+      const { data, error } = await supabase.rpc(
+        'verificar_aprovacoes_pendentes'
+      );
       rpcResult = data;
       rpcError = error;
     } catch (error) {
@@ -280,19 +294,21 @@ export async function GET() {
         triggers: triggersData || [],
         rpc: {
           resultado: rpcResult,
-          erro: rpcError
+          erro: rpcError,
         },
         usuarios: usuariosData || [],
-        total_usuarios: usuariosData?.length || 0
-      }
+        total_usuarios: usuariosData?.length || 0,
+      },
     });
-
   } catch (error) {
     console.error('Erro ao verificar status dos triggers:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Erro interno do servidor',
-      details: error
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Erro interno do servidor',
+        details: error,
+      },
+      { status: 500 }
+    );
   }
 }
