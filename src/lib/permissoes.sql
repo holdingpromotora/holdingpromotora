@@ -71,34 +71,47 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_tipos_acesso_updated_at 
-    BEFORE UPDATE ON tipos_acesso 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
+-- Criar triggers apenas se não existirem
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_tipos_acesso_updated_at') THEN
+        CREATE TRIGGER update_tipos_acesso_updated_at 
+            BEFORE UPDATE ON tipos_acesso 
+            FOR EACH ROW 
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_permissoes_updated_at') THEN
+        CREATE TRIGGER update_permissoes_updated_at 
+            BEFORE UPDATE ON permissoes 
+            FOR EACH ROW 
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'update_niveis_acesso_updated_at') THEN
+        CREATE TRIGGER update_niveis_acesso_updated_at 
+            BEFORE UPDATE ON niveis_acesso 
+            FOR EACH ROW 
+            EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+END $$;
 
-CREATE TRIGGER update_permissoes_updated_at 
-    BEFORE UPDATE ON permissoes 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
+-- Inserir tipos de acesso padrão (apenas se não existirem)
+INSERT INTO tipos_acesso (nome, descricao, nivel, cor, icone) 
+SELECT * FROM (VALUES
+    ('Master', 'Acesso total ao sistema', 1, 'bg-red-600', 'Shield'),
+    ('Administrador', 'Acesso administrativo completo', 2, 'bg-purple-600', 'Shield'),
+    ('Gerente', 'Acesso gerencial com limitações', 3, 'bg-blue-600', 'Shield'),
+    ('Supervisor', 'Acesso de supervisão', 4, 'bg-indigo-600', 'Shield'),
+    ('Operador', 'Acesso operacional básico', 5, 'bg-green-600', 'Shield'),
+    ('Visualizador', 'Acesso apenas para visualização', 6, 'bg-amber-600', 'Eye'),
+    ('Convidado', 'Acesso limitado para convidados', 7, 'bg-gray-600', 'User')
+) AS v(nome, descricao, nivel, cor, icone)
+WHERE NOT EXISTS (SELECT 1 FROM tipos_acesso WHERE tipos_acesso.nome = v.nome);
 
-CREATE TRIGGER update_niveis_acesso_updated_at 
-    BEFORE UPDATE ON niveis_acesso 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Inserir tipos de acesso padrão
-INSERT INTO tipos_acesso (nome, descricao, nivel, cor, icone) VALUES
-('Master', 'Acesso total ao sistema', 1, 'bg-red-600', 'Shield'),
-('Administrador', 'Acesso administrativo completo', 2, 'bg-purple-600', 'Shield'),
-('Gerente', 'Acesso gerencial com limitações', 3, 'bg-blue-600', 'Shield'),
-('Supervisor', 'Acesso de supervisão', 4, 'bg-indigo-600', 'Shield'),
-('Operador', 'Acesso operacional básico', 5, 'bg-green-600', 'Shield'),
-('Visualizador', 'Acesso apenas para visualização', 6, 'bg-amber-600', 'Eye'),
-('Convidado', 'Acesso limitado para convidados', 7, 'bg-gray-600', 'User')
-ON CONFLICT (nome) DO NOTHING;
-
--- Inserir permissões padrão do sistema
-INSERT INTO permissoes (id, nome, descricao, categoria, acao, recurso, nivel_minimo) VALUES
+-- Inserir permissões padrão do sistema (apenas se não existirem)
+INSERT INTO permissoes (id, nome, descricao, categoria, acao, recurso, nivel_minimo) 
+SELECT * FROM (VALUES
 -- Dashboard
 ('dashboard_view', 'Visualizar Dashboard', 'Acesso ao painel principal do sistema', 'dashboard', 'visualizar', 'dashboard', 6),
 
@@ -143,10 +156,12 @@ INSERT INTO permissoes (id, nome, descricao, categoria, acao, recurso, nivel_min
 ('marketing_create', 'Criar Marketing', 'Criar novas campanhas', 'marketing', 'criar', 'marketing', 3),
 ('marketing_edit', 'Editar Marketing', 'Modificar campanhas existentes', 'marketing', 'editar', 'marketing', 3),
 ('marketing_manage', 'Gerenciar Marketing', 'Controle total sobre marketing', 'marketing', 'gerenciar', 'marketing', 3)
-ON CONFLICT (id) DO NOTHING;
+) AS v(id, nome, descricao, categoria, acao, recurso, nivel_minimo)
+WHERE NOT EXISTS (SELECT 1 FROM permissoes WHERE permissoes.id = v.id);
 
--- Inserir níveis de acesso padrão
-INSERT INTO niveis_acesso (tipo_acesso_id, permissoes) VALUES
+-- Inserir níveis de acesso padrão (apenas se não existirem)
+INSERT INTO niveis_acesso (tipo_acesso_id, permissoes) 
+SELECT * FROM (VALUES
 -- Master - Todas as permissões
 (1, ARRAY[
     'dashboard_view', 'usuarios_view', 'usuarios_create', 'usuarios_edit', 'usuarios_delete', 'usuarios_manage',
@@ -209,9 +224,10 @@ INSERT INTO niveis_acesso (tipo_acesso_id, permissoes) VALUES
 (7, ARRAY[
     'dashboard_view'
 ])
-ON CONFLICT (tipo_acesso_id) DO NOTHING;
+) AS v(tipo_acesso_id, permissoes)
+WHERE NOT EXISTS (SELECT 1 FROM niveis_acesso WHERE niveis_acesso.tipo_acesso_id = v.tipo_acesso_id);
 
--- Atualizar usuários existentes para usar o sistema de permissões
+-- Atualizar usuários existentes para usar o sistema de permissões (apenas se necessário)
 UPDATE usuarios 
 SET tipo_acesso_id = CASE 
     WHEN nivel_acesso = 'admin' THEN 2
@@ -220,7 +236,8 @@ SET tipo_acesso_id = CASE
     WHEN nivel_acesso = 'visualizador' THEN 6
     ELSE 6
 END
-WHERE tipo_acesso_id IS NULL;
+WHERE tipo_acesso_id IS NULL 
+AND EXISTS (SELECT 1 FROM tipos_acesso WHERE id IN (2, 3, 5, 6));
 
 -- Função para obter permissões de um usuário
 CREATE OR REPLACE FUNCTION get_user_permissions(user_id INTEGER)

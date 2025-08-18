@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Layout from '@/components/Layout';
+import IsolatedLayout from '@/components/IsolatedLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,6 +56,8 @@ interface DadosReceita {
 }
 
 export default function CadastroPessoaJuridicaPage() {
+  console.log('🚀 Componente CadastroPessoaJuridicaPage renderizado');
+
   const [formData, setFormData] = useState({
     cnpj: '',
     razaoSocial: '',
@@ -82,6 +84,8 @@ export default function CadastroPessoaJuridicaPage() {
     usuario: '',
     senha: '',
   });
+
+  console.log('📋 Estado inicial do formulário:', formData);
 
   const [bancos, setBancos] = useState<Banco[]>([]);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -166,10 +170,9 @@ export default function CadastroPessoaJuridicaPage() {
     const cnpjLimpo = formData.cnpj.replace(/\D/g, '');
 
     if (!cnpjLimpo || cnpjLimpo.length !== 14) {
-      setDialogMessage(
-        `CNPJ inválido. Digite um CNPJ com 14 dígitos. Atual: ${cnpjLimpo.length} dígitos.`
+      console.log(
+        `⚠️ CNPJ inválido. Digite um CNPJ com 14 dígitos. Atual: ${cnpjLimpo.length} dígitos.`
       );
-      setShowErrorDialog(true);
       return;
     }
 
@@ -182,8 +185,7 @@ export default function CadastroPessoaJuridicaPage() {
 
       if (!response.ok) {
         if (response.status === 404) {
-          setDialogMessage('CNPJ não encontrado na base da Receita Federal.');
-          setShowErrorDialog(true);
+          console.log('⚠️ CNPJ não encontrado na base da Receita Federal.');
           return;
         }
         throw new Error(`Erro na API: ${response.status}`);
@@ -193,8 +195,7 @@ export default function CadastroPessoaJuridicaPage() {
 
       // Verificar se os dados são válidos
       if (!dadosReceita.razao_social) {
-        setDialogMessage('Dados do CNPJ incompletos ou inválidos.');
-        setShowErrorDialog(true);
+        console.log('⚠️ Dados do CNPJ incompletos ou inválidos.');
         return;
       }
 
@@ -214,10 +215,10 @@ export default function CadastroPessoaJuridicaPage() {
         estado: dadosReceita.uf || '',
       }));
 
-      setDialogMessage(
-        `Dados encontrados para CNPJ ${formData.cnpj} e preenchidos automaticamente!`
+      // Apenas mostrar mensagem no console, sem popup bloqueante
+      console.log(
+        `✅ Dados encontrados para CNPJ ${formData.cnpj} e preenchidos automaticamente!`
       );
-      setShowSuccessDialog(true);
     } catch (error) {
       console.error('Erro ao buscar CNPJ:', error);
 
@@ -238,15 +239,15 @@ export default function CadastroPessoaJuridicaPage() {
           estado: dadosMock.estado,
         }));
 
-        setDialogMessage(
-          `API indisponível. Dados simulados preenchidos para CNPJ ${formData.cnpj}.`
+        // Apenas mostrar mensagem no console, sem popup bloqueante
+        console.log(
+          `⚠️ API indisponível. Dados simulados preenchidos para CNPJ ${formData.cnpj}.`
         );
-        setShowSuccessDialog(true);
       } catch {
-        setDialogMessage(
-          'Erro ao buscar CNPJ. Os campos podem ser preenchidos manualmente.'
+        // Apenas mostrar mensagem no console, sem popup bloqueante
+        console.log(
+          '⚠️ Erro ao buscar CNPJ. Os campos podem ser preenchidos manualmente.'
         );
-        setShowErrorDialog(true);
       }
     } finally {
       setIsLoadingCNPJ(false);
@@ -493,11 +494,33 @@ export default function CadastroPessoaJuridicaPage() {
       formData.proprietarioEmail
     );
     if (formData.proprietarioEmail) {
-      setFormData(prev => ({ ...prev, usuario: formData.proprietarioEmail }));
-      console.log(
-        '✅ Usuário definido automaticamente como:',
-        formData.proprietarioEmail
-      );
+      console.log('🔄 Forçando atualização do campo usuario...');
+
+      // Forçar atualização imediata
+      setFormData(prev => {
+        const newState = { ...prev, usuario: formData.proprietarioEmail };
+        console.log(
+          '✅ Usuário definido automaticamente como:',
+          formData.proprietarioEmail
+        );
+        console.log('🔄 Estado completo após atualização:', newState);
+        return newState;
+      });
+
+      // Verificar se foi atualizado corretamente
+      setTimeout(() => {
+        console.log('🔍 Verificando se o campo usuario foi atualizado...');
+        setFormData(current => {
+          if (current.usuario !== formData.proprietarioEmail) {
+            console.log(
+              '⚠️ Campo usuario não foi atualizado, forçando novamente...'
+            );
+            return { ...current, usuario: formData.proprietarioEmail };
+          }
+          console.log('✅ Campo usuario está correto:', current.usuario);
+          return current;
+        });
+      }, 100);
     }
   }, [formData.proprietarioEmail]);
 
@@ -615,11 +638,33 @@ export default function CadastroPessoaJuridicaPage() {
     setFormData(prev => {
       const newState = { ...prev, [campo]: valorFormatado };
       console.log(`🔄 Estado atualizado para campo ${campo}:`, newState[campo]);
+
+      // Log especial para proprietarioEmail
+      if (campo === 'proprietarioEmail') {
+        console.log(
+          '📧 Campo proprietarioEmail alterado, novo valor:',
+          valorFormatado
+        );
+        console.log(
+          '📧 Campo usuario será atualizado automaticamente para:',
+          valorFormatado
+        );
+      }
+
+      // Log especial para usuario
+      if (campo === 'usuario') {
+        console.log(
+          '⚠️ ATENÇÃO: Campo usuario está sendo alterado manualmente para:',
+          valorFormatado
+        );
+        console.log('⚠️ Isso pode sobrescrever o preenchimento automático!');
+      }
+
       return newState;
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     console.log('🚀 Iniciando salvamento do formulário...');
 
@@ -662,6 +707,18 @@ export default function CadastroPessoaJuridicaPage() {
 
       // Inserir no Supabase
       console.log('💾 Tentando inserção no banco de dados...');
+      console.log('🔑 Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log(
+        '🔑 Supabase Key:',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          ? '✅ Configurado'
+          : '❌ Não configurado'
+      );
+      console.log(
+        '📊 Dados para inserção:',
+        JSON.stringify(dadosParaInserir, null, 2)
+      );
+
       const { data: initialData, error: initialError } = await supabase
         .from('pessoas_juridicas')
         .insert([dadosParaInserir])
@@ -781,7 +838,7 @@ export default function CadastroPessoaJuridicaPage() {
   };
 
   return (
-    <Layout>
+    <IsolatedLayout>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -1182,8 +1239,8 @@ export default function CadastroPessoaJuridicaPage() {
                     className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">Selecione o tipo de conta</option>
-                    <option value="corrente">Corrente</option>
-                    <option value="poupanca">Poupança</option>
+                    <option value="Corrente">Conta Corrente</option>
+                    <option value="Poupança">Conta Poupança</option>
                   </select>
                 </div>
 
@@ -1389,6 +1446,6 @@ export default function CadastroPessoaJuridicaPage() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </Layout>
+    </IsolatedLayout>
   );
 }

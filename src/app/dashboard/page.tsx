@@ -236,7 +236,7 @@ export default function DashboardPage() {
                       <div className="flex items-center space-x-3">
                         <Shield className="w-5 h-5 text-purple-600" />
                         <span className="text-purple-800 font-medium">
-                          Perfis Configurados
+                          Sistema Ativo
                         </span>
                       </div>
                       <span className="text-purple-600 text-sm font-medium">

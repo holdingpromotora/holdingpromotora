@@ -1,49 +1,69 @@
--- Script para corrigir a constraint UNIQUE do campo nivel
--- Execute este script no Supabase SQL Editor ANTES de executar niveis_acesso_perfis.sql
+-- 🚀 Correção das Constraints da Tabela pessoas_juridicas
+-- Primeiro limpar dados inválidos, depois adicionar constraints CHECK
 
--- ========================================
--- CORREÇÃO: Remover constraint UNIQUE do campo nivel
--- ========================================
+-- 1. LIMPAR DADOS INVÁLIDOS EXISTENTES
+-- Corrigir valores de tipo_conta para valores válidos
+UPDATE pessoas_juridicas 
+SET tipo_conta = 'Corrente' 
+WHERE tipo_conta NOT IN ('Corrente', 'Poupança') 
+   OR tipo_conta IS NULL;
 
--- 1. Verificar se a constraint existe
+-- Corrigir valores de tipo_pix para valores válidos
+UPDATE pessoas_juridicas 
+SET tipo_pix = 'E-mail' 
+WHERE tipo_pix NOT IN ('CNPJ', 'CPF', 'Telefone', 'E-mail') 
+   OR tipo_pix IS NULL;
+
+-- 2. ADICIONAR CONSTRAINTS CHECK
+DO $$
+BEGIN
+    -- Adicionar constraint para tipo_conta se não existir
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.check_constraints 
+        WHERE constraint_name = 'pessoas_juridicas_tipo_conta_check'
+    ) THEN
+        ALTER TABLE pessoas_juridicas 
+        ADD CONSTRAINT pessoas_juridicas_tipo_conta_check 
+        CHECK (tipo_conta IN ('Corrente', 'Poupança'));
+        
+        RAISE NOTICE '✅ Constraint para tipo_conta adicionada com sucesso';
+    ELSE
+        RAISE NOTICE 'ℹ️ Constraint para tipo_conta já existe';
+    END IF;
+    
+    -- Adicionar constraint para tipo_pix se não existir
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.check_constraints 
+        WHERE constraint_name = 'pessoas_juridicas_tipo_pix_check'
+    ) THEN
+        ALTER TABLE pessoas_juridicas 
+        ADD CONSTRAINT pessoas_juridicas_tipo_pix_check 
+        CHECK (tipo_pix IN ('CNPJ', 'CPF', 'Telefone', 'E-mail'));
+        
+        RAISE NOTICE '✅ Constraint para tipo_pix adicionada com sucesso';
+    ELSE
+        RAISE NOTICE 'ℹ️ Constraint para tipo_pix já existe';
+    END IF;
+END $$;
+
+-- 3. VERIFICAR RESULTADO
+-- Mostrar as constraints criadas
 SELECT 
-    tc.constraint_name,
-    tc.table_name,
-    kcu.column_name,
-    tc.constraint_type
-FROM 
-    information_schema.table_constraints tc
-    JOIN information_schema.key_column_usage kcu 
-        ON tc.constraint_name = kcu.constraint_name
-WHERE 
-    tc.table_name = 'tipos_acesso' 
-    AND kcu.column_name = 'nivel'
-    AND tc.constraint_type = 'UNIQUE';
+    constraint_name,
+    constraint_type,
+    table_name
+FROM information_schema.table_constraints 
+WHERE table_name = 'pessoas_juridicas' 
+  AND constraint_type = 'CHECK';
 
--- 2. Remover a constraint UNIQUE do campo nivel
--- (Execute apenas se a constraint existir)
-ALTER TABLE tipos_acesso DROP CONSTRAINT IF EXISTS tipos_acesso_nivel_key;
-
--- 3. Verificar se a constraint foi removida
+-- Mostrar os dados corrigidos
 SELECT 
-    tc.constraint_name,
-    tc.table_name,
-    kcu.column_name,
-    tc.constraint_type
-FROM 
-    information_schema.table_constraints tc
-    JOIN information_schema.key_column_usage kcu 
-        ON tc.constraint_name = kcu.constraint_name
-WHERE 
-    tc.table_name = 'tipos_acesso' 
-    AND kcu.column_name = 'nivel';
-
--- 4. Verificar a estrutura atual da tabela
-\d tipos_acesso;
-
--- ========================================
--- MENSAGEM DE SUCESSO
--- ========================================
--- ✅ Constraint UNIQUE removida com sucesso!
--- ✅ Agora você pode executar niveis_acesso_perfis.sql
--- ✅ Múltiplos tipos de acesso podem ter o mesmo nível
+    id,
+    cnpj,
+    tipo_conta,
+    tipo_pix,
+    chave_pix
+FROM pessoas_juridicas 
+WHERE tipo_conta IS NOT NULL 
+   OR tipo_pix IS NOT NULL
+ORDER BY id;

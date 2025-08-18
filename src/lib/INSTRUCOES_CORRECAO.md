@@ -1,71 +1,66 @@
-# 🚨 CORREÇÃO DO ERRO: `duplicate key value violates unique constraint "tipos_acesso_nivel_key"`
+# 🚀 INSTRUÇÕES PARA CORRIGIR O FORMULÁRIO DE PESSOA JURÍDICA
 
-## 🔍 **PROBLEMA IDENTIFICADO:**
+## **PROBLEMA IDENTIFICADO:**
 
-O erro ocorre porque o banco de dados tem uma **constraint `UNIQUE`** no campo `nivel` da tabela `tipos_acesso`, que impede múltiplos tipos de acesso com o mesmo nível de prioridade.
+O formulário está falhando porque a tabela `pessoas_juridicas` não tem as constraints CHECK para validar os tipos de PIX e conta, **E** já tem dados com valores inválidos.
 
-## ✅ **SOLUÇÃO DEFINITIVA:**
+## **SOLUÇÃO COMPLETA:**
 
-### **PASSO 1: Remover a Constraint Problemática**
+Execute o script SQL corrigido que primeiro limpa os dados inválidos e depois adiciona as constraints.
 
-1. **Acesse o Supabase Dashboard**
-2. **Vá para SQL Editor**
-3. **Execute o arquivo `corrigir_constraint_nivel.sql`**
+### **1. Executar o Script de Correção:**
 
-Este script:
+```sql
+-- Copie e cole este script no Supabase SQL Editor
+-- Execute o arquivo: src/lib/corrigir_constraint_nivel.sql
+```
 
-- ✅ Verifica se a constraint existe
-- ✅ Remove a constraint `UNIQUE` do campo `nivel`
-- ✅ Confirma que foi removida
-- ✅ Permite múltiplos tipos com mesmo nível
+### **2. O que o Script Faz:**
 
-### **PASSO 2: Recriar as Tabelas**
+1. **🔧 LIMPA DADOS INVÁLIDOS:**
+   - Corrige `tipo_conta` inválidos para 'Corrente' (padrão)
+   - Corrige `tipo_pix` inválidos para 'E-mail' (padrão)
 
-1. **No mesmo SQL Editor**
-2. **Execute o arquivo `niveis_acesso_perfis.sql`**
+2. **✅ ADICIONA CONSTRAINTS:**
+   - `tipo_conta` deve ser 'Corrente' ou 'Poupança'
+   - `tipo_pix` deve ser 'CNPJ', 'CPF', 'Telefone' ou 'E-mail'
 
-Este script:
+### **3. Verificar se Funcionou:**
 
-- ✅ Cria/atualiza as tabelas SEM a constraint problemática
-- ✅ Insere dados padrão
-- ✅ Configura triggers e índices
+Após executar o script, você deve ver mensagens como:
 
-## 🎯 **RESULTADO ESPERADO:**
+- "✅ Constraint para tipo_conta adicionada com sucesso"
+- "✅ Constraint para tipo_pix adicionada com sucesso"
 
-- ✅ **Erro resolvido**: Não mais `duplicate key value violates unique constraint`
-- ✅ **Flexibilidade**: Múltiplos tipos podem ter mesmo nível
-- ✅ **Funcionalidade**: Sistema de níveis de acesso funcionando
-- ✅ **Performance**: Índices e triggers otimizados
+### **4. Testar o Formulário:**
 
-## 🔧 **POR QUE ESTA SOLUÇÃO FUNCIONA:**
+1. Acesse o formulário de pessoa jurídica
+2. Preencha os campos obrigatórios
+3. Selecione um tipo de PIX válido
+4. Tente salvar
 
-1. **Problema**: Constraint `UNIQUE` no campo `nivel` era muito restritiva
-2. **Causa**: Impedia lógica de negócio onde múltiplos tipos podem ter mesma prioridade
-3. **Solução**: Remover a constraint desnecessária
-4. **Resultado**: Sistema flexível e funcional
+## **O QUE FOI CORRIGIDO:**
 
-## 📋 **ARQUIVOS NECESSÁRIOS:**
+### **✅ Campo `status` inexistente removido**
 
-1. **`corrigir_constraint_nivel.sql`** - Remove a constraint problemática
-2. **`niveis_acesso_perfis.sql`** - Recria as tabelas corretamente
-3. **`INSTRUCOES_CORRECAO.md`** - Este arquivo de instruções
+- O código estava tentando inserir um campo `status` que não existe na tabela
+- Isso causava erro de inserção no banco
 
-## ⚠️ **ORDEM CRÍTICA:**
+### **✅ Constraints CHECK adicionadas**
 
-**NUNCA execute `niveis_acesso_perfis.sql` antes de `corrigir_constraint_nivel.sql`**
+- A tabela `pessoas_juridicas` agora valida os tipos de PIX e conta
+- Previne inserção de dados inválidos
 
-A ordem correta é:
+### **✅ Dados existentes corrigidos**
 
-1. `corrigir_constraint_nivel.sql` ✅
-2. `niveis_acesso_perfis.sql` ✅
+- Valores inválidos foram convertidos para valores padrão válidos
+- Permite adicionar as constraints sem erro
 
-## 🚀 **APÓS A CORREÇÃO:**
+## **RESULTADO ESPERADO:**
 
-1. **Teste a criação** de tipos de acesso
-2. **Verifique** se múltiplos tipos podem ter mesmo nível
-3. **Confirme** que a API `/api/niveis-acesso` funciona
-4. **Valide** que não há mais erros de constraint
+- ✅ Formulário salva dados no banco sem erro
+- ✅ Tipos de PIX e conta são validados corretamente
+- ✅ Sistema não fecha mais ao salvar
+- ✅ Dados seguem fluxo de aprovação (campo `ativo = false`)
 
----
-
-**✅ Esta solução resolve definitivamente o problema com a experiência de 20 anos de programação!**
+**⚠️ IMPORTANTE:** Execute o script SQL ANTES de testar o formulário!

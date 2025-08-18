@@ -22,7 +22,8 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "clean": "rm -rf .next out dist"
+    "clean": "rm -rf .next out dist",
+    "setup-db": "node scripts/setup-database.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
