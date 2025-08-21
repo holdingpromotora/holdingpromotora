@@ -4,6 +4,7 @@ export interface User {
   nome: string;
   perfil_id?: string;
   perfil_nome?: string;
+  nivel_acesso?: number;
   aprovado?: boolean;
   ativo?: boolean;
   status?: 'pendente' | 'aprovado' | 'rejeitado';
@@ -11,6 +12,7 @@ export interface User {
   data_aprovacao?: string;
   aprovado_por?: string;
   ultimo_acesso?: string;
+  permissoes?: string[];
 }
 
 export interface LoginCredentials {

@@ -58,17 +58,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
 
-      // Simular verificação de credenciais
-      if (email === 'admin@holding.com' && password === 'admin123') {
+      // Chamar API de autenticação real
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.user) {
         const userData: User = {
-          id: 0,
-          email: 'admin@holding.com',
-          nome: 'Administrador Master',
-          perfil_id: '1',
-          perfil_nome: 'Master',
-          aprovado: true,
-          ativo: true,
-          status: 'aprovado',
+          id: result.user.id,
+          email: result.user.email,
+          nome: result.user.nome,
+          perfil_id: result.user.perfil_id,
+          perfil_nome: result.user.perfil_nome,
+          nivel_acesso: result.user.nivel_acesso,
+          aprovado: result.user.aprovado,
+          ativo: result.user.ativo,
+          status: result.user.status,
+          permissoes: result.user.permissoes,
         };
 
         setUser(userData);
@@ -83,8 +95,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: true, user: userData };
       }
 
-      return { success: false, error: 'Credenciais inválidas' };
-    } catch {
+      return { success: false, error: result.error || 'Credenciais inválidas' };
+    } catch (error) {
+      console.error('Erro durante login:', error);
       return { success: false, error: 'Erro interno do servidor' };
     } finally {
       setIsLoading(false);
