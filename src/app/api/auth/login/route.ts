@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://ferlknesyqrhdvapqqso.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZlcmxrbmVzeXFyaGR2YXBxcXNvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTEyMTA0NSwiZXhwIjoyMDcwNjk3MDQ1fQ.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  'https://ferlknesyqrhdvapqqso.supabase.co';
+const supabaseServiceKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZlcmxrbmVzeXFyaGR2YXBxcXNvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTEyMTA0NSwiZXhwIjoyMDcwNjk3MDQ1fQ.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -22,21 +26,33 @@ export async function POST(request: NextRequest) {
     // Buscar usuário no banco de dados
     const { data: usuarios, error: usuariosError } = await supabase
       .from('usuarios')
-      .select(`
+      .select(
+        `
         id,
         nome,
         email,
         senha_hash,
         ativo,
-        tipo_acesso_id,
-        tipos_acesso (
-          id,
-          nome,
-          nivel
-        )
-      `)
+        tipo_acesso_id
+      `
+      )
       .eq('email', email)
       .eq('ativo', true)
+      .single();
+
+    if (usuariosError || !usuarios) {
+      console.log('❌ Usuário não encontrado:', email);
+      return NextResponse.json(
+        { success: false, error: 'Credenciais inválidas' },
+        { status: 401 }
+      );
+    }
+
+    // Buscar tipo de acesso do usuário
+    const { data: tipoAcesso, error: tipoAcessoError } = await supabase
+      .from('tipos_acesso')
+      .select('id, nome, nivel')
+      .eq('id', usuarios.tipo_acesso_id)
       .single();
 
     if (usuariosError || !usuarios) {
@@ -70,22 +86,21 @@ export async function POST(request: NextRequest) {
       id: usuarios.id,
       email: usuarios.email,
       nome: usuarios.nome,
-      perfil_id: usuarios.tipos_acesso?.id?.toString() || '1',
-      perfil_nome: usuarios.tipos_acesso?.nome || 'Usuário',
-      nivel_acesso: usuarios.tipos_acesso?.nivel || 1,
+      perfil_id: tipoAcesso?.id?.toString() || '1',
+      perfil_nome: tipoAcesso?.nome || 'Usuário',
+      nivel_acesso: tipoAcesso?.nivel || 1,
       aprovado: usuarios.ativo,
       ativo: usuarios.ativo,
       status: usuarios.ativo ? 'aprovado' : 'pendente',
-      permissoes: niveisAcesso?.permissoes || []
+      permissoes: niveisAcesso?.permissoes || [],
     };
 
     console.log('✅ Login bem-sucedido para usuário:', email);
 
     return NextResponse.json({
       success: true,
-      user: userData
+      user: userData,
     });
-
   } catch (error) {
     console.error('❌ Erro durante autenticação:', error);
     return NextResponse.json(
