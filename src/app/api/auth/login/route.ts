@@ -41,12 +41,18 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (usuariosError || !usuarios) {
-      console.log('❌ Usuário não encontrado:', email);
+      console.log('❌ Usuário não encontrado:', email, usuariosError);
       return NextResponse.json(
         { success: false, error: 'Credenciais inválidas' },
         { status: 401 }
       );
     }
+
+    console.log('✅ Usuário encontrado:', {
+      id: usuarios.id,
+      email: usuarios.email,
+      tipo_acesso_id: usuarios.tipo_acesso_id,
+    });
 
     // Buscar tipo de acesso do usuário
     const { data: tipoAcesso, error: tipoAcessoError } = await supabase
@@ -55,13 +61,19 @@ export async function POST(request: NextRequest) {
       .eq('id', usuarios.tipo_acesso_id)
       .single();
 
-    if (usuariosError || !usuarios) {
-      console.log('❌ Usuário não encontrado:', email);
+    if (tipoAcessoError || !tipoAcesso) {
+      console.log(
+        '❌ Tipo de acesso não encontrado:',
+        usuarios.tipo_acesso_id,
+        tipoAcessoError
+      );
       return NextResponse.json(
-        { success: false, error: 'Credenciais inválidas' },
+        { success: false, error: 'Tipo de acesso não encontrado' },
         { status: 401 }
       );
     }
+
+    console.log('✅ Tipo de acesso encontrado:', tipoAcesso);
 
     // Verificar se a senha está correta
     // Por enquanto, comparando diretamente (em produção, usar hash)
@@ -80,6 +92,15 @@ export async function POST(request: NextRequest) {
       .eq('tipo_acesso_id', usuarios.tipo_acesso_id)
       .eq('ativo', true)
       .single();
+
+    if (niveisError) {
+      console.log(
+        '⚠️ Erro ao buscar permissões (continuando sem permissões):',
+        niveisError
+      );
+    } else {
+      console.log('✅ Permissões encontradas:', niveisAcesso);
+    }
 
     // Preparar dados do usuário para retorno
     const userData = {
