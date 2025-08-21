@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -15,17 +15,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import {
   Shield,
   Users,
@@ -37,8 +26,15 @@ import {
   ArrowLeft,
   Settings,
   Key,
+  UserCheck,
+  Eye,
+  User,
+  RefreshCw,
+  AlertCircle,
+  BarChart3,
+  Building2,
 } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface TipoAcesso {
   id: string;
@@ -49,15 +45,6 @@ interface TipoAcesso {
   dataCriacao: string;
 }
 
-interface TipoAcessoDB {
-  id: number;
-  nome: string;
-  descricao: string | null;
-  nivel: number;
-  ativo: boolean;
-  created_at: string;
-}
-
 interface Permissao {
   id: string;
   nome: string;
@@ -66,25 +53,22 @@ interface Permissao {
   ativo: boolean;
 }
 
-interface NivelAcesso {
-  id: string;
-  tipoAcessoId: string;
-  tipoAcessoNome: string;
-  permissoes: string[];
-  ativo: boolean;
-  dataCriacao: string;
-}
-
 export default function NiveisAcessoPage() {
   const [tiposAcesso, setTiposAcesso] = useState<TipoAcesso[]>([]);
   const [permissoes, setPermissoes] = useState<Permissao[]>([]);
-  const [niveisAcesso, setNiveisAcesso] = useState<NivelAcesso[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sidebarExpanded] = useState(false);
 
   // Estados para modais
   const [showTipoAcessoModal, setShowTipoAcessoModal] = useState(false);
   const [showPermissaoModal, setShowPermissaoModal] = useState(false);
-  const [showNivelAcessoModal, setShowNivelAcessoModal] = useState(false);
+  const [showPerfilModal, setShowPerfilModal] = useState(false);
+
+  // Estados para alertas
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'success' | 'error'>('success');
 
   // Estados para formulários
   const [tipoAcessoForm, setTipoAcessoForm] = useState({
@@ -96,12 +80,45 @@ export default function NiveisAcessoPage() {
   const [permissaoForm, setPermissaoForm] = useState({
     nome: '',
     descricao: '',
-    categoria: 'sistema',
+    categoria: 'usuarios',
   });
 
-  const [nivelAcessoForm, setNivelAcessoForm] = useState({
+  const [perfilForm, setPerfilForm] = useState({
     tipoAcessoId: '',
-    permissoes: [] as string[],
+    tipoAcessoNome: '',
+    permissoes: {
+      usuarios: {
+        visualizar: false,
+        criar: false,
+        editar: false,
+        excluir: false,
+        aprovar: false,
+        proprios: false,
+      },
+      clientes: {
+        visualizar: false,
+        criar: false,
+        editar: false,
+        excluir: false,
+        proprios: false,
+      },
+      dashboard: {
+        acessoTotal: false,
+        acessoLimitado: false,
+        proprios: false,
+      },
+      sistema: {
+        tiposAcesso: false,
+        configuracoes: false,
+        relatorios: false,
+        proprios: false,
+      },
+      proprios: {
+        visualizar: false,
+        editar: false,
+        excluir: false,
+      },
+    },
   });
 
   // Estados para edição
@@ -110,211 +127,190 @@ export default function NiveisAcessoPage() {
   const [editandoPermissao, setEditandoPermissao] = useState<Permissao | null>(
     null
   );
-  const [editandoNivelAcesso, setEditandoNivelAcesso] =
-    useState<NivelAcesso | null>(null);
+  const [editandoPerfil, setEditandoPerfil] = useState<{
+    tipoAcessoId: string;
+    tipoAcessoNome: string;
+    permissoes: any;
+  } | null>(null);
+
+  const router = useRouter();
 
   useEffect(() => {
     carregarDados();
   }, []);
 
-  const carregarDados = async () => {
-    setIsLoading(true);
-    try {
-      // Carregar tipos de acesso do banco de dados
-      const responseTipos = await fetch('/api/niveis-acesso');
-      if (responseTipos.ok) {
-        const dataTipos = await responseTipos.json();
-        // Converter dados do banco para o formato da interface
-        const tiposConvertidos: TipoAcesso[] = dataTipos.map(
-          (tipo: TipoAcessoDB) => ({
-            id: tipo.id.toString(),
-            nome: tipo.nome,
-            descricao: tipo.descricao || '',
-            nivel: tipo.nivel,
-            ativo: tipo.ativo,
-            dataCriacao: tipo.created_at || new Date().toISOString(),
-          })
-        );
-        setTiposAcesso(tiposConvertidos);
-
-        // Níveis de acesso serão baseados nos tipos de acesso carregados
-        const niveisBaseadosTipos: NivelAcesso[] = tiposConvertidos.map(
-          tipo => ({
-            id: tipo.id,
-            tipoAcessoId: tipo.id,
-            tipoAcessoNome: tipo.nome,
-            permissoes: [], // Por enquanto vazio, será implementado depois
-            ativo: tipo.ativo,
-            dataCriacao: tipo.dataCriacao,
-          })
-        );
-
-        setNiveisAcesso(niveisBaseadosTipos);
+  // Função para exibir alertas
+  const showSuccessAlert = (message: string) => {
+    setAlertMessage(message);
+    setAlertType('success');
+    setShowAlert(true);
+    setTimeout(() => {
+      const alertElement = document.querySelector('.alert-container');
+      if (alertElement) {
+        alertElement.classList.add('animate-[slideOut_0.3s_ease-in]');
+        setTimeout(() => setShowAlert(false), 300);
       } else {
-        console.error(
-          'Erro ao carregar tipos de acesso:',
-          responseTipos.statusText
-        );
+        setShowAlert(false);
+      }
+    }, 5000);
+  };
+
+  const showErrorAlert = (message: string) => {
+    setAlertMessage(message);
+    setAlertType('error');
+    setShowAlert(true);
+    setTimeout(() => {
+      const alertElement = document.querySelector('.alert-container');
+      if (alertElement) {
+        alertElement.classList.add('animate-[slideOut_0.3s_ease-in]');
+        setTimeout(() => setShowAlert(false), 300);
+      } else {
+        setShowAlert(false);
+      }
+    }, 5000);
+  };
+
+  const carregarDados = async () => {
+    try {
+      setIsLoading(true);
+
+      // Carregar tipos de acesso
+      const response = await fetch('/api/niveis-acesso');
+      if (response.ok) {
+        const data = await response.json();
+        setTiposAcesso(data);
       }
 
-      // Manter permissões mockadas por enquanto (serão implementadas depois)
-      const mockPermissoes: Permissao[] = [
-        // Permissões de Usuários
+      // Dados simulados para permissões
+      setPermissoes([
+        // USUÁRIOS
         {
           id: '1',
-          nome: 'visualizar_usuarios',
-          descricao: 'Visualizar lista de usuários',
+          nome: 'Visualizar Usuários',
+          descricao: 'Pode visualizar lista de usuários',
           categoria: 'usuarios',
           ativo: true,
         },
         {
           id: '2',
-          nome: 'criar_usuarios',
-          descricao: 'Criar novos usuários',
+          nome: 'Criar Usuários',
+          descricao: 'Pode criar novos usuários',
           categoria: 'usuarios',
           ativo: true,
         },
         {
           id: '3',
-          nome: 'editar_usuarios',
-          descricao: 'Editar usuários existentes',
+          nome: 'Editar Usuários',
+          descricao: 'Pode editar usuários existentes',
           categoria: 'usuarios',
           ativo: true,
         },
         {
           id: '4',
-          nome: 'excluir_usuarios',
-          descricao: 'Excluir usuários',
+          nome: 'Excluir Usuários',
+          descricao: 'Pode excluir usuários',
           categoria: 'usuarios',
           ativo: true,
         },
         {
           id: '5',
-          nome: 'visualizar_todos_usuarios',
-          descricao: 'Visualizar usuários de outros',
+          nome: 'Aprovar Usuários',
+          descricao: 'Pode aprovar novos usuários',
           categoria: 'usuarios',
           ativo: true,
         },
-
-        // Novas permissões para controle de registros próprios
-        {
-          id: '11',
-          nome: 'visualizar_proprios_usuarios',
-          descricao: 'Visualizar apenas usuários criados por si',
-          categoria: 'usuarios',
-          ativo: true,
-        },
-        {
-          id: '12',
-          nome: 'editar_proprios_usuarios',
-          descricao: 'Editar apenas usuários criados por si',
-          categoria: 'usuarios',
-          ativo: true,
-        },
-        {
-          id: '13',
-          nome: 'excluir_proprios_usuarios',
-          descricao: 'Excluir apenas usuários criados por si',
-          categoria: 'usuarios',
-          ativo: true,
-        },
-
-        // Permissões de Sistema
+        // CLIENTES
         {
           id: '6',
-          nome: 'configurar_sistema',
-          descricao: 'Configurações do sistema',
-          categoria: 'sistema',
+          nome: 'Visualizar Clientes',
+          descricao: 'Pode visualizar lista de clientes',
+          categoria: 'clientes',
           ativo: true,
         },
         {
           id: '7',
-          nome: 'gerenciar_backups',
-          descricao: 'Gerenciar backups',
-          categoria: 'sistema',
+          nome: 'Criar Clientes',
+          descricao: 'Pode criar novos clientes',
+          categoria: 'clientes',
           ativo: true,
         },
         {
           id: '8',
-          nome: 'visualizar_logs',
-          descricao: 'Visualizar logs do sistema',
+          nome: 'Editar Clientes',
+          descricao: 'Pode editar clientes existentes',
+          categoria: 'clientes',
+          ativo: true,
+        },
+        {
+          id: '9',
+          nome: 'Excluir Clientes',
+          descricao: 'Pode excluir clientes',
+          categoria: 'clientes',
+          ativo: true,
+        },
+        // DASHBOARD
+        {
+          id: '10',
+          nome: 'Acesso Total ao Dashboard',
+          descricao: 'Pode acessar todos os dados do dashboard',
+          categoria: 'dashboard',
+          ativo: true,
+        },
+        {
+          id: '11',
+          nome: 'Acesso Limitado ao Dashboard',
+          descricao: 'Pode acessar dados limitados do dashboard',
+          categoria: 'dashboard',
+          ativo: true,
+        },
+        // SISTEMA
+        {
+          id: '12',
+          nome: 'Gerenciar Tipos de Acesso',
+          descricao: 'Pode criar, editar e excluir tipos de acesso',
           categoria: 'sistema',
           ativo: true,
         },
-
-        // Permissões de Relatórios
         {
-          id: '9',
-          nome: 'gerar_relatorios',
-          descricao: 'Gerar relatórios',
-          categoria: 'relatorios',
+          id: '13',
+          nome: 'Configurações do Sistema',
+          descricao: 'Pode alterar configurações gerais do sistema',
+          categoria: 'sistema',
           ativo: true,
         },
-        {
-          id: '10',
-          nome: 'exportar_dados',
-          descricao: 'Exportar dados',
-          categoria: 'relatorios',
-          ativo: true,
-        },
-
-        // Novas permissões para relatórios próprios
         {
           id: '14',
-          nome: 'visualizar_proprios_relatorios',
-          descricao: 'Visualizar apenas relatórios criados por si',
-          categoria: 'relatorios',
+          nome: 'Gerenciar Relatórios',
+          descricao: 'Pode criar, visualizar e exportar relatórios',
+          categoria: 'sistema',
           ativo: true,
         },
+        // REGISTROS PRÓPRIOS
         {
           id: '15',
-          nome: 'editar_proprios_relatorios',
-          descricao: 'Editar apenas relatórios criados por si',
-          categoria: 'relatorios',
+          nome: 'Visualizar Registros Próprios',
+          descricao: 'Pode visualizar apenas registros que criou',
+          categoria: 'proprios',
           ativo: true,
         },
         {
           id: '16',
-          nome: 'excluir_proprios_relatorios',
-          descricao: 'Excluir apenas relatórios criados por si',
-          categoria: 'relatorios',
+          nome: 'Editar Registros Próprios',
+          descricao: 'Pode editar apenas registros que criou',
+          categoria: 'proprios',
           ativo: true,
         },
-
-        // Permissões para registros próprios (nova categoria)
         {
           id: '17',
-          nome: 'visualizar_proprios_registros',
-          descricao: 'Visualizar apenas registros criados por si',
+          nome: 'Excluir Registros Próprios',
+          descricao: 'Pode excluir apenas registros que criou',
           categoria: 'proprios',
           ativo: true,
         },
-        {
-          id: '18',
-          nome: 'editar_proprios_registros',
-          descricao: 'Editar apenas registros criados por si',
-          categoria: 'proprios',
-          ativo: true,
-        },
-        {
-          id: '19',
-          nome: 'excluir_proprios_registros',
-          descricao: 'Excluir apenas registros criados por si',
-          categoria: 'proprios',
-          ativo: true,
-        },
-        {
-          id: '20',
-          nome: 'gerenciar_proprios_registros',
-          descricao: 'Gerenciar completamente registros criados por si',
-          categoria: 'proprios',
-          ativo: true,
-        },
-      ];
-
-      setPermissoes(mockPermissoes);
+      ]);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
+      setError('Erro ao carregar dados');
     } finally {
       setIsLoading(false);
     }
@@ -330,11 +326,7 @@ export default function NiveisAcessoPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          nome: tipoAcessoForm.nome,
-          descricao: tipoAcessoForm.descricao,
-          nivel: tipoAcessoForm.nivel,
-        }),
+        body: JSON.stringify(tipoAcessoForm),
       });
 
       if (response.ok) {
@@ -351,31 +343,25 @@ export default function NiveisAcessoPage() {
         setTiposAcesso(prev => [...prev, tipoConvertido]);
         setTipoAcessoForm({ nome: '', descricao: '', nivel: 1 });
         setShowTipoAcessoModal(false);
-
-        // Recarregar dados para atualizar a lista
+        
+        // Atualizar formulários automaticamente
+        const novaCategoria = tipoConvertido.nome.toLowerCase().replace(/\s+/g, '_');
+        if (!permissoes.some(p => p.categoria === novaCategoria)) {
+          gerarPermissoesParaCategoria(novaCategoria);
+          atualizarFormulariosComNovaCategoria(novaCategoria);
+        }
+        
         carregarDados();
+        showSuccessAlert('Tipo de acesso criado com sucesso!');
       } else {
         const errorData = await response.json();
-        console.error('Erro ao criar tipo de acesso:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData,
-        });
-
-        let mensagemErro = 'Erro ao criar tipo de acesso';
-
-        if (errorData.code === 'DUPLICATE_NAME') {
-          mensagemErro = `Erro: O nome "${tipoAcessoForm.nome}" já existe. Escolha um nome diferente.`;
-        } else if (errorData.details) {
-          mensagemErro = `Erro: ${errorData.details}`;
-        } else if (errorData.error) {
-          mensagemErro = `Erro: ${errorData.error}`;
-        }
-
-        alert(mensagemErro);
+        showErrorAlert(
+          `Erro ao criar tipo de acesso: ${errorData.error || 'Erro desconhecido'}`
+        );
       }
     } catch (error) {
       console.error('Erro ao criar tipo de acesso:', error);
+      showErrorAlert('Erro ao criar tipo de acesso');
     }
   };
 
@@ -392,6 +378,9 @@ export default function NiveisAcessoPage() {
   const handleSalvarEdicaoTipoAcesso = () => {
     if (!editandoTipoAcesso) return;
 
+    // Verificar se o nome foi alterado (pode afetar a categoria)
+    const nomeAlterado = editandoTipoAcesso.nome !== tipoAcessoForm.nome;
+    
     setTiposAcesso(prev =>
       prev.map(tipo =>
         tipo.id === editandoTipoAcesso.id
@@ -400,13 +389,25 @@ export default function NiveisAcessoPage() {
       )
     );
 
+    // Se o nome foi alterado, atualizar formulários
+    if (nomeAlterado) {
+      const novaCategoria = tipoAcessoForm.nome.toLowerCase().replace(/\s+/g, '_');
+      if (!permissoes.some(p => p.categoria === novaCategoria)) {
+        gerarPermissoesParaCategoria(novaCategoria);
+        atualizarFormulariosComNovaCategoria(novaCategoria);
+      }
+    }
+
     setEditandoTipoAcesso(null);
     setTipoAcessoForm({ nome: '', descricao: '', nivel: 1 });
     setShowTipoAcessoModal(false);
+    showSuccessAlert('Tipo de acesso atualizado com sucesso!');
   };
 
   const handleExcluirTipoAcesso = (id: string) => {
-    setTiposAcesso(prev => prev.filter(tipo => tipo.id !== id));
+    if (confirm('Tem certeza que deseja excluir este tipo de acesso?')) {
+      setTiposAcesso(prev => prev.filter(tipo => tipo.id !== id));
+    }
   };
 
   // Funções para Permissões
@@ -421,8 +422,25 @@ export default function NiveisAcessoPage() {
       ativo: true,
     };
 
-    setPermissoes(prev => [...prev, novaPermissao]);
-    setPermissaoForm({ nome: '', descricao: '', categoria: 'sistema' });
+    // Verificar se é uma nova categoria
+    const categoriaExiste = permissoes.some(p => p.categoria === permissaoForm.categoria);
+    
+    if (!categoriaExiste) {
+      // Se for nova categoria, gerar permissões padrão e atualizar formulários
+      gerarPermissoesParaCategoria(permissaoForm.categoria);
+      atualizarFormulariosComNovaCategoria(permissaoForm.categoria);
+      showSuccessAlert(`Nova categoria "${permissaoForm.categoria}" criada com permissões padrão!`);
+    } else {
+      // Se categoria já existe, apenas adicionar a nova permissão
+      setPermissoes(prev => [...prev, novaPermissao]);
+      showSuccessAlert('Permissão criada com sucesso!');
+    }
+
+    setPermissaoForm({
+      nome: '',
+      descricao: '',
+      categoria: 'usuarios',
+    });
     setShowPermissaoModal(false);
   };
 
@@ -439,598 +457,1946 @@ export default function NiveisAcessoPage() {
   const handleSalvarEdicaoPermissao = () => {
     if (!editandoPermissao) return;
 
+    // Verificar se a categoria foi alterada
+    const categoriaAlterada = editandoPermissao.categoria !== permissaoForm.categoria;
+    
     setPermissoes(prev =>
-      prev.map(perm =>
-        perm.id === editandoPermissao.id ? { ...perm, ...permissaoForm } : perm
+      prev.map(permissao =>
+        permissao.id === editandoPermissao.id
+          ? { ...permissao, ...permissaoForm }
+          : permissao
       )
     );
 
+    // Se a categoria foi alterada, atualizar formulários
+    if (categoriaAlterada) {
+      const novaCategoria = permissaoForm.categoria;
+      if (!permissoes.some(p => p.categoria === novaCategoria)) {
+        gerarPermissoesParaCategoria(novaCategoria);
+        atualizarFormulariosComNovaCategoria(novaCategoria);
+      }
+    }
+
     setEditandoPermissao(null);
-    setPermissaoForm({ nome: '', descricao: '', categoria: 'sistema' });
+    setPermissaoForm({
+      nome: '',
+      descricao: '',
+      categoria: 'usuarios',
+    });
     setShowPermissaoModal(false);
+    showSuccessAlert('Permissão atualizada com sucesso!');
   };
 
   const handleExcluirPermissao = (id: string) => {
-    setPermissoes(prev => prev.filter(perm => perm.id !== id));
+    if (confirm('Tem certeza que deseja excluir esta permissão?')) {
+      setPermissoes(prev => prev.filter(permissao => permissao.id !== id));
+    }
   };
 
-  // Funções para Níveis de Acesso
-  const handleCriarNivelAcesso = () => {
-    if (!nivelAcessoForm.tipoAcessoId) return;
+  // Função para gerar permissões automaticamente para uma nova categoria
+  const gerarPermissoesParaCategoria = (categoria: string) => {
+    const permissoesPadrao = [
+      {
+        id: Date.now().toString() + '_1',
+        nome: `Visualizar ${categoria.charAt(0).toUpperCase() + categoria.slice(1)}`,
+        descricao: `Pode visualizar lista de ${categoria}`,
+        categoria: categoria,
+        ativo: true,
+      },
+      {
+        id: Date.now().toString() + '_2',
+        nome: `Criar ${categoria.charAt(0).toUpperCase() + categoria.slice(1)}`,
+        descricao: `Pode criar novos ${categoria}`,
+        categoria: categoria,
+        ativo: true,
+      },
+      {
+        id: Date.now().toString() + '_3',
+        nome: `Editar ${categoria.charAt(0).toUpperCase() + categoria.slice(1)}`,
+        descricao: `Pode editar ${categoria} existentes`,
+        categoria: categoria,
+        ativo: true,
+      },
+      {
+        id: Date.now().toString() + '_4',
+        nome: `Excluir ${categoria.charAt(0).toUpperCase() + categoria.slice(1)}`,
+        descricao: `Pode excluir ${categoria}`,
+        categoria: categoria,
+        ativo: true,
+      },
+      {
+        id: Date.now().toString() + '_5',
+        nome: `Gerenciar ${categoria.charAt(0).toUpperCase() + categoria.slice(1)}`,
+        descricao: `Pode gerenciar configurações de ${categoria}`,
+        categoria: categoria,
+        ativo: true,
+      },
+    ];
 
-    const tipoAcesso = tiposAcesso.find(
-      t => t.id === nivelAcessoForm.tipoAcessoId
-    );
-    if (!tipoAcesso) return;
-
-    const novoNivel: NivelAcesso = {
-      id: Date.now().toString(),
-      tipoAcessoId: nivelAcessoForm.tipoAcessoId,
-      tipoAcessoNome: tipoAcesso.nome,
-      permissoes: nivelAcessoForm.permissoes,
-      ativo: true,
-      dataCriacao: new Date().toISOString(),
-    };
-
-    setNiveisAcesso(prev => [...prev, novoNivel]);
-    setNivelAcessoForm({ tipoAcessoId: '', permissoes: [] });
-    setShowNivelAcessoModal(false);
+    setPermissoes(prev => [...prev, ...permissoesPadrao]);
+    return permissoesPadrao;
   };
 
-  const handleEditarNivelAcesso = (nivel: NivelAcesso) => {
-    setEditandoNivelAcesso(nivel);
-    setNivelAcessoForm({
-      tipoAcessoId: nivel.tipoAcessoId,
-      permissoes: nivel.permissoes,
+  // Função para atualizar formulários com nova categoria
+  const atualizarFormulariosComNovaCategoria = (categoria: string) => {
+    // Atualizar perfilForm com nova categoria
+    setPerfilForm(prev => ({
+      ...prev,
+      permissoes: {
+        ...prev.permissoes,
+        [categoria]: {
+          visualizar: false,
+          criar: false,
+          editar: false,
+          excluir: false,
+          gerenciar: false,
+          proprios: false,
+        },
+      },
+    }));
+
+    // Atualizar permissaoForm se estiver na mesma categoria
+    if (permissaoForm.categoria === categoria) {
+      setPermissaoForm(prev => ({
+        ...prev,
+        categoria: 'usuarios', // Reset para categoria padrão
+      }));
+    }
+  };
+
+  // Funções para Perfis
+  const handleCriarPerfil = () => {
+    if (!perfilForm.tipoAcessoId) return;
+
+    console.log('Permissões a serem configuradas:', perfilForm);
+
+    setPerfilForm({
+      tipoAcessoId: '',
+      tipoAcessoNome: '',
+      permissoes: {
+        usuarios: {
+          visualizar: false,
+          criar: false,
+          editar: false,
+          excluir: false,
+          aprovar: false,
+          proprios: false,
+        },
+        clientes: {
+          visualizar: false,
+          criar: false,
+          editar: false,
+          excluir: false,
+          proprios: false,
+        },
+        dashboard: {
+          acessoTotal: false,
+          acessoLimitado: false,
+          proprios: false,
+        },
+        sistema: {
+          tiposAcesso: false,
+          configuracoes: false,
+          relatorios: false,
+          proprios: false,
+        },
+        proprios: {
+          visualizar: false,
+          editar: false,
+          excluir: false,
+        },
+      },
     });
-    setShowNivelAcessoModal(true);
-  };
+    setShowPerfilModal(false);
 
-  const handleSalvarEdicaoNivelAcesso = () => {
-    if (!editandoNivelAcesso) return;
-
-    const tipoAcesso = tiposAcesso.find(
-      t => t.id === nivelAcessoForm.tipoAcessoId
+    showSuccessAlert(
+      'Permissões configuradas com sucesso! (Funcionalidade será implementada com o banco de dados)'
     );
-    if (!tipoAcesso) return;
+  };
 
-    setNiveisAcesso(prev =>
-      prev.map(nivel =>
-        nivel.id === editandoNivelAcesso.id
-          ? {
-              ...nivel,
-              tipoAcessoId: nivelAcessoForm.tipoAcessoId,
-              tipoAcessoNome: tipoAcesso.nome,
-              permissoes: nivelAcessoForm.permissoes,
-            }
-          : nivel
-      )
+  const handleEditarPerfil = (perfil: any) => {
+    setEditandoPerfil(perfil);
+    setPerfilForm({
+      tipoAcessoId: perfil.tipoAcessoId,
+      tipoAcessoNome: perfil.tipoAcessoNome,
+      permissoes: perfil.permissoes,
+    });
+    setShowPerfilModal(true);
+  };
+
+  const handleEditarPermissoesTipoAcesso = (tipo: TipoAcesso) => {
+    setEditandoPerfil({
+      tipoAcessoId: tipo.id,
+      tipoAcessoNome: tipo.nome,
+      permissoes: {
+        usuarios: {
+          visualizar: false,
+          criar: false,
+          editar: false,
+          excluir: false,
+          aprovar: false,
+          proprios: false,
+        },
+        clientes: {
+          visualizar: false,
+          criar: false,
+          editar: false,
+          excluir: false,
+          proprios: false,
+        },
+        dashboard: {
+          acessoTotal: false,
+          acessoLimitado: false,
+          proprios: false,
+        },
+        sistema: {
+          tiposAcesso: false,
+          configuracoes: false,
+          relatorios: false,
+          proprios: false,
+        },
+        proprios: {
+          visualizar: false,
+          editar: false,
+          excluir: false,
+        },
+      },
+    });
+    setPerfilForm({
+      tipoAcessoId: tipo.id,
+      tipoAcessoNome: tipo.nome,
+      permissoes: {
+        usuarios: {
+          visualizar: false,
+          criar: false,
+          editar: false,
+          excluir: false,
+          aprovar: false,
+          proprios: false,
+        },
+        clientes: {
+          visualizar: false,
+          criar: false,
+          editar: false,
+          excluir: false,
+          proprios: false,
+        },
+        dashboard: {
+          acessoTotal: false,
+          acessoLimitado: false,
+          proprios: false,
+        },
+        sistema: {
+          tiposAcesso: false,
+          configuracoes: false,
+          relatorios: false,
+          proprios: false,
+        },
+        proprios: {
+          visualizar: false,
+          editar: false,
+          excluir: false,
+        },
+      },
+    });
+    setShowPerfilModal(true);
+  };
+
+  const handleSalvarEdicaoPerfil = () => {
+    if (!editandoPerfil) return;
+
+    console.log('Perfil a ser atualizado:', perfilForm);
+
+    setEditandoPerfil(null);
+    setPerfilForm({
+      tipoAcessoId: '',
+      tipoAcessoNome: '',
+      permissoes: {
+        usuarios: {
+          visualizar: false,
+          criar: false,
+          editar: false,
+          excluir: false,
+          aprovar: false,
+          proprios: false,
+        },
+        clientes: {
+          visualizar: false,
+          criar: false,
+          editar: false,
+          excluir: false,
+          proprios: false,
+        },
+        dashboard: {
+          acessoTotal: false,
+          acessoLimitado: false,
+          proprios: false,
+        },
+        sistema: {
+          tiposAcesso: false,
+          configuracoes: false,
+          relatorios: false,
+          proprios: false,
+        },
+        proprios: {
+          visualizar: false,
+          editar: false,
+          excluir: false,
+        },
+      },
+    });
+    setShowPerfilModal(false);
+
+    showSuccessAlert(
+      'Permissões atualizadas com sucesso! (Funcionalidade será implementada com o banco de dados)'
     );
-
-    setEditandoNivelAcesso(null);
-    setNivelAcessoForm({ tipoAcessoId: '', permissoes: [] });
-    setShowNivelAcessoModal(false);
-  };
-
-  const handleExcluirNivelAcesso = (id: string) => {
-    setNiveisAcesso(prev => prev.filter(nivel => nivel.id !== id));
-  };
-
-  const togglePermissao = (permissaoId: string) => {
-    setNivelAcessoForm(prev => ({
-      ...prev,
-      permissoes: prev.permissoes.includes(permissaoId)
-        ? prev.permissoes.filter(id => id !== permissaoId)
-        : [...prev.permissoes, permissaoId],
-    }));
-  };
-
-  // Funções para controle de categorias
-  const marcarTodasCategoria = (categoria: string) => {
-    const permissoesCategoria = permissoes.filter(
-      p => p.categoria === categoria
-    );
-    const idsCategoria = permissoesCategoria.map(p => p.id);
-    const outrasPermissoes = nivelAcessoForm.permissoes.filter(
-      id => !idsCategoria.includes(id)
-    );
-    setNivelAcessoForm(prev => ({
-      ...prev,
-      permissoes: [...outrasPermissoes, ...idsCategoria],
-    }));
-  };
-
-  const desmarcarTodasCategoria = (categoria: string) => {
-    const permissoesCategoria = permissoes.filter(
-      p => p.categoria === categoria
-    );
-    const idsCategoria = permissoesCategoria.map(p => p.id);
-    const novasPermissoes = nivelAcessoForm.permissoes.filter(
-      id => !idsCategoria.includes(id)
-    );
-    setNivelAcessoForm(prev => ({
-      ...prev,
-      permissoes: novasPermissoes,
-    }));
-  };
-
-  const marcarTodasPermissoes = () => {
-    const todasPermissoes = permissoes.map(p => p.id);
-    setNivelAcessoForm(prev => ({ ...prev, permissoes: todasPermissoes }));
-  };
-
-  const desmarcarTodasPermissoes = () => {
-    setNivelAcessoForm(prev => ({ ...prev, permissoes: [] }));
-  };
-
-  const getCategoriaNome = (categoria: string) => {
-    const categorias: { [key: string]: string } = {
-      usuarios: 'Usuários',
-      sistema: 'Sistema',
-      relatorios: 'Relatórios',
-      proprios: 'Registros Próprios',
-    };
-    return categorias[categoria] || categoria;
   };
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-6">
-        <div className="text-center py-12">
-          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600 text-lg font-medium">
-            Carregando níveis de acesso...
-          </p>
+      <div className={`${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-holding-blue-light" />
+            <p className="text-holding-blue-light">Carregando...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <AlertCircle className="w-8 h-8 mx-auto mb-4 text-red-500" />
+            <p className="text-red-500">{error}</p>
+            <Button onClick={carregarDados} className="mt-4">
+              Tentar Novamente
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Cabeçalho */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 via-blue-900 to-indigo-900 rounded-2xl p-6 lg:p-8 shadow-2xl mb-8">
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/50 to-blue-900/50"></div>
-        <div className="absolute top-0 right-0 w-48 h-48 lg:w-64 lg:h-64 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 rounded-full -translate-y-24 lg:-translate-y-32 translate-x-24 lg:translate-x-32"></div>
+    <div className={`${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}>
+      {/* Alertas */}
+      {showAlert && (
+        <div className="fixed top-6 right-6 z-50 max-w-sm md:max-w-md mx-4 animate-[slideIn_0.5s_ease-out] alert-container">
+          <div
+            className={`relative overflow-hidden rounded-xl shadow-2xl border-l-4 p-6 backdrop-blur-sm ${
+              alertType === 'success'
+                ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-500 text-green-800 shadow-green-200/50'
+                : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-500 text-red-800 shadow-red-200/50'
+            }`}
+          >
+            {/* Barra de progresso */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gray-200 rounded-t-xl overflow-hidden">
+              <div
+                className={`h-full transition-all duration-5000 ease-linear ${
+                  alertType === 'success'
+                    ? 'bg-gradient-to-r from-green-400 to-emerald-500'
+                    : 'bg-gradient-to-r from-red-400 to-rose-500'
+                }`}
+                style={{ animation: 'progress 5s linear forwards' }}
+              />
+            </div>
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
-          <div className="flex-1">
-            <div className="flex items-center space-x-4 lg:space-x-6 mb-4">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                <Shield className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
+            <div className="flex items-start space-x-4">
+              <div
+                className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
+                  alertType === 'success'
+                    ? 'bg-gradient-to-br from-green-400 to-emerald-500 shadow-green-300/50'
+                    : 'bg-gradient-to-br from-red-400 to-rose-500 shadow-red-300/50'
+                }`}
+              >
+                {alertType === 'success' ? (
+                  <CheckCircle className="w-6 h-6 text-white" />
+                ) : (
+                  <XCircle className="w-6 h-6 text-white" />
+                )}
               </div>
-              <div>
-                <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2">
-                  Níveis de Acesso
-                </h1>
-                <p className="text-blue-100 text-sm lg:text-lg">
-                  Gerencie tipos de acesso e permissões do sistema
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-semibold mb-1">
+                  {alertType === 'success' ? 'Operação Concluída!' : 'Atenção!'}
+                </p>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {alertMessage}
                 </p>
               </div>
+              <button
+                onClick={() => setShowAlert(false)}
+                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100/80 transition-all duration-200 group hover:shadow-md"
+                title="Fechar alerta"
+              >
+                <XCircle className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+              </button>
+            </div>
+
+            {/* Ícones decorativos */}
+            <div className="absolute -top-2 -right-2 w-16 h-16 opacity-10">
+              {alertType === 'success' ? (
+                <CheckCircle className="w-full h-full text-green-400" />
+              ) : (
+                <XCircle className="w-full h-full text-red-400" />
+              )}
             </div>
           </div>
+        </div>
+      )}
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <Link href="/usuarios">
-              <Button className="bg-white text-slate-800 hover:bg-blue-50 hover:text-blue-700 border-2 border-white/50 hover:border-white transition-all duration-300 transform hover:scale-105 shadow-xl font-semibold px-4 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl text-sm lg:text-base">
-                <ArrowLeft className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3" />
-                Voltar aos Usuários
-              </Button>
-            </Link>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-holding-white mb-2">
+            Níveis de Acesso
+          </h1>
+          <p className="text-holding-blue-light">
+            Gerencie tipos de acesso e permissões do sistema
+          </p>
+        </div>
 
-            <Link href="/dashboard">
-              <div className="relative group animate-pulse hover:animate-none">
-                <div className="ring-4 ring-blue-400/30 hover:ring-blue-400/50 transition-all duration-300">
-                  <Button className="bg-white text-slate-800 hover:bg-blue-50 hover:text-blue-700 border-2 border-white/50 hover:border-white transition-all duration-300 transform hover:scale-105 shadow-xl font-semibold px-4 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl text-sm lg:text-base">
-                    <ArrowLeft className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3" />
-                    Voltar ao Dashboard
-                  </Button>
-                </div>
-                <div className="absolute -top-2 -right-2 w-4 h-4 bg-blue-400 rounded-full animate-pulse"></div>
-                <div className="absolute -bottom-1 -left-1 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
-                  Retornar ao painel principal
-                </div>
-              </div>
-            </Link>
-          </div>
+        <div className="flex items-center space-x-4">
+          <Button
+            onClick={() => router.push('/usuarios')}
+            className="bg-holding-blue-light hover:bg-holding-blue-light/80 text-holding-white px-6 py-2"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Gerenciar Usuários
+          </Button>
+          <Button
+            onClick={() => router.push('/usuarios/aprovacao')}
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2"
+          >
+            <UserCheck className="w-4 h-4 mr-2" />
+            Aprovações
+          </Button>
+          <Button
+            onClick={() => setShowTipoAcessoModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+          >
+            <Shield className="w-4 h-4 mr-2" />
+            Criar Tipo de Acesso
+          </Button>
+          <Button
+            onClick={() => setShowPerfilModal(true)}
+            className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2"
+          >
+            <User className="w-4 h-4 mr-2" />
+            Configurar Permissões
+          </Button>
+          <Button
+            onClick={() => setShowPermissaoModal(true)}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2"
+          >
+            <Key className="w-4 h-4 mr-2" />
+            Criar Permissões
+          </Button>
         </div>
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 border-0 shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-transparent"></div>
-          <CardContent className="p-4 lg:p-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 lg:space-x-4">
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-all duration-300">
-                  <Shield className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
-                </div>
-                <div>
-                  <p className="text-white text-xs lg:text-sm font-medium">
-                    Tipos de Acesso
-                  </p>
-                  <p className="text-2xl lg:text-4xl font-bold text-white">
-                    {tiposAcesso.length}
-                  </p>
-                </div>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="glass-effect-accent border-holding-accent/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg text-holding-white flex items-center">
+              <Shield className="w-5 h-5 mr-2 text-holding-blue-light" />
+              Tipos de Acesso
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-holding-white">
+              {tiposAcesso.length}
             </div>
+            <p className="text-holding-blue-light text-sm">
+              Total de tipos configurados
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-gradient-to-br from-green-500 via-green-600 to-green-700 border-0 shadow-2xl hover:shadow-green-500/25 transition-all duration-300 hover:scale-105 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-600/20 to-transparent"></div>
-          <CardContent className="p-4 lg:p-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 lg:space-x-4">
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-all duration-300">
-                  <Key className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
-                </div>
-                <div>
-                  <p className="text-white text-xs lg:text-sm font-medium">
-                    Permissões
-                  </p>
-                  <p className="text-xl lg:text-3xl font-bold text-white">
-                    {permissoes.length}
-                  </p>
-                </div>
-              </div>
+        <Card className="glass-effect-accent border-holding-accent/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg text-holding-white flex items-center">
+              <Key className="w-5 h-5 mr-2 text-holding-blue-light" />
+              Permissões
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-holding-white">
+              {permissoes.length}
             </div>
+            <p className="text-holding-blue-light text-sm">
+              Total de permissões
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 border-0 shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-600/20 to-transparent"></div>
-          <CardContent className="p-4 lg:p-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 lg:space-x-4">
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-all duration-300">
-                  <Settings className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
-                </div>
-                <div>
-                  <p className="text-white text-xs lg:text-sm font-medium">
-                    Níveis Configurados
-                  </p>
-                  <p className="text-xl lg:text-3xl font-bold text-white">
-                    {niveisAcesso.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 border-0 shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 hover:scale-105 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-transparent"></div>
-          <CardContent className="p-4 lg:p-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 lg:space-x-4">
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-all duration-300">
-                  <Users className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
-                </div>
-                <div>
-                  <p className="text-white text-xs lg:text-sm font-medium">
-                    Usuários Ativos
-                  </p>
-                  <p className="text-xl lg:text-3xl font-bold text-white">24</p>
-                </div>
-              </div>
-            </div>
+        <Card className="glass-effect-accent border-holding-accent/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg text-holding-white flex items-center">
+              <Users className="w-5 h-5 mr-2 text-holding-blue-light" />
+              Usuários Ativos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-holding-white">0</div>
+            <p className="text-holding-blue-light text-sm">
+              Com acesso liberado
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Área de Gerenciamento */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-        {/* Tipos de Acesso */}
-        <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-slate-800 flex items-center space-x-2">
-                <Shield className="w-5 h-5 text-blue-600" />
-                <span>Tipos de Acesso</span>
-              </CardTitle>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setEditandoTipoAcesso(null);
-                  setTipoAcessoForm({ nome: '', descricao: '', nivel: 1 });
-                  setShowTipoAcessoModal(true);
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-2 text-sm"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo
-              </Button>
+      {/* Lista de Tipos de Acesso */}
+      <Card className="glass-effect-accent border-holding-accent/30">
+        <CardHeader className="bg-gradient-to-r from-holding-blue-deep/50 to-holding-blue-dark/50 border-b border-holding-blue-light/20">
+          <CardTitle className="text-xl text-holding-white flex items-center">
+            <Shield className="w-6 h-6 mr-3 text-holding-blue-light" />
+            Tipos de Acesso Configurados
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          {tiposAcesso.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-holding-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-10 h-10 text-holding-blue-light/50" />
+              </div>
+              <p className="text-holding-blue-light text-lg font-medium mb-2">
+                Nenhum tipo de acesso configurado
+              </p>
+              <p className="text-holding-blue-light/70 text-sm">
+                Clique em &quot;Criar Tipo de Acesso&quot; para começar
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {tiposAcesso.map(tipo => (
-              <div
-                key={tipo.id}
-                className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <Badge variant="secondary" className="text-xs">
-                      Nível {tipo.nivel}
-                    </Badge>
-                    {tipo.ativo ? (
-                      <Badge className="bg-green-100 text-green-800 text-xs">
-                        Ativo
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive" className="text-xs">
-                        Inativo
-                      </Badge>
-                    )}
-                  </div>
-                  <h4 className="font-semibold text-slate-900 text-sm">
-                    {tipo.nome}
-                  </h4>
-                  <p className="text-slate-600 text-xs">{tipo.descricao}</p>
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleEditarTipoAcesso(tipo)}
-                    className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 p-2"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-slate-600 hover:text-red-600 hover:bg-red-50 p-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          Excluir Tipo de Acesso
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja excluir o tipo de acesso &quot;
-                          {tipo.nome}&quot;? Esta ação não pode ser desfeita.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+              {tiposAcesso.map(tipo => (
+                <Card
+                  key={tipo.id}
+                  className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <Shield className="w-6 h-6 text-holding-blue-light" />
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditarPermissoesTipoAcesso(tipo)}
+                          className="w-8 h-8 p-0 border-holding-blue-light/30 text-holding-blue-light hover:bg-holding-blue-light/20 hover:border-holding-blue-light/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                          title="Editar permissões do tipo de acesso"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-8 h-8 p-0 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:scale-110 transition-all duration-200 rounded-lg"
                           onClick={() => handleExcluirTipoAcesso(tipo.id)}
+                          title="Excluir tipo de acesso"
                         >
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
 
-        {/* Permissões */}
-        <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-slate-800 flex items-center space-x-2">
-                <Key className="w-5 h-5 text-green-600" />
-                <span>Permissões</span>
-              </CardTitle>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setEditandoPermissao(null);
-                  setPermissaoForm({
-                    nome: '',
-                    descricao: '',
-                    categoria: 'sistema',
-                  });
-                  setShowPermissaoModal(true);
-                }}
-                className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-3 py-2 text-sm"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Nova
-              </Button>
+                    <div className="space-y-2">
+                      <h3 className="text-base font-bold text-holding-white group-hover:text-holding-blue-light transition-colors duration-200">
+                        {tipo.nome}
+                      </h3>
+                      <p className="text-xs text-holding-blue-light/80 leading-relaxed">
+                        {tipo.descricao}
+                      </p>
+
+                      <div className="flex items-center space-x-2 pt-1">
+                        <Badge
+                          variant="secondary"
+                          className="bg-holding-blue-light/20 text-holding-blue-light border-holding-blue-light/30 px-2 py-0.5 text-xs font-medium"
+                        >
+                          Nível {tipo.nivel}
+                        </Badge>
+                        <Badge
+                          variant={tipo.ativo ? 'default' : 'destructive'}
+                          className={`px-2 py-0.5 text-xs font-medium ${
+                            tipo.ativo
+                              ? 'bg-green-500/20 text-green-400 border-green-500/30'
+                              : 'bg-red-500/20 text-red-400 border-red-500/30'
+                          }`}
+                        >
+                          {tipo.ativo ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </div>
+
+                      {/* Permissões de Acesso */}
+                      <div className="pt-2 border-t border-holding-blue-light/20">
+                        <h4 className="text-xs font-semibold text-holding-blue-light mb-1">
+                          Permissões de Acesso:
+                        </h4>
+                        <div className="space-y-1">
+                          {tipo.nivel >= 5 && (
+                            <div className="flex items-center space-x-2">
+                              <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                              <span className="text-xs text-holding-blue-light">
+                                Acesso total ao sistema
+                              </span>
+                            </div>
+                          )}
+                          {tipo.nivel >= 4 && (
+                            <div className="flex items-center space-x-2">
+                              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                              <span className="text-xs text-holding-blue-light">
+                                Gerenciar usuários e clientes
+                              </span>
+                            </div>
+                          )}
+                          {tipo.nivel >= 3 && (
+                            <div className="flex items-center space-x-2">
+                              <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+                              <span className="text-xs text-holding-blue-light">
+                                Editar registros
+                              </span>
+                            </div>
+                          )}
+                          {tipo.nivel >= 2 && (
+                            <div className="flex items-center space-x-2">
+                              <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
+                              <span className="text-xs text-holding-blue-light">
+                                Visualizar dados
+                              </span>
+                            </div>
+                          )}
+                          {tipo.nivel >= 1 && (
+                            <div className="flex items-center space-x-2">
+                              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                              <span className="text-xs text-holding-blue-light">
+                                Acesso básico
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {permissoes.map(permissao => (
-              <div
-                key={permissao.id}
-                className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Lista de Permissões */}
+      <Card className="glass-effect-accent border-holding-accent/30">
+        <CardHeader className="bg-gradient-to-r from-holding-blue-deep/50 to-holding-blue-dark/50 border-b border-holding-blue-light/20">
+          <CardTitle className="text-xl text-holding-white flex items-center">
+            <Key className="w-6 h-6 mr-3 text-holding-blue-light" />
+            Permissões Disponíveis
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <Tabs defaultValue="usuarios" className="w-full">
+            <TabsList className="grid w-full grid-cols-5 bg-holding-blue-profound/80 border border-holding-blue-light/30">
+              <TabsTrigger
+                value="usuarios"
+                className="data-[state=active]:bg-holding-blue-light/20 data-[state=active]:text-holding-blue-light data-[state=active]:border-holding-blue-light/50"
               >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <Badge variant="outline" className="text-xs">
-                      {getCategoriaNome(permissao.categoria)}
-                    </Badge>
-                    {permissao.ativo ? (
-                      <Badge className="bg-green-100 text-green-800 text-xs">
-                        Ativa
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive" className="text-xs">
-                        Inativa
-                      </Badge>
-                    )}
-                  </div>
-                  <h4 className="font-semibold text-slate-900 text-sm">
-                    {permissao.nome}
-                  </h4>
-                  <p className="text-slate-600 text-xs">
-                    {permissao.descricao}
+                <Users className="w-4 h-4 mr-2" />
+                Usuários
+              </TabsTrigger>
+              <TabsTrigger
+                value="clientes"
+                className="data-[state=active]:bg-holding-blue-light/20 data-[state=active]:text-holding-blue-light data-[state=active]:border-holding-blue-light/50"
+              >
+                <Building2 className="w-4 h-4 mr-2" />
+                Clientes
+              </TabsTrigger>
+              <TabsTrigger
+                value="dashboard"
+                className="data-[state=active]:bg-holding-blue-light/20 data-[state=active]:text-holding-blue-light data-[state=active]:border-holding-blue-light/50"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger
+                value="sistema"
+                className="data-[state=active]:bg-holding-blue-light/20 data-[state=active]:text-holding-blue-light data-[state=active]:border-holding-blue-light/50"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Sistema
+              </TabsTrigger>
+              <TabsTrigger
+                value="proprios"
+                className="data-[state=active]:bg-holding-blue-light/20 data-[state=active]:text-holding-blue-light data-[state=active]:border-holding-blue-light/50"
+              >
+                <UserCheck className="w-4 h-4 mr-2" />
+                Próprios
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Aba Usuários */}
+            <TabsContent value="usuarios" className="mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                {permissoes
+                  .filter(p => p.categoria === 'usuarios')
+                  .map(permissao => (
+                    <Card
+                      key={permissao.id}
+                      className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <Users className="w-6 h-6 text-holding-blue-light" />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditarPermissao(permissao)}
+                              className="w-8 h-8 p-0 border-holding-blue-light/30 text-holding-blue-light hover:bg-holding-blue-light/20 hover:border-holding-blue-light/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                              title="Editar permissão"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-8 h-8 p-0 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                              onClick={() =>
+                                handleExcluirPermissao(permissao.id)
+                              }
+                              title="Excluir permissão"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h3 className="text-base font-bold text-holding-white group-hover:text-holding-blue-light transition-colors duration-200">
+                            {permissao.nome}
+                          </h3>
+                          <p className="text-xs text-holding-blue-light/80 leading-relaxed">
+                            {permissao.descricao}
+                          </p>
+
+                          <div className="pt-1">
+                            <Badge
+                              variant="outline"
+                              className="bg-holding-blue-light/20 text-holding-blue-light border-holding-blue-light/30 px-2 py-0.5 text-xs font-medium"
+                            >
+                              {permissao.categoria}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </TabsContent>
+
+            {/* Aba Clientes */}
+            <TabsContent value="clientes" className="mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                {permissoes
+                  .filter(p => p.categoria === 'clientes')
+                  .map(permissao => (
+                    <Card
+                      key={permissao.id}
+                      className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <Building2 className="w-6 h-6 text-holding-blue-light" />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditarPermissao(permissao)}
+                              className="w-8 h-8 p-0 border-holding-blue-light/30 text-holding-blue-light hover:bg-holding-blue-light/20 hover:border-holding-blue-light/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                              title="Editar permissão"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-8 h-8 p-0 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                              onClick={() =>
+                                handleExcluirPermissao(permissao.id)
+                              }
+                              title="Excluir permissão"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h3 className="text-base font-bold text-holding-white group-hover:text-holding-blue-light transition-colors duration-200">
+                            {permissao.nome}
+                          </h3>
+                          <p className="text-xs text-holding-blue-light/80 leading-relaxed">
+                            {permissao.descricao}
+                          </p>
+
+                          <div className="pt-1">
+                            <Badge
+                              variant="outline"
+                              className="bg-holding-blue-light/20 text-holding-blue-light border-holding-blue-light/30 px-2 py-0.5 text-xs font-medium"
+                            >
+                              {permissao.categoria}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </TabsContent>
+
+            {/* Aba Dashboard */}
+            <TabsContent value="dashboard" className="mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                {permissoes
+                  .filter(p => p.categoria === 'dashboard')
+                  .map(permissao => (
+                    <Card
+                      key={permissao.id}
+                      className="bg-gradient-to-br from-holding-blue-light/60 to-holding-blue-light/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <BarChart3 className="w-6 h-6 text-holding-blue-light" />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditarPermissao(permissao)}
+                              className="w-8 h-8 p-0 border-holding-blue-light/30 text-holding-blue-light hover:bg-holding-blue-light/20 hover:border-holding-blue-light/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                              title="Editar permissão"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-8 h-8 p-0 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                              onClick={() =>
+                                handleExcluirPermissao(permissao.id)
+                              }
+                              title="Excluir permissão"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h3 className="text-base font-bold text-holding-white group-hover:text-holding-blue-light transition-colors duration-200">
+                            {permissao.nome}
+                          </h3>
+                          <p className="text-xs text-holding-blue-light/80 leading-relaxed">
+                            {permissao.descricao}
+                          </p>
+
+                          <div className="pt-1">
+                            <Badge
+                              variant="outline"
+                              className="bg-holding-blue-light/20 text-holding-blue-light border-holding-blue-light/30 px-2 py-0.5 text-xs font-medium"
+                            >
+                              {permissao.categoria}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </TabsContent>
+
+            {/* Aba Sistema */}
+            <TabsContent value="sistema" className="mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                {permissoes
+                  .filter(p => p.categoria === 'sistema')
+                  .map(permissao => (
+                    <Card
+                      key={permissao.id}
+                      className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <Settings className="w-6 h-6 text-holding-blue-light" />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditarPermissao(permissao)}
+                              className="w-8 h-8 p-0 border-holding-blue-light/30 text-holding-blue-light hover:bg-holding-blue-light/20 hover:border-holding-blue-light/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                              title="Editar permissão"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-8 h-8 p-0 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                              onClick={() =>
+                                handleExcluirPermissao(permissao.id)
+                              }
+                              title="Excluir permissão"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h3 className="text-base font-bold text-holding-white group-hover:text-holding-blue-light transition-colors duration-200">
+                            {permissao.nome}
+                          </h3>
+                          <p className="text-xs text-holding-blue-light/80 leading-relaxed">
+                            {permissao.descricao}
+                          </p>
+
+                          <div className="pt-1">
+                            <Badge
+                              variant="outline"
+                              className="bg-holding-blue-light/20 text-holding-blue-light border-holding-blue-light/30 px-2 py-0.5 text-xs font-medium"
+                            >
+                              {permissao.categoria}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </TabsContent>
+
+            {/* Aba Registros Próprios */}
+            <TabsContent value="proprios" className="mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                {permissoes
+                  .filter(p => p.categoria === 'proprios')
+                  .map(permissao => (
+                    <Card
+                      key={permissao.id}
+                      className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                            <UserCheck className="w-6 h-6 text-holding-blue-light" />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditarPermissao(permissao)}
+                              className="w-8 h-8 p-0 border-holding-blue-light/30 text-holding-blue-light hover:bg-holding-blue-light/20 hover:border-holding-blue-light/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                              title="Editar permissão"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-8 h-8 p-0 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                              onClick={() =>
+                                handleExcluirPermissao(permissao.id)
+                              }
+                              title="Excluir permissão"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h3 className="text-base font-bold text-holding-white group-hover:text-holding-blue-light transition-colors duration-200">
+                            {permissao.nome}
+                          </h3>
+                          <p className="text-xs text-holding-blue-light/80 leading-relaxed">
+                            {permissao.descricao}
+                          </p>
+
+                          <div className="pt-1">
+                            <Badge
+                              variant="outline"
+                              className="bg-holding-blue-light/20 text-holding-blue-light border-holding-blue-light/30 px-2 py-0.5 text-xs font-medium"
+                            >
+                              {permissao.categoria}
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Modal Perfil */}
+      <Dialog open={showPerfilModal} onOpenChange={setShowPerfilModal}>
+        <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto glass-effect-accent border-holding-accent/30 bg-holding-blue-profound/95">
+          <DialogHeader className="bg-gradient-to-r from-holding-blue-deep to-holding-blue-dark text-white p-6 rounded-t-lg">
+            <DialogTitle className="text-xl font-semibold text-white">
+              {editandoPerfil ? 'Editar Permissões' : 'Configurar Permissões'}
+            </DialogTitle>
+            <DialogDescription className="text-holding-blue-light">
+              {editandoPerfil
+                ? 'Edite as permissões do tipo de acesso'
+                : 'Configure as permissões para um tipo de acesso'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="p-6 space-y-6 bg-holding-blue-profound/80">
+            {/* Seleção do tipo de acesso */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="tipoAcesso"
+                  className="text-sm font-medium text-holding-white"
+                >
+                  Tipo de Acesso
+                </Label>
+                <select
+                  id="tipoAcesso"
+                  value={perfilForm.tipoAcessoId}
+                  onChange={e => {
+                    const tipoSelecionado = tiposAcesso.find(
+                      t => t.id === e.target.value
+                    );
+                    setPerfilForm(prev => ({
+                      ...prev,
+                      tipoAcessoId: e.target.value,
+                      tipoAcessoNome: tipoSelecionado?.nome || '',
+                    }));
+                  }}
+                  className="w-full px-3 py-2 border border-holding-blue-light/30 rounded-md focus:outline-none focus:ring-2 focus:ring-holding-blue-light focus:border-transparent bg-holding-blue-profound/90 text-holding-white"
+                >
+                  <option value="">Selecione um tipo de acesso</option>
+                  {tiposAcesso.map(tipo => (
+                    <option key={tipo.id} value={tipo.id}>
+                      {tipo.nome} - Nível {tipo.nivel}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {perfilForm.tipoAcessoNome && (
+                <div className="p-4 bg-holding-blue-light/10 border border-holding-blue-light/30 rounded-lg">
+                  <p className="text-sm text-holding-blue-light">
+                    <strong>Tipo selecionado:</strong>{' '}
+                    {perfilForm.tipoAcessoNome}
                   </p>
                 </div>
-                <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleEditarPermissao(permissao)}
-                    className="text-slate-600 hover:text-green-600 hover:bg-green-50 p-2"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-slate-600 hover:text-red-600 hover:bg-red-50 p-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Excluir Permissão</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja excluir a permissão &quot;
-                          {permissao.nome}&quot;? Esta ação não pode ser
-                          desfeita.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleExcluirPermissao(permissao.id)}
-                        >
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        {/* Níveis de Acesso */}
-        <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-slate-800 flex items-center space-x-2">
-                <Settings className="w-5 h-5 text-amber-600" />
-                <span>Níveis de Acesso</span>
-              </CardTitle>
-              <Button
-                size="sm"
-                onClick={() => {
-                  setEditandoNivelAcesso(null);
-                  setNivelAcessoForm({ tipoAcessoId: '', permissoes: [] });
-                  setShowNivelAcessoModal(true);
-                }}
-                className="bg-amber-600 hover:bg-amber-700 text-white rounded-lg px-3 py-2 text-sm"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Novo
-              </Button>
+              )}
             </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {niveisAcesso.map(nivel => (
-              <div
-                key={nivel.id}
-                className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <Badge className="bg-amber-100 text-amber-800 text-xs">
-                      {nivel.tipoAcessoNome}
-                    </Badge>
-                    {nivel.ativo ? (
-                      <Badge className="bg-green-100 text-green-800 text-xs">
-                        Ativo
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive" className="text-xs">
-                        Inativo
-                      </Badge>
-                    )}
+
+            {/* Configuração de Permissões */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-holding-white border-b border-holding-blue-light/30 pb-2">
+                Configurar Permissões por Categoria
+              </h3>
+
+              {/* USUÁRIOS */}
+              <Card className="glass-effect-accent border-holding-accent/30 p-6 hover:shadow-xl hover:shadow-green-500/10 transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
+                      <Users className="w-5 h-5 text-green-400" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-holding-white">
+                      Usuários
+                    </h4>
                   </div>
-                  <h4 className="font-semibold text-slate-900 text-sm">
-                    {nivel.permissoes.length} permissões
-                  </h4>
-                  <p className="text-slate-600 text-xs">
-                    Criado em{' '}
-                    {new Date(nivel.dataCriacao).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-                <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleEditarNivelAcesso(nivel)}
-                    className="text-slate-600 hover:text-amber-600 hover:bg-amber-50 p-2"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-slate-600 hover:text-red-600 hover:bg-red-50 p-2"
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            usuarios: {
+                              visualizar: true,
+                              criar: true,
+                              editar: true,
+                              excluir: true,
+                              aprovar: true,
+                              proprios: true,
+                            },
+                          },
+                        }));
+                      }}
+                      className="text-xs px-3 py-1 border-green-500/30 text-green-400 hover:bg-green-500/20 hover:border-green-500/50 transition-all duration-200"
+                    >
+                      Selecionar Todos
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            usuarios: {
+                              visualizar: false,
+                              criar: false,
+                              editar: false,
+                              excluir: false,
+                              aprovar: false,
+                              proprios: false,
+                            },
+                          },
+                        }));
+                      }}
+                      className="text-xs px-3 py-1 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200"
+                    >
+                      Desmarcar Todos
+                    </Button>
+                    <div className="flex items-center space-x-2 ml-2 pl-2 border-l border-yellow-500/30">
+                      <input
+                        type="checkbox"
+                        id="perfil-usuarios-proprios-header"
+                        checked={perfilForm.permissoes.usuarios.proprios}
+                        onChange={e => {
+                          const isChecked = e.target.checked;
+                          setPerfilForm(prev => ({
+                            ...prev,
+                            permissoes: {
+                              ...prev.permissoes,
+                              usuarios: {
+                                visualizar: isChecked,
+                                criar: isChecked,
+                                editar: isChecked,
+                                excluir: isChecked,
+                                aprovar: isChecked,
+                                proprios: isChecked,
+                              },
+                            },
+                          }));
+                        }}
+                        className="rounded border-yellow-300 text-yellow-600 focus:ring-yellow-500"
+                      />
+                      <label
+                        htmlFor="perfil-usuarios-proprios-header"
+                        className="text-xs text-yellow-400 font-medium cursor-pointer"
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          Excluir Nível de Acesso
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja excluir o nível de acesso para
-                          &quot;{nivel.tipoAcessoNome}&quot;? Esta ação não pode
-                          ser desfeita.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleExcluirNivelAcesso(nivel.id)}
-                        >
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                        Apenas Registros Próprios
+                      </label>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="flex items-center space-x-3 p-4 bg-green-50/10 border border-green-200/30 rounded-xl hover:bg-green-50/20 hover:border-green-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-usuarios-visualizar"
+                      checked={perfilForm.permissoes.usuarios.visualizar}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            usuarios: {
+                              ...prev.permissoes.usuarios,
+                              visualizar: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-green-300 text-green-600 focus:ring-green-500"
+                    />
+                    <label
+                      htmlFor="perfil-usuarios-visualizar"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Visualizar Usuários
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 bg-green-50/10 border border-green-200/30 rounded-xl hover:bg-green-50/20 hover:border-green-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-usuarios-criar"
+                      checked={perfilForm.permissoes.usuarios.criar}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            usuarios: {
+                              ...prev.permissoes.usuarios,
+                              criar: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-green-300 text-green-600 focus:ring-green-500"
+                    />
+                    <label
+                      htmlFor="perfil-usuarios-criar"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Criar Usuários
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 bg-green-50/10 border border-green-200/30 rounded-xl hover:bg-green-50/20 hover:border-green-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-usuarios-editar"
+                      checked={perfilForm.permissoes.usuarios.editar}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            usuarios: {
+                              ...prev.permissoes.usuarios,
+                              editar: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-green-300 text-green-600 focus:ring-green-500"
+                    />
+                    <label
+                      htmlFor="perfil-usuarios-editar"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Editar Usuários
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 bg-green-50/10 border border-green-200/30 rounded-xl hover:bg-green-50/20 hover:border-green-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-usuarios-excluir"
+                      checked={perfilForm.permissoes.usuarios.excluir}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            usuarios: {
+                              ...prev.permissoes.usuarios,
+                              excluir: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-green-300 text-green-600 focus:ring-green-500"
+                    />
+                    <label
+                      htmlFor="perfil-usuarios-excluir"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Excluir Usuários
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 bg-green-50/10 border border-green-200/30 rounded-xl hover:bg-green-50/20 hover:border-green-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-usuarios-aprovar"
+                      checked={perfilForm.permissoes.usuarios.aprovar}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            usuarios: {
+                              ...prev.permissoes.usuarios,
+                              aprovar: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-green-300 text-green-600 focus:ring-green-500"
+                    />
+                    <label
+                      htmlFor="perfil-usuarios-aprovar"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Aprovar Usuários
+                    </label>
+                  </div>
+                </div>
+              </Card>
+
+              {/* CLIENTES */}
+              <Card className="glass-effect-accent border-holding-accent/30 p-6 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                      <Users className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-holding-white">
+                      Clientes
+                    </h4>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            clientes: {
+                              visualizar: true,
+                              criar: true,
+                              editar: true,
+                              excluir: true,
+                              proprios: true,
+                            },
+                          },
+                        }));
+                      }}
+                      className="text-xs px-3 py-1 border-blue-500/30 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/50 transition-all duration-200"
+                    >
+                      Selecionar Todos
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            clientes: {
+                              visualizar: false,
+                              criar: false,
+                              editar: false,
+                              excluir: false,
+                              proprios: false,
+                            },
+                          },
+                        }));
+                      }}
+                      className="text-xs px-3 py-1 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200"
+                    >
+                      Desmarcar Todos
+                    </Button>
+                    <div className="flex items-center space-x-2 ml-2 pl-2 border-l border-yellow-500/30">
+                      <input
+                        type="checkbox"
+                        id="perfil-clientes-proprios-header"
+                        checked={perfilForm.permissoes.clientes.proprios}
+                        onChange={e => {
+                          const isChecked = e.target.checked;
+                          setPerfilForm(prev => ({
+                            ...prev,
+                            permissoes: {
+                              ...prev.permissoes,
+                              clientes: {
+                                visualizar: isChecked,
+                                criar: isChecked,
+                                editar: isChecked,
+                                excluir: isChecked,
+                                proprios: isChecked,
+                              },
+                            },
+                          }));
+                        }}
+                        className="rounded border-yellow-300 text-yellow-600 focus:ring-yellow-500"
+                      />
+                      <label
+                        htmlFor="perfil-clientes-proprios-header"
+                        className="text-xs text-yellow-400 font-medium cursor-pointer"
+                      >
+                        Apenas Registros Próprios
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="flex items-center space-x-3 p-4 bg-blue-50/10 border border-blue-200/30 rounded-xl hover:bg-blue-50/20 hover:border-blue-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-clientes-visualizar"
+                      checked={perfilForm.permissoes.clientes.visualizar}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            clientes: {
+                              ...prev.permissoes.clientes,
+                              visualizar: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label
+                      htmlFor="perfil-clientes-visualizar"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Visualizar Clientes
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 bg-blue-50/10 border border-blue-200/30 rounded-xl hover:bg-blue-50/20 hover:border-blue-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-clientes-criar"
+                      checked={perfilForm.permissoes.clientes.criar}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            clientes: {
+                              ...prev.permissoes.clientes,
+                              criar: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label
+                      htmlFor="perfil-clientes-criar"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Criar Clientes
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 bg-blue-50/10 border border-blue-200/30 rounded-xl hover:bg-blue-50/20 hover:border-blue-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-clientes-editar"
+                      checked={perfilForm.permissoes.clientes.editar}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            clientes: {
+                              ...prev.permissoes.clientes,
+                              editar: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label
+                      htmlFor="perfil-clientes-editar"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Editar Clientes
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 bg-blue-50/10 border border-blue-200/30 rounded-xl hover:bg-blue-50/20 hover:border-blue-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-clientes-excluir"
+                      checked={perfilForm.permissoes.clientes.excluir}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            clientes: {
+                              ...prev.permissoes.clientes,
+                              excluir: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label
+                      htmlFor="perfil-clientes-excluir"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Excluir Clientes
+                    </label>
+                  </div>
+                </div>
+              </Card>
+
+              {/* DASHBOARD */}
+              <Card className="glass-effect-accent border-holding-accent/30 p-6 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                      <BarChart3 className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-holding-white">
+                      Dashboard
+                    </h4>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            dashboard: {
+                              acessoTotal: true,
+                              acessoLimitado: true,
+                              proprios: true,
+                            },
+                          },
+                        }));
+                      }}
+                      className="text-xs px-3 py-1 border-purple-500/30 text-purple-400 hover:bg-purple-500/20 hover:border-purple-500/50 transition-all duration-200"
+                    >
+                      Selecionar Todos
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            dashboard: {
+                              acessoTotal: false,
+                              acessoLimitado: false,
+                              proprios: false,
+                            },
+                          },
+                        }));
+                      }}
+                      className="text-xs px-3 py-1 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200"
+                    >
+                      Desmarcar Todos
+                    </Button>
+                    <div className="flex items-center space-x-2 ml-2 pl-2 border-l border-yellow-500/30">
+                      <input
+                        type="checkbox"
+                        id="perfil-dashboard-proprios-header"
+                        checked={perfilForm.permissoes.dashboard.proprios}
+                        onChange={e => {
+                          const isChecked = e.target.checked;
+                          setPerfilForm(prev => ({
+                            ...prev,
+                            permissoes: {
+                              ...prev.permissoes,
+                              dashboard: {
+                                acessoTotal: isChecked,
+                                acessoLimitado: isChecked,
+                                proprios: isChecked,
+                              },
+                            },
+                          }));
+                        }}
+                        className="rounded border-yellow-300 text-yellow-600 focus:ring-yellow-500"
+                      />
+                      <label
+                        htmlFor="perfil-dashboard-proprios-header"
+                        className="text-xs text-yellow-400 font-medium cursor-pointer"
+                      >
+                        Apenas Dados Próprios
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-3 p-4 bg-purple-50/10 border border-purple-200/30 rounded-xl hover:bg-purple-50/20 hover:border-purple-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-dashboard-total"
+                      checked={perfilForm.permissoes.dashboard.acessoTotal}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            dashboard: {
+                              ...prev.permissoes.dashboard,
+                              acessoTotal: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
+                    />
+                    <label
+                      htmlFor="perfil-dashboard-total"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Acesso Total
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 bg-purple-50/10 border border-purple-200/30 rounded-xl hover:bg-purple-50/20 hover:border-purple-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-dashboard-limitado"
+                      checked={perfilForm.permissoes.dashboard.acessoLimitado}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            dashboard: {
+                              ...prev.permissoes.dashboard,
+                              acessoLimitado: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-purple-300 text-purple-600 focus:ring-purple-500"
+                    />
+                    <label
+                      htmlFor="perfil-dashboard-limitado"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Acesso Limitado
+                    </label>
+                  </div>
+                </div>
+              </Card>
+
+              {/* SISTEMA */}
+              <Card className="glass-effect-accent border-holding-accent/30 p-6 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-indigo-500/20 rounded-xl flex items-center justify-center">
+                      <Settings className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-holding-white">
+                      Sistema
+                    </h4>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            sistema: {
+                              tiposAcesso: true,
+                              configuracoes: true,
+                              relatorios: true,
+                              proprios: true,
+                            },
+                          },
+                        }));
+                      }}
+                      className="text-xs px-3 py-1 border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20 hover:border-indigo-500/50 transition-all duration-200"
+                    >
+                      Selecionar Todos
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            sistema: {
+                              tiposAcesso: false,
+                              configuracoes: false,
+                              relatorios: false,
+                              proprios: false,
+                            },
+                          },
+                        }));
+                      }}
+                      className="text-xs px-3 py-1 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200"
+                    >
+                      Desmarcar Todos
+                    </Button>
+                    <div className="flex items-center space-x-2 ml-2 pl-2 border-l border-yellow-500/30">
+                      <input
+                        type="checkbox"
+                        id="perfil-sistema-proprios-header"
+                        checked={perfilForm.permissoes.sistema.proprios}
+                        onChange={e => {
+                          const isChecked = e.target.checked;
+                          setPerfilForm(prev => ({
+                            ...prev,
+                            permissoes: {
+                              ...prev.permissoes,
+                              sistema: {
+                                tiposAcesso: isChecked,
+                                configuracoes: isChecked,
+                                relatorios: isChecked,
+                                proprios: isChecked,
+                              },
+                            },
+                          }));
+                        }}
+                        className="rounded border-yellow-300 text-yellow-600 focus:ring-yellow-500"
+                      />
+                      <label
+                        htmlFor="perfil-sistema-proprios-header"
+                        className="text-xs text-yellow-400 font-medium cursor-pointer"
+                      >
+                        Apenas Configurações Próprias
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="flex items-center space-x-3 p-4 bg-indigo-50/10 border border-indigo-200/30 rounded-xl hover:bg-indigo-50/20 hover:border-indigo-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-sistema-tipos-acesso"
+                      checked={perfilForm.permissoes.sistema.tiposAcesso}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            sistema: {
+                              ...prev.permissoes.sistema,
+                              tiposAcesso: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <label
+                      htmlFor="perfil-sistema-tipos-acesso"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Gerenciar Tipos de Acesso
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 bg-indigo-50/10 border border-indigo-200/30 rounded-xl hover:bg-indigo-50/20 hover:border-indigo-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-sistema-configuracoes"
+                      checked={perfilForm.permissoes.sistema.configuracoes}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            sistema: {
+                              ...prev.permissoes.sistema,
+                              configuracoes: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <label
+                      htmlFor="perfil-sistema-configuracoes"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Configurações do Sistema
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3 p-4 bg-indigo-50/10 border border-indigo-200/30 rounded-xl hover:bg-indigo-50/20 hover:border-indigo-200/50 transition-all duration-200">
+                    <input
+                      type="checkbox"
+                      id="perfil-sistema-relatorios"
+                      checked={perfilForm.permissoes.sistema.relatorios}
+                      onChange={e =>
+                        setPerfilForm(prev => ({
+                          ...prev,
+                          permissoes: {
+                            ...prev.permissoes,
+                            sistema: {
+                              ...prev.permissoes.sistema,
+                              relatorios: e.target.checked,
+                            },
+                          },
+                        }))
+                      }
+                      className="rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <label
+                      htmlFor="perfil-sistema-relatorios"
+                      className="text-holding-white cursor-pointer"
+                    >
+                      Gerenciar Relatórios
+                    </label>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+
+          <DialogFooter className="p-6 bg-holding-blue-profound/90 border-t border-holding-blue-light/30">
+            <Button
+              variant="outline"
+              onClick={() => setShowPerfilModal(false)}
+              className="border-holding-blue-light/30 text-holding-blue-light hover:bg-holding-blue-light/10"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={
+                editandoPerfil ? handleSalvarEdicaoPerfil : handleCriarPerfil
+              }
+              className="bg-holding-blue-light hover:bg-holding-blue-light/80 text-holding-white"
+              disabled={!perfilForm.tipoAcessoId}
+            >
+              {editandoPerfil ? 'Salvar Alterações' : 'Configurar Permissões'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Permissão */}
+      <Dialog open={showPermissaoModal} onOpenChange={setShowPermissaoModal}>
+        <DialogContent className="sm:max-w-md glass-effect-accent border-holding-accent/30 bg-holding-blue-profound/95">
+          <DialogHeader className="bg-gradient-to-r from-holding-blue-deep to-holding-blue-dark text-white p-6 rounded-t-lg">
+            <DialogTitle className="text-xl font-semibold text-white">
+              {editandoPermissao ? 'Editar Permissão' : 'Nova Permissão'}
+            </DialogTitle>
+            <DialogDescription className="text-holding-blue-light">
+              {editandoPermissao
+                ? 'Edite as informações da permissão'
+                : 'Crie uma nova permissão para o sistema'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="p-6 space-y-4 bg-holding-blue-profound/80">
+            <div className="space-y-2">
+              <Label htmlFor="nomePermissao" className="text-holding-white">
+                Nome da Permissão
+              </Label>
+              <Input
+                id="nomePermissao"
+                value={permissaoForm.nome}
+                onChange={e =>
+                  setPermissaoForm(prev => ({ ...prev, nome: e.target.value }))
+                }
+                placeholder="Ex: Criar Usuários, Visualizar Clientes"
+                className="w-full px-3 py-2 border border-holding-blue-light/30 rounded-md focus:outline-none focus:ring-2 focus:ring-holding-blue-light focus:border-transparent bg-holding-blue-profound/90 text-holding-white placeholder-holding-blue-light/50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="descricaoPermissao"
+                className="text-holding-white"
+              >
+                Descrição
+              </Label>
+              <Input
+                id="descricaoPermissao"
+                value={permissaoForm.descricao}
+                onChange={e =>
+                  setPermissaoForm(prev => ({
+                    ...prev,
+                    descricao: e.target.value,
+                  }))
+                }
+                placeholder="Descreva o que esta permissão permite fazer"
+                className="w-full px-3 py-2 border border-holding-blue-light/30 rounded-md focus:outline-none focus:ring-2 focus:ring-holding-blue-light focus:border-transparent bg-holding-blue-profound/90 text-holding-white placeholder-holding-blue-light/50"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="categoriaPermissao"
+                className="text-holding-white"
+              >
+                Categoria
+              </Label>
+              <select
+                id="categoriaPermissao"
+                value={permissaoForm.categoria}
+                onChange={e =>
+                  setPermissaoForm(prev => ({
+                    ...prev,
+                    categoria: e.target.value,
+                  }))
+                }
+                className="w-full px-3 py-2 border border-holding-blue-light/30 rounded-md focus:outline-none focus:ring-2 focus:ring-holding-blue-light focus:border-transparent bg-holding-blue-profound/90 text-holding-white"
+              >
+                <option value="usuarios">Usuários</option>
+                <option value="clientes">Clientes</option>
+                <option value="dashboard">Dashboard</option>
+                <option value="sistema">Sistema</option>
+                <option value="proprios">Registros Próprios</option>
+              </select>
+            </div>
+          </div>
+
+          <DialogFooter className="p-6 bg-holding-blue-profound/90 border-t border-holding-blue-light/30">
+            <Button
+              variant="outline"
+              onClick={() => setShowPermissaoModal(false)}
+              className="border-holding-blue-light/30 text-holding-blue-light hover:bg-holding-blue-light/10"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={
+                editandoPermissao
+                  ? handleSalvarEdicaoPermissao
+                  : handleCriarPermissao
+              }
+              className="bg-holding-blue-light hover:bg-holding-blue-light/80 text-holding-white"
+              disabled={!permissaoForm.nome.trim()}
+            >
+              {editandoPermissao ? 'Salvar Alterações' : 'Criar Permissão'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal Tipo de Acesso */}
       <Dialog open={showTipoAcessoModal} onOpenChange={setShowTipoAcessoModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="sm:max-w-md glass-effect-accent border-holding-accent/30 bg-holding-blue-profound/95">
+          <DialogHeader className="bg-gradient-to-r from-holding-blue-deep to-holding-blue-dark text-white p-6 rounded-t-lg">
+            <DialogTitle className="text-xl font-semibold text-white">
               {editandoTipoAcesso
                 ? 'Editar Tipo de Acesso'
                 : 'Novo Tipo de Acesso'}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-holding-blue-light">
               {editandoTipoAcesso
                 ? 'Edite as informações do tipo de acesso'
                 : 'Crie um novo tipo de acesso para o sistema'}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="nome" className="text-slate-700">
+
+          <div className="p-6 space-y-4 bg-holding-blue-profound/80">
+            <div className="space-y-2">
+              <Label htmlFor="nome" className="text-holding-white">
                 Nome
               </Label>
               <Input
@@ -1039,11 +2405,13 @@ export default function NiveisAcessoPage() {
                 onChange={e =>
                   setTipoAcessoForm(prev => ({ ...prev, nome: e.target.value }))
                 }
-                placeholder="Ex: Master, Parceiro, Colaborador"
+                placeholder="Ex: Submaster, Operador, Visualizador"
+                className="w-full px-3 py-2 border border-holding-blue-light/30 rounded-md focus:outline-none focus:ring-2 focus:ring-holding-blue-light focus:border-transparent bg-holding-blue-profound/90 text-holding-white placeholder-holding-blue-light/50"
               />
             </div>
-            <div>
-              <Label htmlFor="descricao" className="text-slate-700">
+
+            <div className="space-y-2">
+              <Label htmlFor="descricao" className="text-holding-white">
                 Descrição
               </Label>
               <Input
@@ -1055,42 +2423,40 @@ export default function NiveisAcessoPage() {
                     descricao: e.target.value,
                   }))
                 }
-                placeholder="Descreva o tipo de acesso"
+                placeholder="Descreva as responsabilidades deste tipo de acesso"
+                className="w-full px-3 py-2 border border-holding-blue-light/30 rounded-md focus:outline-none focus:ring-2 focus:ring-holding-blue-light focus:border-transparent bg-holding-blue-profound/90 text-holding-white placeholder-holding-blue-light/50"
               />
             </div>
-            <div>
-              <Label htmlFor="nivel" className="text-slate-700">
-                Nível de Prioridade
+
+            <div className="space-y-2">
+              <Label htmlFor="nivel" className="text-holding-white">
+                Nível de Acesso
               </Label>
               <select
-                value={tipoAcessoForm.nivel.toString()}
+                id="nivel"
+                value={tipoAcessoForm.nivel}
                 onChange={e =>
                   setTipoAcessoForm(prev => ({
                     ...prev,
                     nivel: parseInt(e.target.value),
                   }))
                 }
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-slate-700"
+                className="w-full px-3 py-2 border border-holding-blue-light/30 rounded-md focus:outline-none focus:ring-2 focus:ring-holding-blue-light focus:border-transparent bg-holding-blue-profound/90 text-holding-white"
               >
-                <option value="">Selecione o nível</option>
-                <option value="1">1 - Máxima Prioridade</option>
-                <option value="2">2 - Alta Prioridade</option>
-                <option value="3">3 - Média Prioridade</option>
-                <option value="4">4 - Baixa Prioridade</option>
-                <option value="5">5 - Mínima Prioridade</option>
-                <option value="6">6 - Muito Baixa</option>
-                <option value="7">7 - Extremamente Baixa</option>
-                <option value="8">8 - Mínima</option>
-                <option value="9">9 - Ultra Mínima</option>
-                <option value="10">10 - Mínima Absoluta</option>
+                <option value={1}>1 - Básico</option>
+                <option value={2}>2 - Intermediário</option>
+                <option value={3}>3 - Avançado</option>
+                <option value={4}>4 - Administrador</option>
+                <option value={5}>5 - Master</option>
               </select>
             </div>
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="p-6 bg-holding-blue-profound/90 border-t border-holding-blue-light/30">
             <Button
               variant="outline"
               onClick={() => setShowTipoAcessoModal(false)}
-              className="text-slate-700 border-slate-300 hover:bg-slate-50"
+              className="border-holding-blue-light/30 text-holding-blue-light hover:bg-holding-blue-light/10"
             >
               Cancelar
             </Button>
@@ -1100,7 +2466,8 @@ export default function NiveisAcessoPage() {
                   ? handleSalvarEdicaoTipoAcesso
                   : handleCriarTipoAcesso
               }
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-holding-blue-light hover:bg-holding-blue-light/80 text-holding-white"
+              disabled={!tipoAcessoForm.nome.trim()}
             >
               {editandoTipoAcesso
                 ? 'Salvar Alterações'
@@ -1110,322 +2477,39 @@ export default function NiveisAcessoPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal Permissão */}
-      <Dialog open={showPermissaoModal} onOpenChange={setShowPermissaoModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {editandoPermissao ? 'Editar Permissão' : 'Nova Permissão'}
-            </DialogTitle>
-            <DialogDescription>
-              {editandoPermissao
-                ? 'Edite as informações da permissão'
-                : 'Crie uma nova permissão para o sistema'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="nomePermissao">Nome da Permissão</Label>
-              <Input
-                id="nomePermissao"
-                value={permissaoForm.nome}
-                onChange={e =>
-                  setPermissaoForm(prev => ({ ...prev, nome: e.target.value }))
-                }
-                placeholder="Ex: criar_usuarios, visualizar_relatorios"
-              />
-            </div>
-            <div>
-              <Label htmlFor="descricaoPermissao">Descrição</Label>
-              <Input
-                id="descricaoPermissao"
-                value={permissaoForm.descricao}
-                onChange={e =>
-                  setPermissaoForm(prev => ({
-                    ...prev,
-                    descricao: e.target.value,
-                  }))
-                }
-                placeholder="Descreva o que esta permissão permite"
-              />
-            </div>
-            <div>
-              <Label htmlFor="categoria">Categoria</Label>
-              <select
-                value={permissaoForm.categoria}
-                onChange={e =>
-                  setPermissaoForm(prev => ({
-                    ...prev,
-                    categoria: e.target.value,
-                  }))
-                }
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="">Selecione a categoria</option>
-                <option value="usuarios">Usuários</option>
-                <option value="sistema">Sistema</option>
-                <option value="relatorios">Relatórios</option>
-                <option value="proprios">Registros Próprios</option>
-                <option value="financeiro">Financeiro</option>
-                <option value="marketing">Marketing</option>
-              </select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowPermissaoModal(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={
-                editandoPermissao
-                  ? handleSalvarEdicaoPermissao
-                  : handleCriarPermissao
-              }
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {editandoPermissao ? 'Salvar Alterações' : 'Criar Permissão'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Estilos CSS para animações */}
+      <style jsx>{`
+        @keyframes progress {
+          from {
+            width: 100%;
+          }
+          to {
+            width: 0%;
+          }
+        }
 
-      {/* Modal Nível de Acesso */}
-      <Dialog
-        open={showNivelAcessoModal}
-        onOpenChange={setShowNivelAcessoModal}
-      >
-        <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editandoNivelAcesso
-                ? 'Editar Nível de Acesso'
-                : 'Novo Nível de Acesso'}
-            </DialogTitle>
-            <DialogDescription>
-              {editandoNivelAcesso
-                ? 'Edite as permissões do nível de acesso'
-                : 'Configure as permissões para um tipo de acesso'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="tipoAcesso">Tipo de Acesso</Label>
-              <select
-                value={nivelAcessoForm.tipoAcessoId}
-                onChange={e =>
-                  setNivelAcessoForm(prev => ({
-                    ...prev,
-                    tipoAcessoId: e.target.value,
-                  }))
-                }
-                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="">Selecione o tipo de acesso</option>
-                {tiposAcesso.map(tipo => (
-                  <option key={tipo.id} value={tipo.id}>
-                    {tipo.nome} (Nível {tipo.nivel})
-                  </option>
-                ))}
-              </select>
-            </div>
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
 
-            <div>
-              <Label className="text-base font-semibold mb-4 block">
-                Permissões Disponíveis
-              </Label>
-
-              {/* Explicação sobre permissões de registros próprios */}
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Shield className="w-3 h-3 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-blue-900 mb-2">
-                      Sobre Permissões de Registros Próprios
-                    </h4>
-                    <div className="text-sm text-blue-800 space-y-1">
-                      <p>
-                        • <strong>Visualizar Próprios:</strong> Usuário vê
-                        apenas registros que criou
-                      </p>
-                      <p>
-                        • <strong>Editar Próprios:</strong> Usuário pode
-                        modificar apenas seus registros
-                      </p>
-                      <p>
-                        • <strong>Excluir Próprios:</strong> Usuário pode
-                        remover apenas seus registros
-                      </p>
-                      <p>
-                        • <strong>Gerenciar Próprios:</strong> Controle total
-                        sobre registros criados por si
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Controles de Seleção em Massa */}
-              <div className="flex items-center justify-between mb-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <div className="flex items-center space-x-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={marcarTodasPermissoes}
-                    className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200 hover:border-green-300"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Marcar Todas
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={desmarcarTodasPermissoes}
-                    className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200 hover:border-red-300"
-                  >
-                    <XCircle className="w-4 h-4 mr-2" />
-                    Desmarcar Todas
-                  </Button>
-                </div>
-                <div className="text-sm text-slate-600">
-                  <span className="font-medium">
-                    {nivelAcessoForm.permissoes.length}
-                  </span>{' '}
-                  de <span className="font-medium">{permissoes.length}</span>{' '}
-                  permissões selecionadas
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {['usuarios', 'sistema', 'relatorios', 'proprios'].map(
-                  categoria => {
-                    const permissoesCategoria = permissoes.filter(
-                      p => p.categoria === categoria
-                    );
-                    if (permissoesCategoria.length === 0) return null;
-
-                    const permissoesSelecionadasCategoria =
-                      nivelAcessoForm.permissoes.filter(id =>
-                        permissoesCategoria.some(p => p.id === id)
-                      );
-                    const totalCategoria = permissoesCategoria.length;
-                    const selecionadasCategoria =
-                      permissoesSelecionadasCategoria.length;
-
-                    return (
-                      <div
-                        key={categoria}
-                        className="border border-slate-200 rounded-lg p-4"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="font-medium text-slate-900 flex items-center space-x-2">
-                            <Shield className="w-4 h-4 text-slate-600" />
-                            <span>{getCategoriaNome(categoria)}</span>
-                          </h4>
-                          <div className="flex items-center space-x-3">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => marcarTodasCategoria(categoria)}
-                              className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 hover:border-blue-300 text-xs px-2 py-1"
-                              disabled={
-                                selecionadasCategoria === totalCategoria
-                              }
-                            >
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                              Marcar Categoria
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => desmarcarTodasCategoria(categoria)}
-                              className="bg-orange-50 text-orange-700 hover:bg-orange-100 border-orange-200 hover:border-orange-300 text-xs px-2 py-1"
-                              disabled={selecionadasCategoria === 0}
-                            >
-                              <XCircle className="w-3 h-3 mr-1" />
-                              Desmarcar Categoria
-                            </Button>
-                            <Badge variant="outline" className="text-xs">
-                              {selecionadasCategoria}/{totalCategoria}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {permissoesCategoria.map(permissao => (
-                            <div
-                              key={permissao.id}
-                              className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-50 transition-colors"
-                            >
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => togglePermissao(permissao.id)}
-                                className={`w-8 h-8 p-0 rounded-full transition-all duration-200 ${
-                                  nivelAcessoForm.permissoes.includes(
-                                    permissao.id
-                                  )
-                                    ? 'bg-green-100 text-green-700 hover:bg-green-200 scale-110'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:scale-105'
-                                }`}
-                              >
-                                {nivelAcessoForm.permissoes.includes(
-                                  permissao.id
-                                ) ? (
-                                  <CheckCircle className="w-4 h-4" />
-                                ) : (
-                                  <XCircle className="w-4 h-4" />
-                                )}
-                              </Button>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-slate-900 truncate">
-                                  {permissao.nome}
-                                </p>
-                                <p className="text-xs text-slate-500 truncate">
-                                  {permissao.descricao}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  }
-                )}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowNivelAcessoModal(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={
-                editandoNivelAcesso
-                  ? handleSalvarEdicaoNivelAcesso
-                  : handleCriarNivelAcesso
-              }
-              className="bg-amber-600 hover:bg-amber-700"
-              disabled={!nivelAcessoForm.tipoAcessoId}
-            >
-              {editandoNivelAcesso
-                ? 'Salvar Alterações'
-                : 'Criar Nível de Acesso'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        @keyframes slideOut {
+          from {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          to {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 }

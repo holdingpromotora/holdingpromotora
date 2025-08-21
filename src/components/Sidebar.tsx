@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   ChevronLeft,
   ChevronRight,
   Users,
-  Shield,
   Key,
   Settings,
   LogOut,
@@ -19,6 +18,8 @@ import {
   ChevronDown,
   ChevronRight as ChevronRightIcon,
   CheckCircle,
+  User,
+  Building2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -32,12 +33,21 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { logout } = useAuth();
-  const [usuariosSubmenuOpen, setUsuariosSubmenuOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [usuariosSubmenuOpen, setUsuariosSubmenuOpen] = React.useState(
+    pathname.startsWith('/usuarios')
+  );
+  const [isClient, setIsClient] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Abrir submenu automaticamente quando estiver em uma rota de usuários
+  React.useEffect(() => {
+    if (pathname.startsWith('/usuarios')) {
+      setUsuariosSubmenuOpen(true);
+    }
+  }, [pathname]);
 
   const handleLogout = () => {
     logout();
@@ -87,77 +97,77 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       <nav className="p-4 space-y-2">
         <Link
           href="/dashboard"
-          className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+          className={`nav-item ${
             pathname === '/dashboard'
               ? 'bg-holding-highlight text-white shadow-lg'
               : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
           }`}
         >
-          <LayoutDashboard className="w-5 h-5" />
-          {!isCollapsed && <span>Dashboard</span>}
+          <LayoutDashboard className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span className="ml-3">Dashboard</span>}
         </Link>
 
         <Link
           href="/clientes"
-          className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+          className={`nav-item ${
             pathname === '/clientes'
               ? 'bg-holding-highlight text-white shadow-lg'
               : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
           }`}
         >
-          <Users className="w-5 h-5" />
-          {!isCollapsed && <span>Clientes</span>}
+          <Users className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span className="ml-3">Clientes</span>}
         </Link>
 
         <Link
           href="/simulacoes"
-          className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+          className={`nav-item ${
             pathname === '/simulacoes'
               ? 'bg-holding-highlight text-white shadow-lg'
               : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
           }`}
         >
-          <Calculator className="w-5 h-5" />
-          {!isCollapsed && <span>Simulações</span>}
+          <Calculator className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span className="ml-3">Simulações</span>}
         </Link>
 
         <Link
           href="/propostas"
-          className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+          className={`nav-item ${
             pathname === '/propostas'
               ? 'bg-holding-highlight text-white shadow-lg'
               : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
           }`}
         >
-          <FileText className="w-5 h-5" />
-          {!isCollapsed && <span>Propostas</span>}
+          <FileText className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span className="ml-3">Propostas</span>}
         </Link>
 
         <Link
           href="/relatorios"
-          className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+          className={`nav-item ${
             pathname === '/relatorios'
               ? 'bg-holding-highlight text-white shadow-lg'
               : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
           }`}
         >
-          <BarChart3 className="w-5 h-5" />
-          {!isCollapsed && <span>Relatórios</span>}
+          <BarChart3 className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span className="ml-3">Relatórios</span>}
         </Link>
 
         {/* Usuários com Submenu */}
         <div className="space-y-1">
           <button
             onClick={toggleUsuariosSubmenu}
-            className={`flex items-center justify-between w-full px-4 py-3 rounded-lg transition-all duration-200 ${
+            className={`nav-item justify-between ${
               pathname.startsWith('/usuarios')
                 ? 'bg-holding-highlight text-white shadow-lg'
                 : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
             }`}
           >
-            <div className="flex items-center space-x-3">
-              <Users className="w-5 h-5" />
-              {!isCollapsed && <span>Usuários</span>}
+            <div className="flex items-center">
+              <Users className="w-5 h-5 flex-shrink-0" />
+              {!isCollapsed && <span className="ml-3">Usuários</span>}
             </div>
             {!isCollapsed &&
               (usuariosSubmenuOpen ? (
@@ -172,38 +182,62 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             <div className="ml-6 space-y-1">
               <Link
                 href="/usuarios"
-                className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${
+                className={`nav-item py-2 ${
                   pathname === '/usuarios'
                     ? 'bg-holding-highlight/50 text-white'
                     : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
                 }`}
               >
-                <UserPlus className="w-4 h-4" />
-                <span>Cadastrados</span>
+                <UserPlus className="w-4 h-4 flex-shrink-0" />
+                <span className="ml-3">Cadastrados</span>
               </Link>
 
               <Link
                 href="/usuarios/aprovacao"
-                className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${
+                className={`nav-item py-2 ${
                   pathname === '/usuarios/aprovacao'
                     ? 'bg-holding-highlight/50 text-white'
                     : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
                 }`}
               >
-                <CheckCircle className="w-4 h-4" />
-                <span>Aprovação</span>
+                <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                <span className="ml-3">Aprovação</span>
               </Link>
 
               <Link
                 href="/usuarios/niveis-acesso"
-                className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-all duration-200 ${
+                className={`nav-item py-2 ${
                   pathname === '/usuarios/niveis-acesso'
                     ? 'bg-holding-highlight/50 text-white'
                     : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
                 }`}
               >
-                <Key className="w-4 h-4" />
-                <span>Níveis de Acesso</span>
+                <Key className="w-4 h-4 flex-shrink-0" />
+                <span className="ml-3">Níveis de Acesso</span>
+              </Link>
+
+              <Link
+                href="/usuarios/cadastro-pf"
+                className={`nav-item py-2 ${
+                  pathname === '/usuarios/cadastro-pf'
+                    ? 'bg-holding-highlight/50 text-white'
+                    : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
+                }`}
+              >
+                <User className="w-4 h-4 flex-shrink-0" />
+                <span className="ml-3">Cadastro PF</span>
+              </Link>
+
+              <Link
+                href="/usuarios/cadastro-pj"
+                className={`nav-item py-2 ${
+                  pathname === '/usuarios/cadastro-pj'
+                    ? 'bg-holding-highlight/50 text-white'
+                    : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
+                }`}
+              >
+                <Building2 className="w-4 h-4 flex-shrink-0" />
+                <span className="ml-3">Cadastro PJ</span>
               </Link>
             </div>
           )}
@@ -211,14 +245,14 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
         <Link
           href="/configuracoes"
-          className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+          className={`nav-item ${
             pathname === '/configuracoes'
               ? 'bg-holding-highlight text-white shadow-lg'
               : 'text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white'
           }`}
         >
-          <Settings className="w-5 h-5" />
-          {!isCollapsed && <span>Configurações</span>}
+          <Settings className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span className="ml-3">Configurações</span>}
         </Link>
       </nav>
 
@@ -226,10 +260,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-holding-accent/30">
         <button
           onClick={handleLogout}
-          className="flex items-center space-x-3 w-full px-4 py-3 rounded-lg text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white transition-all duration-200"
+          className="nav-item text-holding-accent-light hover:bg-holding-accent/20 hover:text-holding-white"
         >
-          <LogOut className="w-5 h-5" />
-          {!isCollapsed && <span>Sair</span>}
+          <LogOut className="w-5 h-5 flex-shrink-0" />
+          {!isCollapsed && <span className="ml-3">Sair</span>}
         </button>
       </div>
     </div>

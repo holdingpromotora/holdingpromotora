@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,2193 +16,688 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   Users,
   UserPlus,
-  Building2,
-  User,
   Search,
-  CheckCircle,
-  Clock,
-  AlertCircle,
+  Filter,
   Edit,
   Trash2,
-  ArrowLeft,
-  Save,
-  X,
-  Calendar,
-  RotateCcw,
+  Eye,
+  Building,
+  Shield,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  BarChart3,
+  FileText,
+  TrendingUp,
+  User,
+  Building2,
   RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  XCircle,
+  UserCheck,
 } from 'lucide-react';
-import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
-
-interface Usuario {
-  id: string;
-  nome: string;
-  tipo: 'PF' | 'PJ';
-  status: 'ativo' | 'pendente' | 'inativo';
-  email: string;
-  dataCadastro: string;
-  ultimoAcesso?: string;
-  dadosOriginais?: Record<string, unknown>; // Para armazenar dados completos do banco
-}
+import {
+  UsuariosService,
+  Usuario,
+  FiltroUsuarios,
+} from '@/lib/usuarios-service';
 
 export default function UsuariosPage() {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('todos');
-  const [tipoFilter, setTipoFilter] = useState<string>('todos');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isClient, setIsClient] = useState(false);
-
-  // Estados para ações
-  const [usuarioParaEditar, setUsuarioParaEditar] = useState<Usuario | null>(
-    null
-  );
-  const [usuarioParaExcluir, setUsuarioParaExcluir] = useState<Usuario | null>(
-    null
-  );
-  const [isEditando, setIsEditando] = useState(false);
-  const [isExcluindo, setIsExcluindo] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Carregar usuários reais do banco de dados
-  useEffect(() => {
-    if (isClient) {
-      carregarUsuarios();
-    }
-  }, [isClient]);
-
-  const carregarUsuarios = async () => {
-    try {
-      setIsLoading(true);
-
-      console.log('Iniciando carregamento de usuários...');
-
-      // 1. Carregar usuários aprovados da tabela usuarios
-      const { data: usuariosAprovados, error: errorUsuarios } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('aprovado', true)
-        .eq('ativo', true);
-
-      if (errorUsuarios) {
-        console.error('Erro ao carregar usuários aprovados:', errorUsuarios);
-      } else {
-        console.log(
-          'Usuários aprovados carregados:',
-          usuariosAprovados?.length || 0
-        );
-      }
-
-      // 2. Sincronizar status ativo nas tabelas pessoas_fisicas e pessoas_juridicas
-      if (usuariosAprovados && usuariosAprovados.length > 0) {
-        console.log('🔄 Sincronizando status ativo...');
-        
-        // Sincronizar pessoas jurídicas
-        for (const usuario of usuariosAprovados) {
-          const { error: updateError } = await supabase
-            .from('pessoas_juridicas')
-            .update({ ativo: true })
-            .eq('proprietario_email', usuario.email);
-          
-          if (updateError) {
-            console.log(`Usuário ${usuario.email} não encontrado em pessoas_juridicas`);
-          } else {
-            console.log(`✅ Status ativo sincronizado para ${usuario.email}`);
-          }
-        }
-
-        // Sincronizar pessoas físicas
-        for (const usuario of usuariosAprovados) {
-          const { error: updateError } = await supabase
-            .from('pessoas_fisicas')
-            .update({ ativo: true })
-            .eq('email', usuario.email);
-          
-          if (updateError) {
-            console.log(`Usuário ${usuario.email} não encontrado em pessoas_fisicas`);
-          } else {
-            console.log(`✅ Status ativo sincronizado para ${usuario.email}`);
-          }
-        }
-      }
-
-      // 3. Carregar pessoas físicas (todas, não apenas ativas)
-      const { data: pessoasFisicas, error: errorPF } = await supabase
-        .from('pessoas_fisicas')
-        .select('*');
-
-      if (errorPF) {
-        console.error('Erro ao carregar pessoas físicas:', errorPF);
-      } else {
-        console.log('Pessoas físicas carregadas:', pessoasFisicas?.length || 0);
-      }
-
-      // 4. Carregar pessoas jurídicas (todas, não apenas ativas)
-      const { data: pessoasJuridicas, error: errorPJ } = await supabase
-        .from('pessoas_juridicas')
-        .select('*');
-
-      if (errorPJ) {
-        console.error('Erro ao carregar pessoas jurídicas:', errorPJ);
-      } else {
-        console.log(
-          'Pessoas jurídicas carregadas:',
-          pessoasJuridicas?.length || 0
-        );
-      }
-
-      // Converter dados para formato unificado
-      const usuariosUnificados: Usuario[] = [];
-
-      // 5. Adicionar usuários aprovados da tabela usuarios
-      if (usuariosAprovados) {
-        usuariosAprovados.forEach(usuario => {
-          // Determinar tipo de pessoa baseado no email
-          let tipo: 'PF' | 'PJ' = 'PF';
-          let nome = usuario.nome || 'Nome não informado';
-
-          // Verificar se é pessoa jurídica
-          const pessoaJuridica = pessoasJuridicas?.find(
-            pj => pj.proprietario_email === usuario.email
-          );
-          if (pessoaJuridica) {
-            tipo = 'PJ';
-            nome =
-              pessoaJuridica.razao_social ||
-              usuario.nome ||
-              'Razão social não informada';
-          }
-
-          const usuarioUnificado: Usuario = {
-            id: `usuario_${usuario.id}_${Date.now()}`, // Prefixo único + timestamp para garantir unicidade
-            nome: nome,
-            tipo: tipo,
-            status: 'ativo' as const,
-            email: usuario.email || 'Email não informado',
-            dataCadastro:
-              usuario.data_cadastro ||
-              usuario.created_at ||
-              new Date().toISOString(),
-            ultimoAcesso:
-              usuario.ultimo_acesso || usuario.updated_at || undefined,
-            dadosOriginais: usuario,
-          };
-
-          console.log('Usuário aprovado convertido:', usuarioUnificado);
-          usuariosUnificados.push(usuarioUnificado);
-        });
-      }
-
-      // 6. Adicionar pessoas físicas (apenas se não estiverem na tabela usuarios)
-      if (pessoasFisicas) {
-        pessoasFisicas.forEach(pf => {
-          // Verificar se já existe na lista de usuários aprovados OU na lista unificada
-          const jaExiste = usuariosAprovados?.some(u => u.email === pf.email) ||
-                          usuariosUnificados.some(u => u.email === pf.email);
-          if (!jaExiste) {
-            const usuario: Usuario = {
-              id: `pf_${pf.id}_${Date.now()}`, // Prefixo único + timestamp para garantir unicidade
-              nome: pf.nome || 'Nome não informado',
-              tipo: 'PF' as const,
-              status: pf.ativo ? 'ativo' : 'inativo',
-              email: pf.email || 'Email não informado',
-              dataCadastro: pf.created_at || new Date().toISOString(),
-              ultimoAcesso: pf.updated_at || undefined,
-              dadosOriginais: pf,
-            };
-
-            console.log('Pessoa física convertida:', usuario);
-            usuariosUnificados.push(usuario);
-          }
-        });
-      }
-
-      // 7. Adicionar pessoas jurídicas (apenas se não estiverem na tabela usuarios)
-      if (pessoasJuridicas) {
-        pessoasJuridicas.forEach(pj => {
-          // Verificar se já existe na lista de usuários aprovados OU na lista unificada
-          const jaExiste = usuariosAprovados?.some(u => u.email === pj.proprietario_email) ||
-                          usuariosUnificados.some(u => u.email === pj.proprietario_email);
-          if (!jaExiste) {
-            const usuario: Usuario = {
-              id: `pj_${pj.id}_${Date.now()}`, // Prefixo único + timestamp para garantir unicidade
-              nome: pj.razao_social || 'Razão social não informada',
-              tipo: 'PJ' as const,
-              status: pj.ativo ? 'ativo' : 'inativo',
-              email: pj.proprietario_email || 'Email não informado',
-              dataCadastro: pj.created_at || new Date().toISOString(),
-              ultimoAcesso: pj.updated_at || undefined,
-              dadosOriginais: pj,
-            };
-
-            console.log('Pessoa jurídica convertida:', usuario);
-            usuariosUnificados.push(usuario);
-          }
-        });
-      }
-
-      console.log('Total de usuários unificados:', usuariosUnificados.length);
-      
-      // Verificar duplicatas por email
-      const emails = usuariosUnificados.map(u => u.email);
-      const emailsUnicos = Array.from(new Set(emails));
-      console.log('Emails únicos:', emailsUnicos.length);
-      console.log('Total emails:', emails.length);
-      
-      if (emails.length !== emailsUnicos.length) {
-        console.warn('⚠️ DUPLICATAS DETECTADAS!');
-        const duplicatas = emails.filter((email, index) => emails.indexOf(email) !== index);
-        console.warn('Emails duplicados:', duplicatas);
-      }
-
-      // Adicionar dados mock se não houver dados reais
-      if (usuariosUnificados.length === 0) {
-        console.log('Nenhum usuário encontrado, usando dados mock...');
-        const mockUsuarios: Usuario[] = [
-          {
-            id: 'fallback_pf_1',
-            nome: 'João Silva Santos',
-            tipo: 'PF',
-            status: 'ativo',
-            email: 'joao.silva@email.com',
-            dataCadastro: '2024-01-15',
-            ultimoAcesso: '2024-01-20 14:30',
-          },
-          {
-            id: 'fallback_pf_2',
-            nome: 'Maria Oliveira Costa',
-            tipo: 'PF',
-            status: 'pendente',
-            email: 'maria.oliveira@email.com',
-            dataCadastro: '2024-01-18',
-          },
-          {
-            id: 'fallback_pj_1',
-            nome: 'Empresa ABC Ltda',
-            tipo: 'PJ',
-            status: 'ativo',
-            email: 'contato@empresaabc.com',
-            dataCadastro: '2024-01-10',
-            ultimoAcesso: '2024-01-19 09:15',
-          },
-        ];
-        setUsuarios(mockUsuarios);
-      } else {
-        setUsuarios(usuariosUnificados);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
-      // Fallback para dados mock em caso de erro
-      const mockUsuarios: Usuario[] = [
-        {
-          id: 'fallback_pf_1',
-          nome: 'João Silva Santos',
-          tipo: 'PF',
-          status: 'ativo',
-          email: 'joao.silva@email.com',
-          dataCadastro: '2024-01-15',
-          ultimoAcesso: '2024-01-20 14:30',
-        },
-        {
-          id: 'fallback_pf_2',
-          nome: 'Maria Oliveira Costa',
-          tipo: 'PF',
-          status: 'pendente',
-          email: 'maria.oliveira@email.com',
-          dataCadastro: '2024-01-18',
-        },
-        {
-          id: 'fallback_pj_1',
-          nome: 'Empresa ABC Ltda',
-          tipo: 'PJ',
-          status: 'ativo',
-          email: 'contato@empresaabc.com',
-          dataCadastro: '2024-01-10',
-          ultimoAcesso: '2024-01-19 09:15',
-        },
-      ];
-      setUsuarios(mockUsuarios);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Função para editar usuário
-  const handleEditar = (usuario: Usuario) => {
-    console.log('Editando usuário:', usuario);
-    console.log('Dados originais:', usuario.dadosOriginais);
-
-    // Verificar se temos dados originais válidos
-    if (!usuario.dadosOriginais) {
-      console.warn('Usuário não possui dados originais completos');
-      alert(
-        'Este usuário não possui dados completos para edição. Recarregue a página e tente novamente.'
-      );
-      return;
-    }
-
-    setUsuarioParaEditar(usuario);
-    setShowEditModal(true);
-  };
-
-  // Função para salvar edições
-  const handleSalvarEdicao = async () => {
-    if (!usuarioParaEditar) return;
-
-    try {
-      setIsEditando(true);
-
-      console.log('Iniciando atualização para usuário:', usuarioParaEditar.id);
-      console.log('Tipo de usuário:', usuarioParaEditar.tipo);
-
-      if (usuarioParaEditar.tipo === 'PF') {
-        // Validar dados antes de enviar
-        const tipoPixAtual = usuarioParaEditar.dadosOriginais?.tipo_pix;
-        const tipoPixValido =
-          typeof tipoPixAtual === 'string' &&
-          ['cpf', 'cnpj', 'telefone', 'email'].includes(tipoPixAtual);
-
-        // Validação mais rigorosa do tipo de conta
-        const tipoContaAtual = usuarioParaEditar.dadosOriginais?.tipo_conta;
-        console.log('🔍 Tipo de conta atual:', tipoContaAtual);
-        console.log('🔍 Tipo de conta atual (typeof):', typeof tipoContaAtual);
-
-        // Valores mais básicos e seguros
-        const valoresContaValidos = ['corrente', 'poupanca'];
-        let tipoContaFinal = tipoContaAtual;
-
-        // Se o valor atual não for válido, usar padrão
-        if (
-          typeof tipoContaAtual !== 'string' ||
-          !valoresContaValidos.includes(tipoContaAtual)
-        ) {
-          console.log('⚠️ Tipo de conta inválido detectado, usando padrão');
-          tipoContaFinal = 'corrente';
-          // Atualizar o objeto para usar o valor válido
-          setUsuarioParaEditar({
-            ...usuarioParaEditar,
-            dadosOriginais: {
-              ...usuarioParaEditar.dadosOriginais,
-              tipo_conta: tipoContaFinal,
-            },
-          });
-        }
-
-        const tipoContaValido =
-          typeof tipoContaFinal === 'string' &&
-          valoresContaValidos.includes(tipoContaFinal);
-
-        console.log('🔍 Valores válidos para conta:', valoresContaValidos);
-        console.log('🔍 Tipo de conta final:', tipoContaFinal);
-        console.log('🔍 Tipo de conta é válido?', tipoContaValido);
-
-        if (!tipoPixValido) {
-          throw new Error(
-            'Tipo PIX inválido. Use apenas: CPF, CNPJ, Telefone ou E-mail.'
-          );
-        }
-
-        if (!tipoContaValido) {
-          throw new Error(
-            'Tipo de conta inválido. Use apenas: Corrente ou Poupança.'
-          );
-        }
-
-        // Atualizar pessoa física com todos os campos
-        const dadosPF = {
-          nome: usuarioParaEditar.nome || '',
-          email: usuarioParaEditar.email || '',
-          cpf: usuarioParaEditar.dadosOriginais?.cpf || null,
-          rg: usuarioParaEditar.dadosOriginais?.rg || null,
-          data_nascimento:
-            usuarioParaEditar.dadosOriginais?.data_nascimento || null,
-          telefone: usuarioParaEditar.dadosOriginais?.telefone || null,
-          cep: usuarioParaEditar.dadosOriginais?.cep || null,
-          endereco: usuarioParaEditar.dadosOriginais?.endereco || null,
-          numero: usuarioParaEditar.dadosOriginais?.numero || null,
-          complemento: usuarioParaEditar.dadosOriginais?.complemento || null,
-          bairro: usuarioParaEditar.dadosOriginais?.bairro || null,
-          cidade: usuarioParaEditar.dadosOriginais?.cidade || null,
-          estado: usuarioParaEditar.dadosOriginais?.estado || null,
-          banco_id: usuarioParaEditar.dadosOriginais?.banco_id || null,
-          agencia: usuarioParaEditar.dadosOriginais?.agencia || null,
-          conta_digito: usuarioParaEditar.dadosOriginais?.conta_digito || null,
-          tipo_conta: tipoContaFinal,
-          tipo_pix: usuarioParaEditar.dadosOriginais?.tipo_pix || 'cpf',
-          chave_pix: usuarioParaEditar.dadosOriginais?.chave_pix || null,
-          ativo: usuarioParaEditar.status === 'ativo',
-        };
-
-        console.log('Dados PF para atualização:', dadosPF);
-
-        const { data, error } = await supabase
-          .from('pessoas_fisicas')
-          .update(dadosPF)
-          .eq('id', usuarioParaEditar.id)
-          .select();
-
-        console.log('Resposta Supabase PF - data:', data);
-        console.log('Resposta Supabase PF - error:', error);
-
-        if (error) {
-          console.error('Erro Supabase PF:', error);
-          throw new Error(
-            `Erro ao atualizar pessoa física: ${error.message || 'Erro desconhecido'}`
-          );
-        }
-
-        if (!data || data.length === 0) {
-          throw new Error(
-            'Nenhum registro foi atualizado. Verifique se o ID existe.'
-          );
-        }
-
-        console.log('Pessoa física atualizada com sucesso:', data[0]);
-      } else {
-        // Validar dados antes de enviar
-        const tipoPixAtual = usuarioParaEditar.dadosOriginais?.tipo_pix;
-        const tipoPixValido =
-          typeof tipoPixAtual === 'string' &&
-          ['cpf', 'cnpj', 'telefone', 'email'].includes(tipoPixAtual);
-
-        // Validação mais rigorosa do tipo de conta
-        const tipoContaAtual = usuarioParaEditar.dadosOriginais?.tipo_conta;
-        console.log('🔍 Tipo de conta atual (PJ):', tipoContaAtual);
-        console.log(
-          '🔍 Tipo de conta atual (PJ) (typeof):',
-          typeof tipoContaAtual
-        );
-
-        // Valores mais básicos e seguros
-        const valoresContaValidos = ['corrente', 'poupanca'];
-        let tipoContaFinal = tipoContaAtual;
-
-        // Se o valor atual não for válido, usar padrão
-        if (
-          typeof tipoContaAtual !== 'string' ||
-          !valoresContaValidos.includes(tipoContaAtual)
-        ) {
-          console.log(
-            '⚠️ Tipo de conta inválido detectado (PJ), usando padrão'
-          );
-          tipoContaFinal = 'corrente';
-          // Atualizar o objeto para usar o valor válido
-          setUsuarioParaEditar({
-            ...usuarioParaEditar,
-            dadosOriginais: {
-              ...usuarioParaEditar.dadosOriginais,
-              tipo_conta: tipoContaFinal,
-            },
-          });
-        }
-
-        const tipoContaValido =
-          typeof tipoContaFinal === 'string' &&
-          valoresContaValidos.includes(tipoContaFinal);
-
-        console.log('🔍 Valores válidos para conta (PJ):', valoresContaValidos);
-        console.log('🔍 Tipo de conta final (PJ):', tipoContaFinal);
-        console.log('🔍 Tipo de conta é válido? (PJ):', tipoContaValido);
-
-        if (!tipoPixValido) {
-          throw new Error(
-            'Tipo PIX inválido. Use apenas: CPF, CNPJ, Telefone ou E-mail.'
-          );
-        }
-
-        if (!tipoContaValido) {
-          throw new Error(
-            'Tipo de conta inválido. Use apenas: Corrente ou Poupança.'
-          );
-        }
-
-        // Atualizar pessoa jurídica com todos os campos
-        const dadosPJ = {
-          razao_social: usuarioParaEditar.nome || '',
-          proprietario_email: usuarioParaEditar.email || '',
-          cnpj: usuarioParaEditar.dadosOriginais?.cnpj || null,
-          nome_fantasia:
-            usuarioParaEditar.dadosOriginais?.nome_fantasia || null,
-          proprietario_nome:
-            usuarioParaEditar.dadosOriginais?.proprietario_nome || null,
-          proprietario_cpf:
-            usuarioParaEditar.dadosOriginais?.proprietario_cpf || null,
-          proprietario_telefone:
-            usuarioParaEditar.dadosOriginais?.proprietario_telefone || null,
-          cep: usuarioParaEditar.dadosOriginais?.cep || null,
-          endereco: usuarioParaEditar.dadosOriginais?.endereco || null,
-          numero: usuarioParaEditar.dadosOriginais?.numero || null,
-          complemento: usuarioParaEditar.dadosOriginais?.complemento || null,
-          bairro: usuarioParaEditar.dadosOriginais?.bairro || null,
-          cidade: usuarioParaEditar.dadosOriginais?.cidade || null,
-          estado: usuarioParaEditar.dadosOriginais?.estado || null,
-          banco_id: usuarioParaEditar.dadosOriginais?.banco_id || null,
-          agencia: usuarioParaEditar.dadosOriginais?.agencia || null,
-          conta_digito: usuarioParaEditar.dadosOriginais?.conta_digito || null,
-          tipo_conta: tipoContaFinal,
-          tipo_pix: usuarioParaEditar.dadosOriginais?.tipo_pix || 'cpf',
-          chave_pix: usuarioParaEditar.dadosOriginais?.chave_pix || null,
-          ativo: usuarioParaEditar.status === 'ativo',
-        };
-
-        console.log('Dados PJ para atualização:', dadosPJ);
-
-        const { data, error } = await supabase
-          .from('pessoas_juridicas')
-          .update(dadosPJ)
-          .eq('id', usuarioParaEditar.id)
-          .select();
-
-        console.log('Resposta Supabase PJ - data:', data);
-        console.log('Resposta Supabase PJ - error:', error);
-
-        if (error) {
-          console.error('Erro Supabase PJ:', error);
-          throw new Error(
-            `Erro ao atualizar pessoa jurídica: ${error.message || 'Erro desconhecido'}`
-          );
-        }
-
-        if (!data || data.length === 0) {
-          throw new Error(
-            'Nenhum registro foi atualizado. Verifique se o ID existe.'
-          );
-        }
-
-        console.log('Pessoa jurídica atualizada com sucesso:', data[0]);
-      }
-
-      // Atualizar lista local
-      setUsuarios(prev =>
-        prev.map(u => (u.id === usuarioParaEditar.id ? usuarioParaEditar : u))
-      );
-
-      setShowEditModal(false);
-      setUsuarioParaEditar(null);
-
-      // Recarregar usuários para garantir sincronização
-      await carregarUsuarios();
-    } catch (error) {
-      console.error('Erro completo ao atualizar usuário:', error);
-
-      let mensagemErro = 'Erro ao atualizar usuário.';
-
-      if (error instanceof Error) {
-        mensagemErro = error.message;
-      } else if (typeof error === 'object' && error !== null) {
-        mensagemErro = `Erro: ${JSON.stringify(error)}`;
-      }
-
-      alert(mensagemErro);
-    } finally {
-      setIsEditando(false);
-    }
-  };
-
-  // Função para excluir usuário
-  const handleExcluir = (usuario: Usuario) => {
-    setUsuarioParaExcluir(usuario);
-    setShowDeleteModal(true);
-  };
-
-  // Função para confirmar exclusão
-  const handleConfirmarExclusao = async () => {
-    if (!usuarioParaExcluir) return;
-
-    try {
-      setIsExcluindo(true);
-
-      if (usuarioParaExcluir.tipo === 'PF') {
-        // Desativar pessoa física (soft delete)
-        const { error } = await supabase
-          .from('pessoas_fisicas')
-          .update({ ativo: false })
-          .eq('id', usuarioParaExcluir.id);
-
-        if (error) throw error;
-      } else {
-        // Desativar pessoa jurídica (soft delete)
-        const { error } = await supabase
-          .from('pessoas_juridicas')
-          .update({ ativo: false })
-          .eq('id', usuarioParaExcluir.id);
-
-        if (error) throw error;
-      }
-
-      // Remover da lista local
-      setUsuarios(prev => prev.filter(u => u.id !== usuarioParaExcluir.id));
-
-      setShowDeleteModal(false);
-      setUsuarioParaExcluir(null);
-
-      // Recarregar usuários para garantir sincronização
-      await carregarUsuarios();
-    } catch (error) {
-      console.error('Erro ao excluir usuário:', error);
-      alert('Erro ao excluir usuário. Tente novamente.');
-    } finally {
-      setIsExcluindo(false);
-    }
-  };
-
-  // Estatísticas
-  const totalUsuarios = usuarios.length;
-  const usuariosAtivos = usuarios.filter(u => u.status === 'ativo').length;
-  const usuariosPendentes = usuarios.filter(
-    u => u.status === 'pendente'
-  ).length;
-  const usuariosInativos = usuarios.filter(u => u.status === 'inativo').length;
-
-  // Filtros
-  const filteredUsuarios = usuarios.filter(usuario => {
-    const matchesSearch =
-      usuario.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      usuario.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'todos' || usuario.status === statusFilter;
-    const matchesTipo = tipoFilter === 'todos' || usuario.tipo === tipoFilter;
-
-    return matchesSearch && matchesStatus && matchesTipo;
+  const router = useRouter();
+  const [sidebarExpanded, setSidebarExpanded] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [filterStatus, setFilterStatus] = React.useState('todos');
+  const [filterPerfil, setFilterPerfil] = React.useState('todos');
+  const [showTipoUsuarioDialog, setShowTipoUsuarioDialog] =
+    React.useState(false);
+  const [usuarios, setUsuarios] = React.useState<Usuario[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [estatisticas, setEstatisticas] = React.useState({
+    total: 0,
+    aprovados: 0,
+    pendentes: 0,
+    rejeitados: 0,
+    ativos: 0,
+    inativos: 0,
   });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'ativo':
-        return (
-          <Badge className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm">
-            <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
-            Ativo
-          </Badge>
-        );
-      case 'pendente':
-        return (
-          <Badge className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm">
-            <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
-            Pendente
-          </Badge>
-        );
-      case 'inativo':
-        return (
-          <Badge className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm">
-            <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
-            Inativo
-          </Badge>
-        );
-      default:
-        return (
-          <Badge className="bg-gradient-to-r from-slate-500 to-slate-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-sm">
-            {status}
-          </Badge>
-        );
+  // Carregar usuários do banco
+  const carregarUsuarios = React.useCallback(async () => {
+    try {
+      console.log('🔄 [UsuariosPage] Iniciando carregamento de usuários...');
+      setLoading(true);
+      setError(null);
+
+      const filtros: FiltroUsuarios = {
+        searchTerm,
+        status: filterStatus !== 'todos' ? filterStatus : undefined,
+        perfil: filterPerfil !== 'todos' ? filterPerfil : undefined,
+        // Mostrar apenas usuários aprovados e ativos (que têm acesso ao aplicativo)
+        aprovado: true,
+        ativo: true,
+      };
+
+      console.log(
+        '🔄 [UsuariosPage] Chamando UsuariosService.buscarUsuarios...'
+      );
+      const usuariosData = await UsuariosService.buscarUsuarios(filtros);
+      console.log('✅ [UsuariosPage] Usuários recebidos:', usuariosData);
+      setUsuarios(usuariosData);
+
+      // Carregar estatísticas apenas dos usuários com acesso
+      console.log('🔄 [UsuariosPage] Carregando estatísticas...');
+      const stats = await UsuariosService.buscarEstatisticas();
+      console.log('✅ [UsuariosPage] Estatísticas recebidas:', stats);
+      setEstatisticas(stats);
+    } catch (err) {
+      console.error('❌ Erro ao carregar usuários:', err);
+      setError('Erro ao carregar usuários do banco de dados');
+    } finally {
+      setLoading(false);
+    }
+  }, [searchTerm, filterStatus, filterPerfil]);
+
+  // Carregar usuários na montagem do componente
+  React.useEffect(() => {
+    carregarUsuarios();
+  }, [carregarUsuarios]);
+
+  const toggleSidebar = () => {
+    setSidebarExpanded(!sidebarExpanded);
+  };
+
+  const getStatusBadge = (
+    status: string,
+    aprovado: boolean,
+    ativo: boolean
+  ) => {
+    if (status === 'pendente') {
+      return (
+        <span className="holding-badge holding-badge-warning">Pendente</span>
+      );
+    } else if (status === 'aprovado' && aprovado) {
+      return (
+        <span className="holding-badge holding-badge-success">Aprovado</span>
+      );
+    } else if (status === 'rejeitado') {
+      return (
+        <span className="holding-badge holding-badge-error">Rejeitado</span>
+      );
+    } else if (ativo) {
+      return <span className="holding-badge holding-badge-success">Ativo</span>;
+    } else {
+      return <span className="holding-badge holding-badge-error">Inativo</span>;
     }
   };
 
-  // Função para obter o ícone baseado no tipo de usuário
-  const getTipoIcon = (tipo: string) => {
-    switch (tipo) {
-      case 'PF':
-        return <User className="w-6 h-6 text-blue-600" />;
-      case 'PJ':
-        return <Building2 className="w-6 h-6 text-emerald-600" />;
-      default:
-        return <User className="w-6 h-6 text-slate-600" />;
+  const getPerfilIcon = (perfilNome?: string) => {
+    if (!perfilNome) return <User className="w-4 h-4" />;
+
+    if (perfilNome.toLowerCase().includes('admin'))
+      return <Shield className="w-4 h-4" />;
+    if (perfilNome.toLowerCase().includes('gerente'))
+      return <Settings className="w-4 h-4" />;
+    if (perfilNome.toLowerCase().includes('operador'))
+      return <Users className="w-4 h-4" />;
+    if (perfilNome.toLowerCase().includes('visualizador'))
+      return <Eye className="w-4 h-4" />;
+
+    return <User className="w-4 h-4" />;
+  };
+
+  const formatarData = (data?: string) => {
+    if (!data) return 'N/A';
+    return new Date(data).toLocaleDateString('pt-BR');
+  };
+
+  const handleAprovarUsuario = async (id: number) => {
+    try {
+      await UsuariosService.aprovarUsuario(id, 'Sistema');
+      await carregarUsuarios(); // Recarregar lista
+    } catch (err) {
+      console.error('❌ Erro ao aprovar usuário:', err);
+      setError('Erro ao aprovar usuário');
+    }
+  };
+
+  const handleRejeitarUsuario = async (id: number) => {
+    try {
+      await UsuariosService.rejeitarUsuario(id, 'Sistema');
+      await carregarUsuarios(); // Recarregar lista
+    } catch (err) {
+      console.error('❌ Erro ao rejeitar usuário:', err);
+      setError('Erro ao rejeitar usuário');
+    }
+  };
+
+  const handleExcluirUsuario = async (id: number) => {
+    try {
+      await UsuariosService.excluirUsuario(id);
+      await carregarUsuarios(); // Recarregar lista
+    } catch (err) {
+      console.error('❌ Erro ao excluir usuário:', err);
+      setError('Erro ao excluir usuário');
     }
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Cabeçalho da Página */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-800 via-blue-900 to-indigo-900 rounded-2xl p-6 lg:p-8 shadow-2xl mb-8">
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/50 to-blue-900/50"></div>
-        <div className="absolute top-0 right-0 w-48 h-48 lg:w-64 lg:h-64 bg-gradient-to-br from-blue-400/10 to-indigo-400/10 rounded-full -translate-y-24 lg:-translate-y-32 translate-x-24 lg:translate-x-32"></div>
+    <div className="min-h-screen holding-layout">
+      {/* Sidebar Recolhível */}
+      <div
+        className={`holding-sidebar ${sidebarExpanded ? 'expanded' : 'collapsed'}`}
+      >
+        <nav className="flex flex-col items-center py-8 space-y-6">
+          {/* Botão Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-12 h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg mb-8"
+            onClick={toggleSidebar}
+            title={sidebarExpanded ? 'Recolher Menu' : 'Expandir Menu'}
+          >
+            {sidebarExpanded ? (
+              <ChevronLeft className="w-5 h-5" />
+            ) : (
+              <ChevronRight className="w-5 h-5" />
+            )}
+          </Button>
 
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-6 lg:space-y-0">
-          <div className="flex-1">
-            <div className="flex items-center space-x-4 lg:space-x-6 mb-4">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                <Users className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2">
-                  Gestão de Usuários
-                </h1>
-                <p className="text-blue-100 text-sm lg:text-lg">
-                  Administre todos os usuários do sistema de forma eficiente
-                </p>
-              </div>
-            </div>
+          {/* Logo */}
+          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-medium to-holding-blue-light rounded-xl flex items-center justify-center mb-8">
+            <Shield className="w-6 h-6 text-holding-white" />
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <Link href="/dashboard">
-              <div className="relative group animate-pulse hover:animate-none">
-                <Button className="bg-white text-slate-800 hover:bg-blue-50 hover:text-blue-700 border-2 border-white/50 hover:border-white transition-all duration-300 transform hover:scale-105 shadow-xl font-semibold px-4 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-xl ring-4 ring-blue-400/30 hover:ring-blue-400/50 text-sm lg:text-base">
-                  <ArrowLeft className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3" />
-                  Voltar ao Sistema
-                </Button>
-                {/* Indicador visual adicional */}
-                <div className="absolute -top-2 -right-2 w-3 h-3 lg:w-4 lg:h-4 bg-blue-400 rounded-full animate-pulse"></div>
-                <div className="absolute -bottom-1 -left-1 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                {/* Tooltip de ajuda */}
-                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
-                  ← Clique para voltar ao Dashboard
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
-                </div>
-              </div>
-            </Link>
-            <div className="border-l border-white/20 h-12 lg:h-16 hidden sm:block"></div>
+          {/* Navegação Principal */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`${
+              sidebarExpanded
+                ? 'w-full justify-start px-4'
+                : 'w-12 justify-center'
+            } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
+            onClick={() => router.push('/dashboard')}
+            title="Dashboard"
+          >
+            <BarChart3 className="w-5 h-5" />
+            {sidebarExpanded && (
+              <span className="ml-3 text-sm font-medium">Dashboard</span>
+            )}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`${
+              sidebarExpanded
+                ? 'w-full justify-start px-4'
+                : 'w-12 justify-center'
+            } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
+            onClick={() => router.push('/usuarios')}
+            title="Usuários"
+          >
+            <Users className="w-5 h-5" />
+            {sidebarExpanded && (
+              <span className="ml-3 text-sm font-medium">Usuários</span>
+            )}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`${
+              sidebarExpanded
+                ? 'w-full justify-start px-4'
+                : 'w-12 justify-center'
+            } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
+            onClick={() => router.push('/clientes')}
+            title="Clientes"
+          >
+            <Building className="w-5 h-5" />
+            {sidebarExpanded && (
+              <span className="ml-3 text-sm font-medium">Clientes</span>
+            )}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`${
+              sidebarExpanded
+                ? 'w-full justify-start px-4'
+                : 'w-12 justify-center'
+            } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
+            onClick={() => router.push('/settings')}
+            title="Configurações"
+          >
+            <Settings className="w-5 h-5" />
+            {sidebarExpanded && (
+              <span className="ml-3 text-sm font-medium">Configurações</span>
+            )}
+          </Button>
+
+          {/* Logout */}
+          <div
+            className={`pt-8 border-t border-holding-blue-light/30 ${sidebarExpanded ? 'w-full' : 'w-8'}`}
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`${
+                sidebarExpanded
+                  ? 'w-full justify-start px-4'
+                  : 'w-12 justify-center'
+              } h-12 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg`}
+              onClick={() => {
+                console.log('Logout solicitado');
+                if (confirm('Tem certeza que deseja sair do sistema?')) {
+                  localStorage.removeItem('holding_user');
+                  window.location.href = '/login';
+                }
+              }}
+              title="Sair"
+            >
+              <LogOut className="w-5 h-5" />
+              {sidebarExpanded && (
+                <span className="ml-3 text-sm font-medium">Sair</span>
+              )}
+            </Button>
           </div>
-        </div>
+        </nav>
       </div>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <Card className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 border-0 shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-transparent"></div>
-          <CardContent className="p-4 lg:p-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 lg:space-x-4">
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-all duration-300">
-                  <Users className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
-                </div>
-                <div>
-                  <p className="text-white/80 text-xs lg:text-sm font-medium">
-                    Total de Usuários
-                  </p>
-                  <p className="text-xl lg:text-3xl font-bold text-white">
-                    {isLoading ? '...' : totalUsuarios}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right hidden lg:block">
-                <div className="w-3 h-3 bg-white/40 rounded-full animate-pulse"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-gradient-to-br from-green-500 via-green-600 to-green-700 border-0 shadow-2xl hover:shadow-green-500/25 transition-all duration-300 hover:scale-105 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-green-600/20 to-transparent"></div>
-          <CardContent className="p-4 lg:p-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 lg:space-x-4">
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-all duration-300">
-                  <CheckCircle className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
-                </div>
-                <div>
-                  <p className="text-white/80 text-xs lg:text-sm font-medium">
-                    Usuários Ativos
-                  </p>
-                  <p className="text-xl lg:text-3xl font-bold text-white">
-                    {isLoading ? '...' : usuariosAtivos}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right hidden lg:block">
-                <div className="w-3 h-3 bg-white/40 rounded-full animate-pulse"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 border-0 shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-600/20 to-transparent"></div>
-          <CardContent className="p-4 lg:p-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 lg:space-x-4">
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-all duration-300">
-                  <Clock className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
-                </div>
-                <div>
-                  <p className="text-white/80 text-xs lg:text-sm font-medium">
-                    Pendentes
-                  </p>
-                  <p className="text-xl lg:text-3xl font-bold text-white">
-                    {isLoading ? '...' : usuariosPendentes}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right hidden lg:block">
-                <div className="w-3 h-3 bg-white/40 rounded-full animate-pulse"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-gradient-to-br from-red-500 via-red-600 to-red-700 border-0 shadow-2xl hover:shadow-red-500/25 transition-all duration-300 hover:scale-105 group">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-600/20 to-transparent"></div>
-          <CardContent className="p-4 lg:p-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3 lg:space-x-4">
-                <div className="w-10 h-10 lg:w-14 lg:h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-all duration-300">
-                  <AlertCircle className="w-5 h-5 lg:w-7 lg:h-7 text-white" />
-                </div>
-                <div>
-                  <p className="text-white/80 text-xs lg:text-sm font-medium">
-                    Inativos
-                  </p>
-                  <p className="text-xl lg:text-3xl font-bold text-white">
-                    {isLoading ? '...' : usuariosInativos}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right hidden lg:block">
-                <div className="w-3 h-3 bg-white/40 rounded-full animate-pulse"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Área de Cadastro */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-        {/* Cadastro de Pessoa Física */}
-        <Card className="group relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 border-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] cursor-pointer">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute top-0 right-0 w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full -translate-y-12 lg:-translate-y-16 translate-x-12 lg:translate-x-16 group-hover:scale-110 transition-transform duration-500"></div>
-
-          <CardHeader className="relative z-10 pb-3 lg:pb-4">
-            <CardTitle className="text-slate-800 flex items-center space-x-3 lg:space-x-4 group-hover:text-blue-700 transition-colors duration-300">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-blue-500/25 transition-all duration-300 group-hover:scale-110">
-                <Users className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
-              </div>
-              <span className="text-lg lg:text-2xl font-bold">
-                Cadastro de Pessoa Física
-              </span>
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="relative z-10 space-y-4 lg:space-y-6">
-            <p className="text-slate-600 text-sm lg:text-base leading-relaxed">
-              Cadastre pessoas físicas com dados pessoais, endereço, bancários e
-              PIX de forma completa e segura.
-            </p>
-
-            <div className="space-y-2 lg:space-y-3">
-              <div className="flex items-center space-x-2 lg:space-x-3 text-slate-700">
-                <div className="w-5 h-5 lg:w-6 lg:h-6 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 text-green-600" />
-                </div>
-                <span className="text-sm lg:text-base font-medium">
-                  Dados pessoais completos
-                </span>
-              </div>
-              <div className="flex items-center space-x-2 lg:space-x-3 text-slate-700">
-                <div className="w-5 h-5 lg:w-6 lg:h-6 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 text-green-600" />
-                </div>
-                <span className="text-sm lg:text-base font-medium">
-                  Validação de CPF e RG
-                </span>
-              </div>
-              <div className="flex items-center space-x-2 lg:space-x-3 text-slate-700">
-                <div className="w-5 h-5 lg:w-6 lg:h-6 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 text-green-600" />
-                </div>
-                <span className="text-sm lg:text-base font-medium">
-                  Dados bancários e PIX
-                </span>
-              </div>
-            </div>
-
-            <Link href="/usuarios/cadastro-pf">
-              <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-2 lg:py-3 px-4 lg:px-6 rounded-lg lg:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-sm lg:text-base">
-                <UserPlus className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3" />
-                Cadastrar Pessoa Física
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        {/* Cadastro de Pessoa Jurídica */}
-        <Card className="group relative overflow-hidden bg-gradient-to-br from-slate-50 via-emerald-50 to-green-100 border-0 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] cursor-pointer">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-          <div className="absolute top-0 right-0 w-24 h-24 lg:w-32 lg:h-32 bg-gradient-to-br from-emerald-400/20 to-transparent rounded-full -translate-y-12 lg:-translate-y-16 translate-x-12 lg:translate-x-16 group-hover:scale-110 transition-transform duration-500"></div>
-
-          <CardHeader className="relative z-10 pb-3 lg:pb-4">
-            <CardTitle className="text-slate-800 flex items-center space-x-3 lg:space-x-4 group-hover:text-emerald-700 transition-colors duration-300">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-emerald-500/25 transition-all duration-300 group-hover:scale-110">
-                <Building2 className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
-              </div>
-              <span className="text-lg lg:text-2xl font-bold">
-                Cadastro de Pessoa Jurídica
-              </span>
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="relative z-10 space-y-4 lg:space-y-6">
-            <p className="text-slate-600 text-sm lg:text-base leading-relaxed">
-              Cadastre pessoas jurídicas com dados da empresa, proprietário,
-              bancários e PIX de forma eficiente.
-            </p>
-
-            <div className="space-y-2 lg:space-y-3">
-              <div className="flex items-center space-x-2 lg:space-x-3 text-slate-700">
-                <div className="w-5 h-5 lg:w-6 lg:h-6 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 text-green-600" />
-                </div>
-                <span className="text-sm lg:text-base font-medium">
-                  Busca automática de CNPJ
-                </span>
-              </div>
-              <div className="flex items-center space-x-2 lg:space-x-3 text-slate-700">
-                <div className="w-5 h-5 lg:w-6 lg:h-6 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 text-green-600" />
-                </div>
-                <span className="text-sm lg:text-base font-medium">
-                  Dados da empresa completos
-                </span>
-              </div>
-              <div className="flex items-center space-x-2 lg:space-x-3 text-slate-700">
-                <div className="w-5 h-5 lg:w-6 lg:h-6 bg-green-100 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4 text-green-600" />
-                </div>
-                <span className="text-sm lg:text-base font-medium">
-                  Informações bancárias
-                </span>
-              </div>
-            </div>
-
-            <Link href="/usuarios/cadastro-pj">
-              <Button className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold py-2 lg:py-3 px-4 lg:px-6 rounded-lg lg:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-sm lg:text-base">
-                <Building2 className="w-4 h-4 lg:w-5 lg:h-5 mr-2 lg:mr-3" />
-                Cadastrar Pessoa Jurídica
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Lista de Usuários */}
-      <Card className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-50 border-0 shadow-xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-indigo-500/5"></div>
-
-        <CardHeader className="relative z-10 bg-gradient-to-r from-slate-100 to-slate-200 border-b border-slate-200">
-          <CardTitle className="text-slate-800 text-2xl font-bold flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Users className="w-5 h-5 text-white" />
-            </div>
-            <span>Usuários Cadastrados</span>
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent className="relative z-10 p-6">
-          {/* Filtros e Busca */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 lg:p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-6">
-              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 flex-1">
-                <div className="relative flex-1 min-w-0">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    placeholder="Buscar por nome, email ou documento..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 lg:py-3 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg lg:rounded-xl text-sm lg:text-base"
-                  />
-                </div>
-
-                <select
-                  value={statusFilter}
-                  onChange={e => setStatusFilter(e.target.value)}
-                  className="w-full sm:w-auto min-w-[140px] border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg lg:rounded-xl py-2 lg:py-3 text-sm lg:text-base flex h-10 items-center justify-between px-3 ring-offset-background focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="todos">Todos os Status</option>
-                  <option value="ativo">Ativo</option>
-                  <option value="pendente">Pendente</option>
-                  <option value="inativo">Inativo</option>
-                </select>
-
-                <select
-                  value={tipoFilter}
-                  onChange={e => setTipoFilter(e.target.value)}
-                  className="w-full sm:w-auto min-w-[140px] border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-lg lg:rounded-xl py-2 lg:py-3 text-sm lg:text-base flex h-10 items-center justify-between px-3 ring-offset-background focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="todos">Todos os Tipos</option>
-                  <option value="Pessoa Física">Pessoa Física</option>
-                  <option value="Pessoa Jurídica">Pessoa Jurídica</option>
-                </select>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSearchTerm('');
-                    setStatusFilter('todos');
-                    setTipoFilter('todos');
-                  }}
-                  className="border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-700 rounded-lg lg:rounded-xl py-2 lg:py-3 px-3 lg:px-4 text-sm lg:text-base"
-                >
-                  <RotateCcw className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
-                  Limpar
-                </Button>
-                <Button
-                  onClick={() => {
-                    setSearchTerm('');
-                    setStatusFilter('todos');
-                    setTipoFilter('todos');
-                  }}
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg lg:rounded-xl py-2 lg:py-3 px-3 lg:px-4 text-sm lg:text-base"
-                >
-                  <RefreshCw className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
-                  Atualizar
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Loading State */}
-          {isLoading && (
-            <div className="text-center py-12">
-              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-slate-600 text-lg font-medium">
-                Carregando usuários...
+      {/* Conteúdo Principal */}
+      <div
+        className={`transition-all duration-300 ${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}
+      >
+        {/* Header */}
+        <div className="holding-fade-in">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <h1 className="text-4xl font-bold text-holding-white mb-4">
+                Gerenciamento de Usuários
+              </h1>
+              <p className="text-xl text-holding-blue-light">
+                Usuários aprovados e ativos com acesso ao aplicativo
               </p>
             </div>
-          )}
-
-          {/* Cards de Usuários (Mobile/Tablet) */}
-          {!isLoading && (
-            <div className="lg:hidden space-y-4 mb-8">
-              <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center space-x-2">
-                <Users className="w-5 h-5 text-blue-600" />
-                <span>Usuários Cadastrados</span>
-              </h3>
-
-              {filteredUsuarios.map(usuario => (
-                <Card
-                  key={usuario.id}
-                  className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-all duration-200"
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-3 flex-1">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
-                          {getTipoIcon(usuario.tipo)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-slate-900 truncate">
-                            {usuario.nome}
-                          </h4>
-                          <p className="text-slate-500 text-sm truncate">
-                            {usuario.email}
-                          </p>
-                          <div className="flex items-center space-x-2 mt-2">
-                            {getStatusBadge(usuario.status)}
-                            <span className="text-xs text-slate-400">•</span>
-                            <span className="text-xs text-slate-500">
-                              {usuario.tipo}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col space-y-2 ml-3">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg p-2"
-                          title="Editar"
-                          onClick={() => handleEditar(usuario)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg p-2"
-                          title="Excluir"
-                          onClick={() => handleExcluir(usuario)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-slate-100">
-                      <div className="grid grid-cols-2 gap-4 text-xs text-slate-500">
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="w-3 h-3 text-slate-400" />
-                          <span>
-                            Cadastro:{' '}
-                            {new Date(usuario.dataCadastro).toLocaleDateString(
-                              'pt-BR'
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Clock className="w-3 h-3 text-slate-400" />
-                          <span>
-                            {usuario.ultimoAcesso
-                              ? new Date(
-                                  usuario.ultimoAcesso
-                                ).toLocaleDateString('pt-BR')
-                              : 'Nunca acessou'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-
-              {filteredUsuarios.length === 0 && (
-                <Card className="bg-slate-50 border-slate-200">
-                  <CardContent className="p-8 text-center">
-                    <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Users className="w-8 h-8 text-slate-400" />
-                    </div>
-                    <p className="text-slate-600 font-medium">
-                      Nenhum usuário encontrado
-                    </p>
-                    <p className="text-slate-500 text-sm mt-1">
-                      Tente ajustar os filtros de busca
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+            <div className="flex items-center space-x-4">
+              <Button
+                onClick={() => router.push('/usuarios/aprovacao')}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <UserCheck className="w-4 h-4 mr-2" />
+                Aprovação
+              </Button>
+              <Button
+                onClick={() => router.push('/usuarios/niveis-acesso')}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Níveis de Acesso
+              </Button>
+              <Button
+                onClick={() => setShowTipoUsuarioDialog(true)}
+                className="holding-btn-primary"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Novo Usuário
+              </Button>
             </div>
-          )}
+          </div>
+        </div>
 
-          {/* Tabela de Usuários (Desktop) */}
-          {!isLoading && (
-            <div className="hidden lg:block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-              <div className="bg-gradient-to-r from-slate-100 to-slate-200 px-6 py-4 border-b border-slate-200">
-                <h3 className="text-slate-800 text-xl lg:text-2xl font-bold flex items-center space-x-3">
-                  <Users className="w-6 h-6 lg:w-7 lg:h-7 text-slate-600" />
-                  <span>Usuários Cadastrados</span>
+        {/* Barra de Pesquisa e Filtros */}
+        <div className="holding-card p-8">
+          <div className="flex flex-col md:flex-row gap-6 items-center">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-holding-blue-light w-4 h-4" />
+              <Input
+                type="text"
+                placeholder="Buscar usuários por nome ou email..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="holding-input pl-12 py-3"
+              />
+            </div>
+            <div className="flex items-center space-x-3">
+              <Filter className="w-4 h-4 text-holding-blue-light" />
+              <select
+                value={filterStatus}
+                onChange={e => setFilterStatus(e.target.value)}
+                className="holding-input py-3 px-4"
+              >
+                <option value="todos">Todos os Status</option>
+                <option value="pendente">Pendente</option>
+                <option value="aprovado">Aprovado</option>
+                <option value="rejeitado">Rejeitado</option>
+                <option value="ativo">Ativo</option>
+                <option value="inativo">Inativo</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Estatísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+          <Card className="holding-stat-card">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-between">
+                <div className="w-16 h-16 bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/20 rounded-xl flex items-center justify-center">
+                  <Users className="w-8 h-8 text-holding-blue-light" />
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-holding-white">
+                    {estatisticas.total}
+                  </p>
+                  <p className="text-holding-blue-light text-sm">
+                    Total de Usuários
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="holding-stat-card">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-between">
+                <div className="w-16 h-16 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-medium/20 rounded-xl flex items-center justify-center">
+                  <Shield className="w-8 h-8 text-holding-blue-light" />
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-holding-white">
+                    {estatisticas.ativos}
+                  </p>
+                  <p className="text-holding-blue-light text-sm">
+                    Usuários Ativos
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="holding-stat-card">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-between">
+                <div className="w-16 h-16 bg-gradient-to-br from-holding-blue-dark/20 to-holding-blue-deep/20 rounded-xl flex items-center justify-center">
+                  <UserPlus className="w-8 h-8 text-holding-blue-light" />
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-holding-white">
+                    {estatisticas.aprovados}
+                  </p>
+                  <p className="text-holding-blue-light text-sm">
+                    Usuários Aprovados
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="holding-stat-card">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-between">
+                <div className="w-16 h-16 bg-gradient-to-br from-holding-blue-deep/20 to-holding-blue-profound/20 rounded-xl flex items-center justify-center">
+                  <AlertCircle className="w-8 h-8 text-holding-blue-light" />
+                </div>
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-holding-white">
+                    {estatisticas.pendentes}
+                  </p>
+                  <p className="text-holding-blue-light text-sm">
+                    Usuários Pendentes
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Lista de Usuários */}
+        <Card className="holding-card">
+          <CardHeader className="p-8">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center space-x-6">
+                <h3 className="text-xl font-semibold text-holding-white">
+                  Usuários com Acesso ao Aplicativo
                 </h3>
+                <span className="text-holding-blue-light text-sm font-normal">
+                  ({usuarios.length} usuário
+                  {usuarios.length !== 1 ? 's' : ''})
+                </span>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
+              {/* DEBUG: Mostrar dados brutos */}
+              <div className="text-xs text-holding-blue-light/70">
+                <details>
+                  <summary>Debug: Dados do Banco</summary>
+                  <pre className="mt-2 p-2 bg-holding-dark/50 rounded text-xs overflow-auto max-w-md">
+                    {JSON.stringify(usuarios.slice(0, 2), null, 2)}
+                  </pre>
+                </details>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={carregarUsuarios}
+                  disabled={loading}
+                  className="text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 px-4 py-2"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`}
+                  />
+                  Atualizar
+                </Button>
+
+                <Button
+                  onClick={() => setShowTipoUsuarioDialog(true)}
+                  className="bg-holding-blue-light hover:bg-holding-blue-light/80 text-holding-white px-6 py-2"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Novo Usuário
+                </Button>
+              </div>
+            </div>
+            <CardTitle className="text-holding-white flex items-center space-x-3">
+              <Users className="w-6 h-6 text-holding-blue-light" />
+              <span>Usuários com Acesso ao Aplicativo</span>
+              <span className="text-holding-blue-light text-sm font-normal">
+                ({usuarios.length} usuário
+                {usuarios.length !== 1 ? 's' : ''})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="holding-table">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-4">Nome</th>
+                    <th className="px-6 py-4">Email</th>
+                    <th className="px-6 py-4">Perfil</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Data de Cadastro</th>
+                    <th className="px-6 py-4">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
                     <tr>
-                      <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-semibold text-slate-900 uppercase tracking-wider">
-                        Usuário
-                      </th>
-                      <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-semibold text-slate-900 uppercase tracking-wider">
-                        Tipo
-                      </th>
-                      <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-semibold text-slate-900 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-semibold text-slate-900 uppercase tracking-wider">
-                        Data Cadastro
-                      </th>
-                      <th className="px-4 lg:px-6 py-3 lg:py-4 text-left text-xs lg:text-sm font-semibold text-slate-900 uppercase tracking-wider">
-                        Último Acesso
-                      </th>
-                      <th className="px-4 lg:px-6 py-3 lg:py-4 text-center text-xs lg:text-sm font-semibold text-slate-900 uppercase tracking-wider">
-                        Ações
-                      </th>
+                      <td colSpan={6} className="text-center py-16">
+                        <RefreshCw className="w-16 h-16 text-holding-blue-light/50 mx-auto mb-6 animate-spin" />
+                        <p className="text-holding-blue-light text-lg mb-3">
+                          Carregando usuários...
+                        </p>
+                        <p className="text-holding-blue-light/70 text-sm">
+                          Aguarde um momento.
+                        </p>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-slate-200">
-                    {filteredUsuarios.map(usuario => (
+                  ) : error ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-16">
+                        <AlertCircle className="w-16 h-16 text-red-400/50 mx-auto mb-6" />
+                        <p className="text-red-400 text-lg mb-3">{error}</p>
+                        <p className="text-red-400/70 text-sm">
+                          Tente recarregar a página.
+                        </p>
+                      </td>
+                    </tr>
+                  ) : usuarios.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-16">
+                        <XCircle className="w-16 h-16 text-holding-blue-light/50 mx-auto mb-6" />
+                        <p className="text-holding-blue-light text-lg mb-3">
+                          Nenhum usuário encontrado
+                        </p>
+                        <p className="text-holding-blue-light/70 text-sm">
+                          Tente ajustar os filtros de busca
+                        </p>
+                      </td>
+                    </tr>
+                  ) : (
+                    usuarios.map(user => (
                       <tr
-                        key={usuario.id}
-                        className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200"
+                        key={user.id}
+                        className="hover:bg-holding-blue-light/5 transition-colors"
                       >
-                        <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-3 lg:space-x-4">
-                            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center">
-                              {getTipoIcon(usuario.tipo)}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm lg:text-base font-semibold text-slate-900 truncate">
-                                {usuario.nome}
-                              </p>
-                              <p className="text-xs lg:text-sm text-slate-500 truncate">
-                                {usuario.email}
-                              </p>
-                            </div>
-                          </div>
+                        <td className="font-medium text-holding-white px-6 py-4">
+                          {user.nome}
                         </td>
-                        <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs lg:text-sm font-medium bg-slate-100 text-slate-800">
-                            {usuario.tipo}
-                          </span>
+                        <td className="text-holding-blue-light px-6 py-4">
+                          {user.email}
                         </td>
-                        <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap">
-                          {getStatusBadge(usuario.status)}
+                        <td className="flex items-center space-x-3 px-6 py-4">
+                          {getPerfilIcon(user.perfil_nome)}
+                          <span>{user.perfil_nome || 'N/A'}</span>
                         </td>
-                        <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm text-slate-600">
-                          {new Date(usuario.dataCadastro).toLocaleDateString(
-                            'pt-BR'
+                        <td className="px-6 py-4">
+                          {getStatusBadge(
+                            user.status,
+                            user.aprovado,
+                            user.ativo
                           )}
                         </td>
-                        <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-xs lg:text-sm text-slate-600">
-                          {usuario.ultimoAcesso
-                            ? new Date(usuario.ultimoAcesso).toLocaleDateString(
-                                'pt-BR'
-                              )
-                            : 'Nunca acessou'}
+                        <td className="text-holding-blue-light px-6 py-4">
+                          {formatarData(user.data_cadastro)}
                         </td>
-                        <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-center text-sm font-medium">
-                          <div className="flex items-center justify-center space-x-2">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-3">
                             <Button
-                              size="sm"
                               variant="ghost"
-                              className="text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg p-2"
-                              title="Editar"
-                              onClick={() => handleEditar(usuario)}
+                              size="sm"
+                              className="w-10 h-10 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20"
+                              title="Visualizar"
                             >
-                              <Edit className="w-4 h-4" />
+                              <Eye className="w-4 h-4" />
                             </Button>
+                            {user.status === 'pendente' && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-10 h-10 p-0 text-green-400 hover:text-green-300 hover:bg-green-500/20"
+                                  onClick={() => handleAprovarUsuario(user.id)}
+                                  title="Aprovar Usuário"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="w-10 h-10 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                                  onClick={() => handleRejeitarUsuario(user.id)}
+                                  title="Rejeitar Usuário"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              </>
+                            )}
                             <Button
-                              size="sm"
                               variant="ghost"
-                              className="text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg p-2"
-                              title="Excluir"
-                              onClick={() => handleExcluir(usuario)}
+                              size="sm"
+                              className="w-10 h-10 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                              onClick={() => handleExcluirUsuario(user.id)}
+                              title="Excluir Usuário"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {filteredUsuarios.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-slate-400" />
-                  </div>
-                  <p className="text-slate-600 font-medium">
-                    Nenhum usuário encontrado
-                  </p>
-                  <p className="text-slate-500 text-sm mt-1">
-                    Tente ajustar os filtros de busca
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {!isLoading && filteredUsuarios.length === 0 && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 text-slate-400" />
-              </div>
-              <p className="text-slate-600 text-lg font-medium">
-                Nenhum usuário encontrado com os filtros aplicados.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Modal de Edição */}
-      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="bg-white border-gray-200 max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="bg-gray-50 -m-6 mb-6 p-6 rounded-t-lg">
-            <DialogTitle className="text-gray-900 text-xl font-semibold">
-              Editar{' '}
-              {usuarioParaEditar?.tipo === 'PF'
-                ? 'Pessoa Física'
-                : 'Pessoa Jurídica'}
-            </DialogTitle>
-            <DialogDescription className="text-gray-600 mt-2">
-              Atualize todas as informações do usuário selecionado.
-            </DialogDescription>
-          </DialogHeader>
-
-          {usuarioParaEditar && (
-            <div className="space-y-6">
-              {/* Dados Básicos */}
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Dados Básicos
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="nome" className="text-gray-700 font-medium">
-                      {usuarioParaEditar.tipo === 'PF'
-                        ? 'Nome Completo'
-                        : 'Razão Social'}
-                    </Label>
-                    <Input
-                      id="nome"
-                      value={usuarioParaEditar.nome}
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          nome: e.target.value,
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="email"
-                      className="text-gray-700 font-medium"
-                    >
-                      {usuarioParaEditar.tipo === 'PF'
-                        ? 'Email'
-                        : 'Email do Proprietário'}
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={usuarioParaEditar.email}
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          email: e.target.value,
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  {usuarioParaEditar.tipo === 'PF' && (
-                    <>
-                      <div>
-                        <Label
-                          htmlFor="cpf"
-                          className="text-gray-700 font-medium"
-                        >
-                          CPF
-                        </Label>
-                        <Input
-                          id="cpf"
-                          value={String(
-                            (
-                              usuarioParaEditar.dadosOriginais as Record<
-                                string,
-                                string
-                              >
-                            )?.cpf || ''
-                          )}
-                          onChange={e =>
-                            setUsuarioParaEditar({
-                              ...usuarioParaEditar,
-                              dadosOriginais: {
-                                ...usuarioParaEditar.dadosOriginais,
-                                cpf: e.target.value,
-                              },
-                            })
-                          }
-                          className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                          placeholder="000.000.000-00"
-                        />
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="rg"
-                          className="text-gray-700 font-medium"
-                        >
-                          RG
-                        </Label>
-                        <Input
-                          id="rg"
-                          value={String(
-                            (
-                              usuarioParaEditar.dadosOriginais as Record<
-                                string,
-                                string
-                              >
-                            )?.rg || ''
-                          )}
-                          onChange={e =>
-                            setUsuarioParaEditar({
-                              ...usuarioParaEditar,
-                              dadosOriginais: {
-                                ...usuarioParaEditar.dadosOriginais,
-                                rg: e.target.value,
-                              },
-                            })
-                          }
-                          className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                          placeholder="00.000.000-0"
-                        />
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="dataNascimento"
-                          className="text-gray-700 font-medium"
-                        >
-                          Data de Nascimento
-                        </Label>
-                        <Input
-                          id="dataNascimento"
-                          type="date"
-                          value={String(
-                            (
-                              usuarioParaEditar.dadosOriginais as Record<
-                                string,
-                                string
-                              >
-                            )?.data_nascimento || ''
-                          )}
-                          onChange={e =>
-                            setUsuarioParaEditar({
-                              ...usuarioParaEditar,
-                              dadosOriginais: {
-                                ...usuarioParaEditar.dadosOriginais,
-                                data_nascimento: e.target.value,
-                              },
-                            })
-                          }
-                          className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="telefone"
-                          className="text-gray-700 font-medium"
-                        >
-                          Telefone
-                        </Label>
-                        <Input
-                          id="telefone"
-                          value={String(
-                            (
-                              usuarioParaEditar.dadosOriginais as Record<
-                                string,
-                                string
-                              >
-                            )?.telefone || ''
-                          )}
-                          onChange={e =>
-                            setUsuarioParaEditar({
-                              ...usuarioParaEditar,
-                              dadosOriginais: {
-                                ...usuarioParaEditar.dadosOriginais,
-                                telefone: e.target.value,
-                              },
-                            })
-                          }
-                          className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                          placeholder="(00) 00000-0000"
-                        />
-                      </div>
-                    </>
+                    ))
                   )}
-
-                  {usuarioParaEditar.tipo === 'PJ' && (
-                    <>
-                      <div>
-                        <Label
-                          htmlFor="cnpj"
-                          className="text-gray-700 font-medium"
-                        >
-                          CNPJ
-                        </Label>
-                        <Input
-                          id="cnpj"
-                          value={String(
-                            (
-                              usuarioParaEditar.dadosOriginais as Record<
-                                string,
-                                string
-                              >
-                            )?.cnpj || ''
-                          )}
-                          onChange={e =>
-                            setUsuarioParaEditar({
-                              ...usuarioParaEditar,
-                              dadosOriginais: {
-                                ...usuarioParaEditar.dadosOriginais,
-                                cnpj: e.target.value,
-                              },
-                            })
-                          }
-                          className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                          placeholder="00.000.000/0000-00"
-                        />
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="nomeFantasia"
-                          className="text-gray-700 font-medium"
-                        >
-                          Nome Fantasia
-                        </Label>
-                        <Input
-                          id="nomeFantasia"
-                          value={String(
-                            (
-                              usuarioParaEditar.dadosOriginais as Record<
-                                string,
-                                string
-                              >
-                            )?.nome_fantasia || ''
-                          )}
-                          onChange={e =>
-                            setUsuarioParaEditar({
-                              ...usuarioParaEditar,
-                              dadosOriginais: {
-                                ...usuarioParaEditar.dadosOriginais,
-                                nome_fantasia: e.target.value,
-                              },
-                            })
-                          }
-                          className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="proprietarioNome"
-                          className="text-gray-700 font-medium"
-                        >
-                          Nome do Proprietário
-                        </Label>
-                        <Input
-                          id="proprietarioNome"
-                          value={String(
-                            (
-                              usuarioParaEditar.dadosOriginais as Record<
-                                string,
-                                string
-                              >
-                            )?.proprietario_nome || ''
-                          )}
-                          onChange={e =>
-                            setUsuarioParaEditar({
-                              ...usuarioParaEditar,
-                              dadosOriginais: {
-                                ...usuarioParaEditar.dadosOriginais,
-                                proprietario_nome: e.target.value,
-                              },
-                            })
-                          }
-                          className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="proprietarioCPF"
-                          className="text-gray-700 font-medium"
-                        >
-                          CPF do Proprietário
-                        </Label>
-                        <Input
-                          id="proprietarioCPF"
-                          value={String(
-                            (
-                              usuarioParaEditar.dadosOriginais as Record<
-                                string,
-                                string
-                              >
-                            )?.proprietario_cpf || ''
-                          )}
-                          onChange={e =>
-                            setUsuarioParaEditar({
-                              ...usuarioParaEditar,
-                              dadosOriginais: {
-                                ...usuarioParaEditar.dadosOriginais,
-                                proprietario_cpf: e.target.value,
-                              },
-                            })
-                          }
-                          className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                          placeholder="000.000.000-00"
-                        />
-                      </div>
-
-                      <div>
-                        <Label
-                          htmlFor="proprietarioTelefone"
-                          className="text-gray-700 font-medium"
-                        >
-                          Telefone do Proprietário
-                        </Label>
-                        <Input
-                          id="proprietarioTelefone"
-                          value={
-                            (
-                              usuarioParaEditar.dadosOriginais as Record<
-                                string,
-                                string
-                              >
-                            )?.proprietario_telefone || ''
-                          }
-                          onChange={e =>
-                            setUsuarioParaEditar({
-                              ...usuarioParaEditar,
-                              dadosOriginais: {
-                                ...usuarioParaEditar.dadosOriginais,
-                                proprietario_telefone: e.target.value,
-                              },
-                            })
-                          }
-                          className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                          placeholder="(00) 00000-0000"
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Endereço */}
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Endereço
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="cep" className="text-gray-700 font-medium">
-                      CEP
-                    </Label>
-                    <Input
-                      id="cep"
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.cep || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            cep: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="00000-000"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="endereco"
-                      className="text-gray-700 font-medium"
-                    >
-                      Endereço
-                    </Label>
-                    <Input
-                      id="endereco"
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.endereco || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            endereco: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="numero"
-                      className="text-gray-700 font-medium"
-                    >
-                      Número
-                    </Label>
-                    <Input
-                      id="numero"
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.numero || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            numero: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="complemento"
-                      className="text-gray-700 font-medium"
-                    >
-                      Complemento
-                    </Label>
-                    <Input
-                      id="complemento"
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.complemento || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            complemento: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="bairro"
-                      className="text-gray-700 font-medium"
-                    >
-                      Bairro
-                    </Label>
-                    <Input
-                      id="bairro"
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.bairro || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            bairro: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="cidade"
-                      className="text-gray-700 font-medium"
-                    >
-                      Cidade
-                    </Label>
-                    <Input
-                      id="cidade"
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.cidade || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            cidade: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="estado"
-                      className="text-gray-700 font-medium"
-                    >
-                      Estado
-                    </Label>
-                    <select
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.estado || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            estado: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="">Selecione o estado</option>
-                      <option value="AC">Acre</option>
-                      <option value="AL">Alagoas</option>
-                      <option value="AP">Amapá</option>
-                      <option value="AM">Amazonas</option>
-                      <option value="BA">Bahia</option>
-                      <option value="CE">Ceará</option>
-                      <option value="DF">Distrito Federal</option>
-                      <option value="ES">Espírito Santo</option>
-                      <option value="GO">Goiás</option>
-                      <option value="MA">Maranhão</option>
-                      <option value="MT">Mato Grosso</option>
-                      <option value="MS">Mato Grosso do Sul</option>
-                      <option value="MG">Minas Gerais</option>
-                      <option value="PA">Pará</option>
-                      <option value="PB">Paraíba</option>
-                      <option value="PR">Paraná</option>
-                      <option value="PE">Pernambuco</option>
-                      <option value="PI">Piauí</option>
-                      <option value="RJ">Rio de Janeiro</option>
-                      <option value="RN">Rio Grande do Norte</option>
-                      <option value="RS">Rio Grande do Sul</option>
-                      <option value="RO">Rondônia</option>
-                      <option value="RR">Roraima</option>
-                      <option value="SC">Santa Catarina</option>
-                      <option value="SP">São Paulo</option>
-                      <option value="SE">Sergipe</option>
-                      <option value="TO">Tocantins</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Dados Bancários */}
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Dados Bancários
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label
-                      htmlFor="banco"
-                      className="text-gray-700 font-medium"
-                    >
-                      Banco
-                    </Label>
-                    <Input
-                      id="banco"
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.banco_id || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            banco_id: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="agencia"
-                      className="text-gray-700 font-medium"
-                    >
-                      Agência
-                    </Label>
-                    <Input
-                      id="agencia"
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.agencia || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            agencia: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="conta"
-                      className="text-gray-700 font-medium"
-                    >
-                      Conta com Dígito
-                    </Label>
-                    <Input
-                      id="conta"
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.conta_digito || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            conta_digito: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="00000-0"
-                    />
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="tipoConta"
-                      className="text-gray-700 font-medium"
-                    >
-                      Tipo de Conta
-                    </Label>
-                    <select
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.tipo_conta || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            tipo_conta: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="">Selecione o tipo</option>
-                      <option value="corrente">Corrente</option>
-                      <option value="poupanca">Poupança</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="tipoPix"
-                      className="text-gray-700 font-medium"
-                    >
-                      Tipo PIX
-                    </Label>
-                    <select
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.tipo_pix || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            tipo_pix: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="">Selecione o tipo</option>
-                      <option value="cpf">CPF</option>
-                      <option value="cnpj">CNPJ</option>
-                      <option value="telefone">Telefone</option>
-                      <option value="email">E-mail</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <Label
-                      htmlFor="chavePix"
-                      className="text-gray-700 font-medium"
-                    >
-                      Chave PIX
-                    </Label>
-                    <Input
-                      id="chavePix"
-                      value={
-                        (
-                          usuarioParaEditar.dadosOriginais as Record<
-                            string,
-                            string
-                          >
-                        )?.chave_pix || ''
-                      }
-                      onChange={e =>
-                        setUsuarioParaEditar({
-                          ...usuarioParaEditar,
-                          dadosOriginais: {
-                            ...usuarioParaEditar.dadosOriginais,
-                            chave_pix: e.target.value,
-                          },
-                        })
-                      }
-                      className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="bg-gray-50 p-6 rounded-lg">
-                <div>
-                  <Label
-                    htmlFor="status"
-                    className="text-gray-900 font-semibold"
-                  >
-                    Status do Usuário
-                  </Label>
-                  <select
-                    value={usuarioParaEditar.status}
-                    onChange={e => {
-                      const value = e.target.value as
-                        | 'ativo'
-                        | 'pendente'
-                        | 'inativo';
-                      setUsuarioParaEditar({
-                        ...usuarioParaEditar,
-                        status: value,
-                      });
-                    }}
-                    className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="ativo">Ativo</option>
-                    <option value="pendente">Pendente</option>
-                    <option value="inativo">Inativo</option>
-                  </select>
-                </div>
-              </div>
+                </tbody>
+              </table>
             </div>
-          )}
+          </CardContent>
+        </Card>
 
-          <DialogFooter className="bg-gray-50 -m-6 mt-6 p-6 rounded-b-lg">
-            <Button
-              variant="outline"
-              onClick={() => setShowEditModal(false)}
-              className="border-gray-300 text-gray-700 hover:bg-gray-100"
-            >
-              <X className="w-4 h-4 mr-2" />
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSalvarEdicao}
-              disabled={isEditando}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {isEditando ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Salvar Alterações
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        {/* Popup de Seleção do Tipo de Usuário */}
+        <AlertDialog
+          open={showTipoUsuarioDialog}
+          onOpenChange={setShowTipoUsuarioDialog}
+        >
+          <AlertDialogContent className="bg-holding-dark border border-holding-accent/30">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-holding-white text-xl">
+                Selecione o Tipo de Usuário
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-holding-blue-light">
+                Escolha se deseja cadastrar uma Pessoa Física ou Pessoa Jurídica
+              </AlertDialogDescription>
+            </AlertDialogHeader>
 
-      {/* Modal de Confirmação de Exclusão */}
-      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-        <AlertDialogContent className="bg-holding-secondary border-holding-accent/30">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-holding-white">
-              Confirmar Exclusão
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-holding-accent-light">
-              Tem certeza que deseja excluir o usuário &quot;
-              {usuarioParaExcluir?.nome}&quot;? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-holding-accent/30 text-holding-accent hover:text-holding-white">
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmarExclusao}
-              disabled={isExcluindo}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              {isExcluindo ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Excluindo...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Excluir
-                </>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+              <Button
+                onClick={() => {
+                  setShowTipoUsuarioDialog(false);
+                  router.push('/usuarios/cadastro-pf');
+                }}
+                className="h-24 flex flex-col items-center justify-center space-y-2 bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/20 hover:from-holding-blue-medium/30 hover:to-holding-blue-light/30 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-200"
+              >
+                <User className="w-8 h-8 text-holding-blue-light" />
+                <span className="text-holding-white font-semibold">
+                  Pessoa Física
+                </span>
+                <span className="text-holding-blue-light text-sm">
+                  CPF, RG, etc.
+                </span>
+              </Button>
+
+              <Button
+                onClick={() => {
+                  setShowTipoUsuarioDialog(false);
+                  router.push('/usuarios/cadastro-pj');
+                }}
+                className="h-24 flex flex-col items-center justify-center space-y-2 bg-gradient-to-br from-holding-blue-dark/20 to-holding-blue-deep/20 hover:from-holding-blue-dark/30 hover:to-holding-blue-deep/30 border border-holding-blue-deep/30 hover:border-holding-blue-deep/50 transition-all duration-200"
+              >
+                <Building2 className="w-8 h-8 text-holding-blue-light" />
+                <span className="text-holding-white font-semibold">
+                  Pessoa Jurídica
+                </span>
+                <span className="text-holding-blue-light text-sm">
+                  CNPJ, Razão Social, etc.
+                </span>
+              </Button>
+            </div>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-holding-accent/20 text-holding-blue-light hover:bg-holding-accent/30 hover:text-holding-white border-holding-accent/30">
+                Cancelar
+              </AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }

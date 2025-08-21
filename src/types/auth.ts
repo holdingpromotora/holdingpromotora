@@ -31,6 +31,7 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   hasApprovedProfile: boolean;
   isLoading: boolean;
+  isInitialized: boolean;
   login: (email: string, password: string) => Promise<LoginResult>;
   logout: () => void;
 }

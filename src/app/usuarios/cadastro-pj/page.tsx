@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import IsolatedLayout from '@/components/IsolatedLayout';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,21 +20,27 @@ import {
 import { supabase } from '@/lib/supabase';
 import { createTables } from '@/lib/supabase';
 import {
-  Building2,
-  CreditCard,
+  Users,
+  Shield,
+  BarChart3,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Building,
+  Calculator,
+  FileText,
+  FileSpreadsheet,
+  UserPlus,
   Search,
   MapPin,
   User,
-  Key,
+  CreditCard,
+  Calendar,
   Mail,
   Phone,
-  Calendar,
   Banknote,
-  Building,
-  Users,
-  Shield,
-  CheckCircle,
-  AlertCircle,
+  Key,
 } from 'lucide-react';
 
 interface Banco {
@@ -92,7 +98,12 @@ export default function CadastroPessoaJuridicaPage() {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState('');
   const [isLoadingCNPJ, setIsLoadingCNPJ] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const router = useRouter();
+
+  const toggleSidebar = () => {
+    setSidebarExpanded(!sidebarExpanded);
+  };
 
   // Carregar bancos do Supabase
   useEffect(() => {
@@ -838,614 +849,751 @@ export default function CadastroPessoaJuridicaPage() {
   };
 
   return (
-    <IsolatedLayout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-holding-white">
-              Cadastro de Pessoa Jurídica
-            </h1>
-            <p className="text-holding-accent-light mt-2">
-              Preencha os dados para cadastrar uma nova pessoa jurídica
-            </p>
+    <div className="min-h-screen holding-layout">
+      {/* Sidebar Recolhível */}
+      <div
+        className={`holding-sidebar ${sidebarExpanded ? 'expanded' : 'collapsed'}`}
+      >
+        <nav className="flex flex-col items-center py-8 space-y-6">
+          {/* Botão Toggle */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-12 h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg mb-8"
+            onClick={toggleSidebar}
+            title={sidebarExpanded ? 'Recolher Menu' : 'Expandir Menu'}
+          >
+            {sidebarExpanded ? (
+              <ChevronLeft className="w-5 h-5" />
+            ) : (
+              <ChevronRight className="w-5 h-5" />
+            )}
+          </Button>
+
+          {/* Logo */}
+          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-medium to-holding-blue-light rounded-xl flex items-center justify-center mb-8">
+            <Shield className="w-6 h-6 text-holding-white" />
           </div>
-        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Dados da Empresa */}
-            <Card className="glass-effect-accent border-holding-accent/30">
-              <CardHeader>
-                <CardTitle className="text-holding-white flex items-center space-x-3">
-                  <Building2 className="w-5 h-5 text-holding-highlight" />
-                  <span>Dados da Empresa</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                    <CreditCard className="w-4 h-4" />
-                    <span>CNPJ</span>
-                  </Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      value={formData.cnpj}
-                      onChange={e => handleInputChange('cnpj', e.target.value)}
-                      placeholder="00.000.000/0000-00"
-                      maxLength={18}
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      onClick={buscarCNPJ}
-                      disabled={isLoadingCNPJ}
-                      className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white px-3"
-                    >
-                      {isLoadingCNPJ ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <Search className="w-4 h-4" />
-                      )}
-                    </Button>
-                  </div>
-                  {/* Debug: mostrar valor atual do CNPJ */}
-                  <div className="text-xs text-holding-accent-light mt-1">
-                    Debug CNPJ: {formData.cnpj || 'Vazio'}
-                  </div>
-                </div>
+          {/* Navegação Principal */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`${
+              sidebarExpanded
+                ? 'w-full justify-start px-4'
+                : 'w-12 justify-center'
+            } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
+            onClick={() => router.push('/dashboard')}
+            title="Dashboard"
+          >
+            <BarChart3 className="w-5 h-5" />
+            {sidebarExpanded && (
+              <span className="ml-3 text-sm font-medium">Dashboard</span>
+            )}
+          </Button>
 
-                <div>
-                  <Label className="text-holding-accent-light text-sm font-medium">
-                    Razão Social
-                  </Label>
-                  <Input
-                    value={formData.razaoSocial}
-                    onChange={e =>
-                      handleInputChange('razaoSocial', e.target.value)
-                    }
-                    placeholder="Digite a razão social"
-                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    required
-                  />
-                </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`${
+              sidebarExpanded
+                ? 'w-full justify-start px-4'
+                : 'w-12 justify-center'
+            } h-12 p-0 text-holding-white hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg bg-holding-blue-light/20`}
+            onClick={() => router.push('/usuarios')}
+            title="Usuários"
+          >
+            <Users className="w-5 h-5" />
+            {sidebarExpanded && (
+              <span className="ml-3 text-sm font-medium">Usuários</span>
+            )}
+          </Button>
 
-                <div>
-                  <Label className="text-holding-accent-light text-sm font-medium">
-                    Nome Fantasia
-                  </Label>
-                  <Input
-                    value={formData.nomeFantasia}
-                    onChange={e =>
-                      handleInputChange('nomeFantasia', e.target.value)
-                    }
-                    placeholder="Digite o nome fantasia"
-                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`${
+              sidebarExpanded
+                ? 'w-full justify-start px-4'
+                : 'w-12 justify-center'
+            } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
+            onClick={() => router.push('/clientes')}
+            title="Clientes"
+          >
+            <Building className="w-5 h-5" />
+            {sidebarExpanded && (
+              <span className="ml-3 text-sm font-medium">Clientes</span>
+            )}
+          </Button>
 
-            {/* Endereço */}
-            <Card className="glass-effect-accent border-holding-accent/30">
-              <CardHeader>
-                <CardTitle className="text-holding-white flex items-center space-x-3">
-                  <MapPin className="w-5 h-5 text-holding-highlight" />
-                  <span>Endereço</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                    <MapPin className="w-4 h-4" />
-                    <span>CEP</span>
-                  </Label>
-                  <Input
-                    value={formData.cep}
-                    onChange={e => handleInputChange('cep', e.target.value)}
-                    placeholder="00000-000"
-                    maxLength={9}
-                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                  />
-                </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`${
+              sidebarExpanded
+                ? 'w-full justify-start px-4'
+                : 'w-12 justify-center'
+            } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
+            onClick={() => router.push('/settings')}
+            title="Configurações"
+          >
+            <Settings className="w-5 h-5" />
+            {sidebarExpanded && (
+              <span className="ml-3 text-sm font-medium">Configurações</span>
+            )}
+          </Button>
 
-                <div>
-                  <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                    <MapPin className="w-4 h-4" />
-                    <span>Endereço</span>
-                  </Label>
-                  <Input
-                    value={formData.endereco}
-                    onChange={e =>
-                      handleInputChange('endereco', e.target.value)
-                    }
-                    placeholder="Digite o endereço completo"
-                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                  />
-                </div>
+          {/* Logout */}
+          <div
+            className={`pt-8 border-t border-holding-blue-light/30 ${
+              sidebarExpanded ? 'w-full' : 'w-8'
+            }`}
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`${
+                sidebarExpanded
+                  ? 'w-full justify-start px-4'
+                  : 'w-12 justify-center'
+              } h-12 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg`}
+              onClick={() => {
+                console.log('Logout solicitado');
+                if (confirm('Tem certeza que deseja sair do sistema?')) {
+                  localStorage.removeItem('holding_user');
+                  window.location.href = '/login';
+                }
+              }}
+              title="Sair"
+            >
+              <LogOut className="w-5 h-5" />
+              {sidebarExpanded && (
+                <span className="ml-3 text-sm font-medium">Sair</span>
+              )}
+            </Button>
+          </div>
+        </nav>
+      </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label className="text-holding-accent-light text-sm font-medium">
-                      Número
-                    </Label>
-                    <Input
-                      value={formData.numero}
-                      onChange={e =>
-                        handleInputChange('numero', e.target.value)
-                      }
-                      placeholder="000"
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    />
-                  </div>
+      {/* Conteúdo Principal */}
+      <div
+        className={`transition-all duration-300 ${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}
+      >
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-holding-white">
+                Cadastro de Pessoa Jurídica
+              </h1>
+              <p className="text-holding-accent-light mt-2">
+                Preencha os dados para cadastrar uma nova pessoa jurídica
+              </p>
+            </div>
+          </div>
 
-                  <div>
-                    <Label className="text-holding-accent-light text-sm font-medium">
-                      Complemento
-                    </Label>
-                    <Input
-                      value={formData.complemento}
-                      onChange={e =>
-                        handleInputChange('complemento', e.target.value)
-                      }
-                      placeholder="Sala, Apto, etc."
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-holding-accent-light text-sm font-medium">
-                      Bairro
-                    </Label>
-                    <Input
-                      value={formData.bairro}
-                      onChange={e =>
-                        handleInputChange('bairro', e.target.value)
-                      }
-                      placeholder="Nome do bairro"
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-holding-accent-light text-sm font-medium">
-                      Cidade
-                    </Label>
-                    <Input
-                      value={formData.cidade}
-                      onChange={e =>
-                        handleInputChange('cidade', e.target.value)
-                      }
-                      placeholder="Nome da cidade"
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-holding-accent-light text-sm font-medium">
-                      Estado
-                    </Label>
-                    <Input
-                      value={formData.estado}
-                      onChange={e =>
-                        handleInputChange('estado', e.target.value)
-                      }
-                      placeholder="UF"
-                      maxLength={2}
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Dados do Proprietário ou Gerente */}
-            <Card className="glass-effect-accent border-holding-accent/30">
-              <CardHeader>
-                <CardTitle className="text-holding-white flex items-center space-x-3">
-                  <User className="w-5 h-5 text-holding-highlight" />
-                  <span>Dados do Proprietário ou Gerente</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                    <User className="w-4 h-4" />
-                    <span>Nome</span>
-                  </Label>
-                  <Input
-                    value={formData.proprietarioNome}
-                    onChange={e =>
-                      handleInputChange('proprietarioNome', e.target.value)
-                    }
-                    placeholder="Digite o nome completo"
-                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Dados da Empresa */}
+              <Card className="glass-effect-accent border-holding-accent/30">
+                <CardHeader>
+                  <CardTitle className="text-holding-white flex items-center space-x-3">
+                    <Building className="w-5 h-5 text-holding-highlight" />
+                    <span>Dados da Empresa</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <CreditCard className="w-4 h-4" />
-                      <span>RG</span>
+                      <Calculator className="w-4 h-4" />
+                      <span>CNPJ</span>
                     </Label>
-                    <Input
-                      value={formData.proprietarioRg}
-                      onChange={e =>
-                        handleInputChange('proprietarioRg', e.target.value)
-                      }
-                      placeholder="00.000.000-0"
-                      maxLength={12}
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <CreditCard className="w-4 h-4" />
-                      <span>CPF</span>
-                    </Label>
-                    <Input
-                      value={formData.proprietarioCpf}
-                      onChange={e =>
-                        handleInputChange('proprietarioCpf', e.target.value)
-                      }
-                      placeholder="000.000.000-00"
-                      maxLength={14}
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                      required
-                    />
-                    {/* Debug: mostrar valor atual do CPF */}
+                    <div className="flex space-x-2">
+                      <Input
+                        value={formData.cnpj}
+                        onChange={e =>
+                          handleInputChange('cnpj', e.target.value)
+                        }
+                        placeholder="00.000.000/0000-00"
+                        maxLength={18}
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        onClick={buscarCNPJ}
+                        disabled={isLoadingCNPJ}
+                        className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white px-3"
+                      >
+                        {isLoadingCNPJ ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Search className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                    {/* Debug: mostrar valor atual do CNPJ */}
                     <div className="text-xs text-holding-accent-light mt-1">
-                      Debug CPF: {formData.proprietarioCpf || 'Vazio'}
+                      Debug CNPJ: {formData.cnpj || 'Vazio'}
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>Data de Nascimento</span>
-                  </Label>
-                  <Input
-                    type="date"
-                    value={formData.proprietarioDataNascimento}
-                    onChange={e =>
-                      handleInputChange(
-                        'proprietarioDataNascimento',
-                        e.target.value
-                      )
-                    }
-                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <Mail className="w-4 h-4" />
-                      <span>Email</span>
+                    <Label className="text-holding-accent-light text-sm font-medium">
+                      Razão Social
                     </Label>
                     <Input
-                      type="email"
-                      value={formData.proprietarioEmail}
+                      value={formData.razaoSocial}
                       onChange={e =>
-                        handleInputChange('proprietarioEmail', e.target.value)
+                        handleInputChange('razaoSocial', e.target.value)
                       }
-                      placeholder="email@exemplo.com"
+                      placeholder="Digite a razão social"
                       className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
                       required
                     />
                   </div>
 
                   <div>
-                    <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <Phone className="w-4 h-4" />
-                      <span>Telefone</span>
+                    <Label className="text-holding-accent-light text-sm font-medium">
+                      Nome Fantasia
                     </Label>
                     <Input
-                      value={formData.proprietarioTelefone}
+                      value={formData.nomeFantasia}
+                      onChange={e =>
+                        handleInputChange('nomeFantasia', e.target.value)
+                      }
+                      placeholder="Digite o nome fantasia"
+                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Endereço */}
+              <Card className="glass-effect-accent border-holding-accent/30">
+                <CardHeader>
+                  <CardTitle className="text-holding-white flex items-center space-x-3">
+                    <MapPin className="w-5 h-5 text-holding-highlight" />
+                    <span>Endereço</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                      <MapPin className="w-4 h-4" />
+                      <span>CEP</span>
+                    </Label>
+                    <Input
+                      value={formData.cep}
+                      onChange={e => handleInputChange('cep', e.target.value)}
+                      placeholder="00000-000"
+                      maxLength={9}
+                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                      <MapPin className="w-4 h-4" />
+                      <span>Endereço</span>
+                    </Label>
+                    <Input
+                      value={formData.endereco}
+                      onChange={e =>
+                        handleInputChange('endereco', e.target.value)
+                      }
+                      placeholder="Digite o endereço completo"
+                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium">
+                        Número
+                      </Label>
+                      <Input
+                        value={formData.numero}
+                        onChange={e =>
+                          handleInputChange('numero', e.target.value)
+                        }
+                        placeholder="000"
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium">
+                        Complemento
+                      </Label>
+                      <Input
+                        value={formData.complemento}
+                        onChange={e =>
+                          handleInputChange('complemento', e.target.value)
+                        }
+                        placeholder="Sala, Apto, etc."
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium">
+                        Bairro
+                      </Label>
+                      <Input
+                        value={formData.bairro}
+                        onChange={e =>
+                          handleInputChange('bairro', e.target.value)
+                        }
+                        placeholder="Nome do bairro"
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium">
+                        Cidade
+                      </Label>
+                      <Input
+                        value={formData.cidade}
+                        onChange={e =>
+                          handleInputChange('cidade', e.target.value)
+                        }
+                        placeholder="Nome da cidade"
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium">
+                        Estado
+                      </Label>
+                      <Input
+                        value={formData.estado}
+                        onChange={e =>
+                          handleInputChange('estado', e.target.value)
+                        }
+                        placeholder="UF"
+                        maxLength={2}
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Dados do Proprietário ou Gerente */}
+              <Card className="glass-effect-accent border-holding-accent/30">
+                <CardHeader>
+                  <CardTitle className="text-holding-white flex items-center space-x-3">
+                    <User className="w-5 h-5 text-holding-highlight" />
+                    <span>Dados do Proprietário ou Gerente</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                      <User className="w-4 h-4" />
+                      <span>Nome</span>
+                    </Label>
+                    <Input
+                      value={formData.proprietarioNome}
+                      onChange={e =>
+                        handleInputChange('proprietarioNome', e.target.value)
+                      }
+                      placeholder="Digite o nome completo"
+                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                        <CreditCard className="w-4 h-4" />
+                        <span>RG</span>
+                      </Label>
+                      <Input
+                        value={formData.proprietarioRg}
+                        onChange={e =>
+                          handleInputChange('proprietarioRg', e.target.value)
+                        }
+                        placeholder="00.000.000-0"
+                        maxLength={12}
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                        <CreditCard className="w-4 h-4" />
+                        <span>CPF</span>
+                      </Label>
+                      <Input
+                        value={formData.proprietarioCpf}
+                        onChange={e =>
+                          handleInputChange('proprietarioCpf', e.target.value)
+                        }
+                        placeholder="000.000.000-00"
+                        maxLength={14}
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                        required
+                      />
+                      {/* Debug: mostrar valor atual do CPF */}
+                      <div className="text-xs text-holding-accent-light mt-1">
+                        Debug CPF: {formData.proprietarioCpf || 'Vazio'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                      <Calendar className="w-4 h-4" />
+                      <span>Data de Nascimento</span>
+                    </Label>
+                    <Input
+                      type="date"
+                      value={formData.proprietarioDataNascimento}
                       onChange={e =>
                         handleInputChange(
-                          'proprietarioTelefone',
+                          'proprietarioDataNascimento',
                           e.target.value
                         )
                       }
-                      placeholder="(00) 00000-0000"
-                      maxLength={15}
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white"
                       required
                     />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* Dados Bancários */}
-            <Card className="glass-effect-accent border-holding-accent/30">
-              <CardHeader>
-                <CardTitle className="text-holding-white flex items-center space-x-3">
-                  <Building className="w-5 h-5 text-holding-highlight" />
-                  <span>Dados Bancários</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                    <Building className="w-4 h-4" />
-                    <span>Banco</span>
-                  </Label>
-                  <select
-                    value={formData.bancoId}
-                    onChange={e => handleInputChange('bancoId', e.target.value)}
-                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Selecione o banco</option>
-                    {bancos.map(banco => (
-                      <option key={banco.id} value={banco.id.toString()}>
-                        {banco.codigo} - {banco.nome}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                        <Mail className="w-4 h-4" />
+                        <span>Email</span>
+                      </Label>
+                      <Input
+                        type="email"
+                        value={formData.proprietarioEmail}
+                        onChange={e =>
+                          handleInputChange('proprietarioEmail', e.target.value)
+                        }
+                        placeholder="email@exemplo.com"
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                        required
+                      />
+                    </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                        <Phone className="w-4 h-4" />
+                        <span>Telefone</span>
+                      </Label>
+                      <Input
+                        value={formData.proprietarioTelefone}
+                        onChange={e =>
+                          handleInputChange(
+                            'proprietarioTelefone',
+                            e.target.value
+                          )
+                        }
+                        placeholder="(00) 00000-0000"
+                        maxLength={15}
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                        required
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Dados Bancários */}
+              <Card className="glass-effect-accent border-holding-accent/30">
+                <CardHeader>
+                  <CardTitle className="text-holding-white flex items-center space-x-3">
+                    <Building className="w-5 h-5 text-holding-highlight" />
+                    <span>Dados Bancários</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
                       <Building className="w-4 h-4" />
-                      <span>Agência</span>
+                      <span>Banco</span>
                     </Label>
-                    <Input
-                      value={formData.agencia}
+                    <select
+                      value={formData.bancoId}
                       onChange={e =>
-                        handleInputChange('agencia', e.target.value)
+                        handleInputChange('bancoId', e.target.value)
                       }
-                      placeholder="0000"
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    />
+                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Selecione o banco</option>
+                      {bancos.map(banco => (
+                        <option key={banco.id} value={banco.id.toString()}>
+                          {banco.codigo} - {banco.nome}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                        <Building className="w-4 h-4" />
+                        <span>Agência</span>
+                      </Label>
+                      <Input
+                        value={formData.agencia}
+                        onChange={e =>
+                          handleInputChange('agencia', e.target.value)
+                        }
+                        placeholder="0000"
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                        <Banknote className="w-4 h-4" />
+                        <span>Conta com Dígito</span>
+                      </Label>
+                      <Input
+                        value={formData.contaDigito}
+                        onChange={e =>
+                          handleInputChange('contaDigito', e.target.value)
+                        }
+                        placeholder="00000-0"
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                      />
+                    </div>
                   </div>
 
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
                       <Banknote className="w-4 h-4" />
-                      <span>Conta com Dígito</span>
-                    </Label>
-                    <Input
-                      value={formData.contaDigito}
-                      onChange={e =>
-                        handleInputChange('contaDigito', e.target.value)
-                      }
-                      placeholder="00000-0"
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                    <Banknote className="w-4 h-4" />
-                    <span>Tipo de Conta</span>
-                  </Label>
-                  <select
-                    value={formData.tipoConta}
-                    onChange={e =>
-                      handleInputChange('tipoConta', e.target.value)
-                    }
-                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <option value="">Selecione o tipo de conta</option>
-                    <option value="Corrente">Conta Corrente</option>
-                    <option value="Poupança">Conta Poupança</option>
-                  </select>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <Key className="w-4 h-4" />
-                      <span>Tipo do PIX</span>
+                      <span>Tipo de Conta</span>
                     </Label>
                     <select
-                      value={formData.tipoPix}
+                      value={formData.tipoConta}
                       onChange={e =>
-                        handleInputChange('tipoPix', e.target.value)
+                        handleInputChange('tipoConta', e.target.value)
                       }
                       className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <option value="">Selecione o tipo</option>
-                      <option value="CNPJ">CNPJ</option>
-                      <option value="CPF">CPF</option>
-                      <option value="Telefone">Telefone</option>
-                      <option value="E-mail">E-mail</option>
+                      <option value="">Selecione o tipo de conta</option>
+                      <option value="Corrente">Conta Corrente</option>
+                      <option value="Poupança">Conta Poupança</option>
                     </select>
-                    {/* Debug: mostrar valor atual do tipo de PIX */}
-                    <div className="text-xs text-holding-accent-light mt-1">
-                      Debug: {formData.tipoPix || 'Não selecionado'}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                        <Key className="w-4 h-4" />
+                        <span>Tipo do PIX</span>
+                      </Label>
+                      <select
+                        value={formData.tipoPix}
+                        onChange={e =>
+                          handleInputChange('tipoPix', e.target.value)
+                        }
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-holding-accent-light focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <option value="">Selecione o tipo</option>
+                        <option value="CNPJ">CNPJ</option>
+                        <option value="CPF">CPF</option>
+                        <option value="Telefone">Telefone</option>
+                        <option value="E-mail">E-mail</option>
+                      </select>
+                      {/* Debug: mostrar valor atual do tipo de PIX */}
+                      <div className="text-xs text-holding-accent-light mt-1">
+                        Debug: {formData.tipoPix || 'Não selecionado'}
+                      </div>
                     </div>
+
+                    <div>
+                      <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                        <Key className="w-4 h-4" />
+                        <span>Chave PIX</span>
+                      </Label>
+                      <Input
+                        value={formData.chavePix}
+                        onChange={e =>
+                          handleInputChange('chavePix', e.target.value)
+                        }
+                        placeholder="Chave PIX"
+                        className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                        readOnly
+                      />
+                      {/* Debug: mostrar valor atual da chave PIX */}
+                      <div className="text-xs text-holding-accent-light mt-1">
+                        Debug: {formData.chavePix || 'Vazio'}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Dados de Acesso */}
+              <Card className="glass-effect-accent border-holding-accent/30">
+                <CardHeader>
+                  <CardTitle className="text-holding-white flex items-center space-x-3">
+                    <Key className="w-5 h-5 text-holding-highlight" />
+                    <span>Dados de Acesso</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
+                      <Mail className="w-4 h-4" />
+                      <span>Usuário</span>
+                    </Label>
+                    <Input
+                      value={formData.usuario}
+                      onChange={e =>
+                        handleInputChange('usuario', e.target.value)
+                      }
+                      placeholder="Email será usado como usuário"
+                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
+                      readOnly
+                    />
                   </div>
 
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
                       <Key className="w-4 h-4" />
-                      <span>Chave PIX</span>
+                      <span>Senha</span>
                     </Label>
                     <Input
-                      value={formData.chavePix}
-                      onChange={e =>
-                        handleInputChange('chavePix', e.target.value)
-                      }
-                      placeholder="Chave PIX"
+                      type="password"
+                      value={formData.senha}
+                      onChange={e => handleInputChange('senha', e.target.value)}
+                      placeholder="Digite a senha"
                       className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                      readOnly
+                      required
                     />
-                    {/* Debug: mostrar valor atual da chave PIX */}
-                    <div className="text-xs text-holding-accent-light mt-1">
-                      Debug: {formData.chavePix || 'Vazio'}
-                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
 
-            {/* Dados de Acesso */}
-            <Card className="glass-effect-accent border-holding-accent/30">
-              <CardHeader>
-                <CardTitle className="text-holding-white flex items-center space-x-3">
-                  <Key className="w-5 h-5 text-holding-highlight" />
-                  <span>Dados de Acesso</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                    <Mail className="w-4 h-4" />
-                    <span>Usuário</span>
-                  </Label>
-                  <Input
-                    value={formData.usuario}
-                    onChange={e => handleInputChange('usuario', e.target.value)}
-                    placeholder="Email será usado como usuário"
-                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    readOnly
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                    <Key className="w-4 h-4" />
-                    <span>Senha</span>
-                  </Label>
-                  <Input
-                    type="password"
-                    value={formData.senha}
-                    onChange={e => handleInputChange('senha', e.target.value)}
-                    placeholder="Digite a senha"
-                    className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    required
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Botão de Envio */}
-          <div className="mt-6 flex justify-center">
-            <Button
-              type="submit"
-              className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white px-8 py-3"
-            >
-              <Banknote className="w-5 h-5 mr-2" />
-              Cadastrar Pessoa Jurídica
-            </Button>
-          </div>
-        </form>
-
-        {/* Popup de Sucesso */}
-        <AlertDialog
-          open={showSuccessDialog}
-          onOpenChange={setShowSuccessDialog}
-        >
-          <AlertDialogContent className="glass-effect-accent border-holding-accent/30">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-holding-white flex items-center space-x-3">
-                <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
-                  <div className="w-6 h-6 bg-green-500 rounded-full"></div>
-                </div>
-                <span>Cadastro Realizado com Sucesso!</span>
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-holding-accent-light">
-                {dialogMessage ||
-                  'Pessoa jurídica cadastrada com sucesso! Aguardando aprovação.'}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-              <AlertDialogAction
-                onClick={() => {
-                  setShowSuccessDialog(false);
-                  // Limpar formulário para novo cadastro
-                  setFormData({
-                    cnpj: '',
-                    razaoSocial: '',
-                    nomeFantasia: '',
-                    cep: '',
-                    endereco: '',
-                    numero: '',
-                    complemento: '',
-                    bairro: '',
-                    cidade: '',
-                    estado: '',
-                    proprietarioNome: '',
-                    proprietarioRg: '',
-                    proprietarioCpf: '',
-                    proprietarioDataNascimento: '',
-                    proprietarioEmail: '',
-                    proprietarioTelefone: '',
-                    bancoId: '',
-                    agencia: '',
-                    contaDigito: '',
-                    tipoConta: '',
-                    tipoPix: '',
-                    chavePix: '',
-                    usuario: '',
-                    senha: '',
-                  });
-                  console.log('✅ Formulário limpo para novo cadastro');
-                  console.log('✅ Sistema permanecerá aberto');
-                }}
-                className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white"
+            {/* Botão de Envio */}
+            <div className="mt-6 flex justify-center">
+              <Button
+                type="submit"
+                className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white px-8 py-3"
               >
-                Cadastrar Nova Pessoa Jurídica
-              </AlertDialogAction>
-              <AlertDialogAction
-                onClick={() => {
-                  setShowSuccessDialog(false);
-                  // Redirecionar para o início do sistema (dashboard) sem fechar
-                  console.log(
-                    '✅ Redirecionando para dashboard sem fechar sistema'
-                  );
-                  if (typeof window !== 'undefined') {
-                    // Usar router.push em vez de window.location para não recarregar a página
-                    router.push('/dashboard');
-                  }
-                }}
-                className="bg-holding-secondary hover:bg-holding-accent/20 text-holding-white border-holding-accent/30"
-              >
-                Retornar ao Início
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+                <Banknote className="w-5 h-5 mr-2" />
+                Cadastrar Pessoa Jurídica
+              </Button>
+            </div>
+          </form>
 
-        {/* Popup de Erro */}
-        <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
-          <AlertDialogContent className="glass-effect-accent border-holding-accent/30">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-holding-white flex items-center space-x-3">
-                <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
-                  <div className="w-6 h-6 bg-red-500 rounded-full"></div>
-                </div>
-                <span>Erro</span>
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-holding-accent-light">
-                {dialogMessage}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogAction onClick={() => setShowErrorDialog(false)}>
-                Tentar Novamente
-              </AlertDialogAction>
-              <AlertDialogCancel onClick={() => setShowErrorDialog(false)}>
-                Cancelar
-              </AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          {/* Popup de Sucesso */}
+          <AlertDialog
+            open={showSuccessDialog}
+            onOpenChange={setShowSuccessDialog}
+          >
+            <AlertDialogContent className="glass-effect-accent border-holding-accent/30">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-holding-white flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 bg-green-500 rounded-full"></div>
+                  </div>
+                  <span>Cadastro Realizado com Sucesso!</span>
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-holding-accent-light">
+                  {dialogMessage ||
+                    'Pessoa jurídica cadastrada com sucesso! Aguardando aprovação.'}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                <AlertDialogAction
+                  onClick={() => {
+                    setShowSuccessDialog(false);
+                    // Limpar formulário para novo cadastro
+                    setFormData({
+                      cnpj: '',
+                      razaoSocial: '',
+                      nomeFantasia: '',
+                      cep: '',
+                      endereco: '',
+                      numero: '',
+                      complemento: '',
+                      bairro: '',
+                      cidade: '',
+                      estado: '',
+                      proprietarioNome: '',
+                      proprietarioRg: '',
+                      proprietarioCpf: '',
+                      proprietarioDataNascimento: '',
+                      proprietarioEmail: '',
+                      proprietarioTelefone: '',
+                      bancoId: '',
+                      agencia: '',
+                      contaDigito: '',
+                      tipoConta: '',
+                      tipoPix: '',
+                      chavePix: '',
+                      usuario: '',
+                      senha: '',
+                    });
+                    console.log('✅ Formulário limpo para novo cadastro');
+                    console.log('✅ Sistema permanecerá aberto');
+                  }}
+                  className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white"
+                >
+                  Cadastrar Nova Pessoa Jurídica
+                </AlertDialogAction>
+                <AlertDialogAction
+                  onClick={() => {
+                    setShowSuccessDialog(false);
+                    // Redirecionar para o início do sistema (dashboard) sem fechar
+                    console.log(
+                      '✅ Redirecionando para dashboard sem fechar sistema'
+                    );
+                    if (typeof window !== 'undefined') {
+                      // Usar router.push em vez de window.location para não recarregar a página
+                      router.push('/dashboard');
+                    }
+                  }}
+                  className="bg-holding-secondary hover:bg-holding-accent/20 text-holding-white border-holding-accent/30"
+                >
+                  Retornar ao Início
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* Popup de Erro */}
+          <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+            <AlertDialogContent className="glass-effect-accent border-holding-accent/30">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="text-holding-white flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 bg-red-500 rounded-full"></div>
+                  </div>
+                  <span>Erro</span>
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-holding-accent-light">
+                  {dialogMessage}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setShowErrorDialog(false)}>
+                  Tentar Novamente
+                </AlertDialogAction>
+                <AlertDialogCancel onClick={() => setShowErrorDialog(false)}>
+                  Cancelar
+                </AlertDialogCancel>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
-    </IsolatedLayout>
+    </div>
   );
 }

@@ -1,0 +1,20 @@
+{
+  "snippets.enabled": true,
+  "snippets.suggestSnippets": true,
+  "editor.snippetSuggestions": "top",
+  "editor.tabCompletion": "on",
+  "workbench.settings.enableNaturalLanguageSearch": true,
+  "git.enableSmartCommit": true,
+  "git.confirmSync": false,
+  "git.autofetch": true,
+  "emmet.includeLanguages": {
+    "typescript": "html",
+    "typescriptreact": "html"
+  },
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  }
+}

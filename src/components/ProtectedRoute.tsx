@@ -25,6 +25,12 @@ export function ProtectedRoute({
 
   useEffect(() => {
     if (!isLoading && isClient) {
+      // PROTEÇÃO CRÍTICA: Não redirecionar usuário master durante operações
+      if (user?.id === 0) {
+        console.log('🔒 Usuário master detectado, protegendo contra redirecionamento automático');
+        return;
+      }
+      
       if (!isAuthenticated) {
         console.log('❌ Usuário não autenticado, redirecionando para login...');
         router.replace('/login');
@@ -35,7 +41,7 @@ export function ProtectedRoute({
         router.replace('/aguardando-aprovacao');
       }
     }
-  }, [isAuthenticated, hasApprovedProfile, isLoading, router, isClient]);
+  }, [isAuthenticated, hasApprovedProfile, isLoading, router, isClient, user]);
 
   if (isLoading || !isClient) {
     return (
@@ -48,17 +54,18 @@ export function ProtectedRoute({
     );
   }
 
+  // PROTEÇÃO CRÍTICA: Usuário master sempre tem acesso, mesmo se isAuthenticated for false temporariamente
+  if (user?.id === 0) {
+    console.log('🔒 Usuário master detectado, permitindo acesso total');
+    return <>{children}</>;
+  }
+
   if (!isAuthenticated) {
     return null;
   }
 
   if (!hasApprovedProfile) {
     return null;
-  }
-
-  // Se for usuário master (ID 0), permitir acesso a tudo
-  if (user?.id === 0) {
-    return <>{children}</>;
   }
 
   // Verificar nível de acesso

@@ -1,0 +1,70 @@
+{
+  "Commit Template - Data Hora Local": {
+    "prefix": "commit",
+    "body": [
+      "## 🗓️ Commit #${1:numero} - ${2:descricao}",
+      "",
+      "### **📅 Data e Hora:**",
+      "",
+      "- **Data**: ${CURRENT_DATE:dddd, dd 'de' MMMM 'de' yyyy}",
+      "- **Hora**: ${CURRENT_TIME:HH:mm} (Horário de Brasília)",
+      "- **Hash**: `${3:hash_do_commit}`",
+      "",
+      "### **🚀 ${4:funcionalidades_corrigidas}:**",
+      "",
+      "#### **🔧 ${5:tipo_correcao}:**",
+      "",
+      "- ✅ **${6:item1}**: ${7:descricao1}",
+      "- ✅ **${8:item2}**: ${9:descricao2}",
+      "- ✅ **${10:item3}**: ${11:descricao3}",
+      "",
+      "#### **📁 Arquivos Modificados:**",
+      "",
+      "- `${12:arquivo1}` - ${13:descricao_arquivo1}",
+      "- `${14:arquivo2}` - ${15:descricao_arquivo2}",
+      "",
+      "### **📊 Estatísticas do Commit:**",
+      "",
+      "- **Total de arquivos alterados**: ${16:total_arquivos}",
+      "- **Inserções**: ${17:insercoes} linhas",
+      "- **Deleções**: ${18:delecoes} linhas",
+      "",
+      "### **🎯 Objetivos Alcançados:**",
+      "",
+      "1. ✅ **${19:objetivo1}**: ${20:descricao_objetivo1}",
+      "2. ✅ **${21:objetivo2}**: ${22:descricao_objetivo2}",
+      "3. ✅ **${23:objetivo3}**: ${24:descricao_objetivo3}",
+      "",
+      "### **🔍 Testes Realizados:**",
+      "",
+      "- ✅ **${25:teste1}**: ${26:resultado_teste1}",
+      "- ✅ **${27:teste2}**: ${28:resultado_teste2}",
+      "",
+      "### **📝 Observações:**",
+      "",
+      "- ${29:observacao1}",
+      "- ${30:observacao2}",
+      "",
+      "---"
+    ],
+    "description": "Template automático para commits com data e hora local"
+  },
+
+  "Data Hora Simples": {
+    "prefix": "datahora",
+    "body": [
+      "### **📅 Data e Hora:**",
+      "",
+      "- **Data**: ${CURRENT_DATE:dddd, dd 'de' MMMM 'de' yyyy}",
+      "- **Hora**: ${CURRENT_TIME:HH:mm} (Horário de Brasília)",
+      "- **Hash**: `${1:hash_do_commit}`"
+    ],
+    "description": "Template simples para data e hora atual"
+  },
+
+  "Hash Git": {
+    "prefix": "hash",
+    "body": "`${1:git rev-parse --short HEAD}`",
+    "description": "Inserir hash do commit atual"
+  }
+}

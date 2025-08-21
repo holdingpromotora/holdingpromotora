@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+} from 'react';
 import { User, AuthContextType } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,7 +21,8 @@ export const useAuth = () => {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const isAuthenticated = !!user;
   const hasApprovedProfile = !!(
@@ -24,125 +31,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user?.perfil_id
   );
 
+  // Carregar dados do localStorage apenas no lado do cliente
   useEffect(() => {
-    console.log('🔄 AuthContext: Iniciando verificação de usuário...');
-
-    const checkUser = async () => {
+    // Usar uma função para evitar problemas de hidratação
+    const initializeAuth = () => {
       try {
-        // Verificar se há usuário logado no localStorage
-        if (typeof window !== 'undefined') {
-          const savedUser = localStorage.getItem('holding_user');
-          if (savedUser) {
-            try {
-              const userData = JSON.parse(savedUser);
-              console.log(
-                '✅ AuthContext: Usuário encontrado no localStorage:',
-                userData
-              );
-
-              // Validar se o usuário ainda é válido
-              if (userData && userData.email && userData.id !== undefined) {
-                setUser(userData);
-                console.log('✅ AuthContext: Usuário válido definido');
-              } else {
-                console.warn(
-                  '⚠️ AuthContext: Dados do usuário inválidos, removendo...'
-                );
-                localStorage.removeItem('holding_user');
-                setUser(null);
-              }
-            } catch (error) {
-              console.error('❌ AuthContext: Erro ao parsear usuário:', error);
-              localStorage.removeItem('holding_user');
-              setUser(null);
-            }
-          } else {
-            console.log(
-              'ℹ️ AuthContext: Nenhum usuário encontrado no localStorage'
-            );
-            setUser(null);
-          }
-        } else {
-          console.log(
-            'ℹ️ AuthContext: Executando no servidor, pulando localStorage'
-          );
-          setUser(null);
+        const savedUser = localStorage.getItem('holding_user');
+        if (savedUser) {
+          const userData = JSON.parse(savedUser);
+          setUser(userData);
         }
       } catch (error) {
-        console.error('❌ AuthContext: Erro durante verificação:', error);
-        setUser(null);
+        console.error('Erro ao carregar usuário do localStorage:', error);
+        localStorage.removeItem('holding_user');
       } finally {
-        setIsLoading(false);
-        console.log('✅ AuthContext: Verificação concluída');
+        setIsInitialized(true);
       }
     };
 
-    checkUser();
-  }, []);
-
-  // Adicionar useEffect para monitorar mudanças no usuário
-  useEffect(() => {
-    console.log('👤 AuthContext: Usuário alterado:', user);
-    if (user) {
-      console.log('✅ AuthContext: Usuário ativo:', user.email);
-      console.log('✅ AuthContext: Usuário aprovado:', user.aprovado);
-      console.log('✅ AuthContext: Usuário ativo:', user.ativo);
-    } else {
-      console.log('❌ AuthContext: Nenhum usuário ativo');
-    }
-  }, [user]);
-
-  // Adicionar useEffect para monitorar mudanças no localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const checkLocalStorage = () => {
-        const savedUser = localStorage.getItem('holding_user');
-        console.log(
-          '💾 AuthContext: Verificando localStorage:',
-          savedUser ? 'Usuário encontrado' : 'Nenhum usuário'
-        );
-      };
-
-      // Verificar a cada 5 segundos
-      const interval = setInterval(checkLocalStorage, 5000);
-
-      return () => clearInterval(interval);
-    }
+    // Aguardar o próximo tick para garantir que estamos no cliente
+    const timer = setTimeout(initializeAuth, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('🔐 AuthContext: Iniciando login...');
       setIsLoading(true);
-
-      // Verificar se é o usuário master original
-      if (
-        email === 'grupoarmandogomes@gmail.com' &&
-        password === '@252980Hol'
-      ) {
-        const userData: User = {
-          id: 0,
-          email: 'grupoarmandogomes@gmail.com',
-          nome: 'Usuário Master',
-          perfil_id: '1',
-          perfil_nome: 'Master',
-          aprovado: true,
-          ativo: true,
-          status: 'aprovado',
-        };
-
-        console.log(
-          '✅ AuthContext: Login bem-sucedido para usuário master original'
-        );
-        setUser(userData);
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('holding_user', JSON.stringify(userData));
-          console.log('💾 AuthContext: Usuário master salvo no localStorage');
-        }
-
-        return { success: true, user: userData };
-      }
 
       // Simular verificação de credenciais
       if (email === 'admin@holding.com' && password === 'admin123') {
@@ -157,129 +71,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           status: 'aprovado',
         };
 
-        console.log('✅ AuthContext: Login bem-sucedido para usuário master');
         setUser(userData);
 
-        if (typeof window !== 'undefined') {
+        // Usar try-catch para evitar erros de SSR
+        try {
           localStorage.setItem('holding_user', JSON.stringify(userData));
-          console.log('💾 AuthContext: Usuário salvo no localStorage');
+        } catch (error) {
+          console.warn('localStorage não disponível:', error);
         }
 
         return { success: true, user: userData };
       }
 
-      // Simular verificação de usuário normal
-      if (email === 'maria@holding.com' && password === 'maria123') {
-        const userData: User = {
-          id: 2,
-          email: 'maria@holding.com',
-          nome: 'Maria Santos',
-          perfil_id: '2',
-          perfil_nome: 'Administrador',
-          aprovado: true,
-          ativo: true,
-          status: 'aprovado',
-        };
-
-        console.log('✅ AuthContext: Login bem-sucedido para usuário normal');
-        setUser(userData);
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('holding_user', JSON.stringify(userData));
-          console.log('💾 AuthContext: Usuário salvo no localStorage');
-        }
-
-        return { success: true, user: userData };
-      }
-
-      // Simular usuário pendente
-      if (email === 'carlos@holding.com' && password === 'carlos123') {
-        const userData: User = {
-          id: 5,
-          email: 'carlos@holding.com',
-          nome: 'Carlos Ferreira',
-          perfil_id: '',
-          perfil_nome: 'Sem perfil',
-          aprovado: false,
-          ativo: false,
-          status: 'pendente',
-        };
-
-        console.log('⚠️ AuthContext: Login para usuário pendente');
-        setUser(userData);
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('holding_user', JSON.stringify(userData));
-          console.log('💾 AuthContext: Usuário pendente salvo no localStorage');
-        }
-
-        return { success: true, user: userData, pending: true };
-      }
-
-      // Simular usuário rejeitado
-      if (email === 'ana@holding.com' && password === 'ana123') {
-        const userData: User = {
-          id: 4,
-          email: 'ana@holding.com',
-          nome: 'Ana Oliveira',
-          perfil_id: '6',
-          perfil_nome: 'Visualizador',
-          aprovado: false,
-          ativo: false,
-          status: 'rejeitado',
-        };
-
-        console.log('❌ AuthContext: Login para usuário rejeitado');
-        setUser(userData);
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('holding_user', JSON.stringify(userData));
-          console.log(
-            '💾 AuthContext: Usuário rejeitado salvo no localStorage'
-          );
-        }
-
-        return { success: true, user: userData, rejected: true };
-      }
-
-      console.log('❌ AuthContext: Credenciais inválidas');
       return { success: false, error: 'Credenciais inválidas' };
-    } catch (error) {
-      console.error('❌ AuthContext: Erro durante login:', error);
+    } catch {
       return { success: false, error: 'Erro interno do servidor' };
     } finally {
       setIsLoading(false);
-      console.log('✅ AuthContext: Login finalizado');
     }
   };
 
   const logout = () => {
-    console.log('🚪 AuthContext: Fazendo logout...');
-    console.log('🚪 AuthContext: Usuário atual antes do logout:', user);
-    
-    // Verificar se é um logout acidental
-    if (user && user.id !== undefined) {
-      console.log('⚠️ AuthContext: Logout solicitado para usuário válido:', user.email);
-    }
-    
-    setUser(null);
-    
-    if (typeof window !== 'undefined') {
+    try {
       localStorage.removeItem('holding_user');
-      console.log('💾 AuthContext: Usuário removido do localStorage');
+    } catch (error) {
+      console.warn('localStorage não disponível:', error);
     }
-    
-    console.log('✅ AuthContext: Logout realizado');
+    setUser(null);
   };
 
-  const value = {
-    user,
-    isAuthenticated,
-    hasApprovedProfile,
-    isLoading,
-    login,
-    logout,
-  };
+  const value = useMemo(
+    () => ({
+      user,
+      isAuthenticated,
+      hasApprovedProfile,
+      isLoading,
+      isInitialized,
+      login,
+      logout,
+    }),
+    [user, isAuthenticated, hasApprovedProfile, isLoading, isInitialized]
+  );
+
+  // Renderizar um estado de carregamento consistente
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-holding-blue-profound via-holding-blue-deep to-holding-blue-dark flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-holding-highlight border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+          <div className="w-32 h-2 bg-gradient-to-r from-holding-highlight to-holding-highlight-light rounded-full mx-auto mb-4 animate-pulse"></div>
+          <p className="text-holding-blue-light text-xl font-medium">
+            Inicializando sistema...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -4,62 +4,70 @@ import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
-interface GlobalErrorProps {
+export default function GlobalError({
+  error,
+  reset,
+}: {
   error: Error & { digest?: string };
   reset: () => void;
-}
-
-export default function GlobalError({ error, reset }: GlobalErrorProps) {
+}) {
   useEffect(() => {
-    console.error('❌ Erro global capturado:', error);
+    console.error('Erro global capturado:', error);
   }, [error]);
 
   return (
     <html>
       <body>
-        <div className="min-h-screen holding-gradient flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto p-6">
-            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <AlertTriangle className="w-10 h-10 text-red-600" />
+        <div className="min-h-screen bg-holding-primary flex items-center justify-center p-6">
+          <div className="max-w-md w-full text-center space-y-6">
+            <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto">
+              <AlertTriangle className="w-10 h-10 text-red-400" />
+            </div>
+            
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold text-holding-white">
+                Erro Crítico do Sistema
+              </h1>
+              <p className="text-holding-accent-light">
+                Ocorreu um erro crítico que afetou todo o sistema. 
+                Tente recarregar a página ou entre em contato com o suporte.
+              </p>
             </div>
 
-            <h1 className="text-3xl font-bold text-holding-white mb-3">
-              Erro Crítico!
-            </h1>
-
-            <p className="text-holding-accent-light mb-6 text-lg">
-              Ocorreu um erro crítico na aplicação. O sistema pode estar
-              instável.
-            </p>
-
-            <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
                 onClick={reset}
-                className="w-full bg-holding-highlight hover:bg-holding-highlight-light text-holding-white py-3"
+                className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white"
               >
-                <RefreshCw className="w-5 h-5 mr-2" />
-                Tentar Recarregar
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Tentar Novamente
               </Button>
-
+              
               <Button
-                onClick={() => (window.location.href = '/')}
+                onClick={() => window.location.href = '/'}
                 variant="outline"
-                className="w-full border-holding-accent/30 text-holding-white hover:bg-holding-accent/20 py-3"
+                className="border-holding-accent/30 text-holding-accent-light hover:bg-holding-accent/20"
               >
-                <Home className="w-5 h-5 mr-2" />
-                Página Inicial
+                <Home className="w-4 h-4 mr-2" />
+                Voltar ao Início
               </Button>
             </div>
 
-            {error.digest && (
-              <p className="text-xs text-holding-accent-light mt-6">
-                ID do erro: {error.digest}
-              </p>
+            {process.env.NODE_ENV === 'development' && (
+              <details className="text-left bg-holding-secondary/50 p-4 rounded-lg border border-holding-accent/30">
+                <summary className="text-holding-accent-light cursor-pointer font-medium">
+                  Detalhes do Erro (Desenvolvimento)
+                </summary>
+                <pre className="text-red-400 text-sm mt-2 whitespace-pre-wrap">
+                  {error.message}
+                </pre>
+                {error.stack && (
+                  <pre className="text-holding-accent-light text-xs mt-2 whitespace-pre-wrap">
+                    {error.stack}
+                  </pre>
+                )}
+              </details>
             )}
-
-            <p className="text-xs text-holding-accent-light mt-4">
-              Se o problema persistir, entre em contato com o suporte técnico.
-            </p>
           </div>
         </div>
       </body>

@@ -2,38 +2,39 @@
 
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 
-interface ErrorProps {
+export default function Error({
+  error,
+  reset,
+}: {
   error: Error & { digest?: string };
   reset: () => void;
-}
-
-export default function Error({ error, reset }: ErrorProps) {
+}) {
   useEffect(() => {
-    console.error('❌ Erro capturado:', error);
+    console.error('Erro capturado:', error);
   }, [error]);
 
   return (
-    <div className="min-h-screen holding-gradient flex items-center justify-center">
-      <div className="text-center max-w-md mx-auto p-6">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="w-8 h-8 text-red-600" />
+    <div className="min-h-screen bg-holding-primary flex items-center justify-center p-6">
+      <div className="max-w-md w-full text-center space-y-6">
+        <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto">
+          <AlertTriangle className="w-10 h-10 text-red-400" />
         </div>
 
-        <h2 className="text-2xl font-bold text-holding-white mb-2">
-          Algo deu errado!
-        </h2>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold text-holding-white">
+            Algo deu errado!
+          </h1>
+          <p className="text-holding-accent-light">
+            Ocorreu um erro inesperado. Tente novamente ou retorne ao início.
+          </p>
+        </div>
 
-        <p className="text-holding-accent-light mb-6">
-          Ocorreu um erro inesperado. Tente novamente ou entre em contato com o
-          suporte.
-        </p>
-
-        <div className="space-y-3">
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
             onClick={reset}
-            className="w-full bg-holding-highlight hover:bg-holding-highlight-light text-holding-white"
+            className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Tentar Novamente
@@ -42,16 +43,27 @@ export default function Error({ error, reset }: ErrorProps) {
           <Button
             onClick={() => (window.location.href = '/')}
             variant="outline"
-            className="w-full border-holding-accent/30 text-holding-white hover:bg-holding-accent/20"
+            className="border-holding-accent/30 text-holding-accent-light hover:bg-holding-accent/20"
           >
+            <Home className="w-4 h-4 mr-2" />
             Voltar ao Início
           </Button>
         </div>
 
-        {error.digest && (
-          <p className="text-xs text-holding-accent-light mt-4">
-            ID do erro: {error.digest}
-          </p>
+        {process.env.NODE_ENV === 'development' && (
+          <details className="text-left bg-holding-secondary/50 p-4 rounded-lg border border-holding-accent/30">
+            <summary className="text-holding-accent-light cursor-pointer font-medium">
+              Detalhes do Erro (Desenvolvimento)
+            </summary>
+            <pre className="text-red-400 text-sm mt-2 whitespace-pre-wrap">
+              {error.message}
+            </pre>
+            {error.stack && (
+              <pre className="text-holding-accent-light text-xs mt-2 whitespace-pre-wrap">
+                {error.stack}
+              </pre>
+            )}
+          </details>
         )}
       </div>
     </div>

@@ -1,38 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['lucide-react'],
-  },
-  webpack: (config, { dev, isServer }) => {
-    // Otimizações para CSS
-    if (!isServer && !dev) {
-      config.optimization.splitChunks.cacheGroups.styles = {
-        name: 'styles',
-        test: /\.(css|scss)$/,
-        chunks: 'all',
-        enforce: true,
-      };
-    }
-    return config;
-  },
-  images: {
-    domains: ['localhost'],
-  },
-  env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY,
-  },
-  // Configurações para melhorar hidratação
   reactStrictMode: true,
-  // Configurações para evitar problemas de hidratação
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  // Configurações para melhorar performance
   poweredByHeader: false,
   compress: true,
   generateEtags: false,
-  // Configurações para melhorar navegação
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
+  webpack: (config, { dev }) => {
+    // Desabilitar splitChunks em desenvolvimento para resolver problemas
+    if (dev) {
+      config.optimization.splitChunks = false;
+      config.optimization.runtimeChunk = false;
+    }
+
+    return config;
+  },
   async headers() {
     return [
       {

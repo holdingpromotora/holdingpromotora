@@ -46,12 +46,17 @@ const config: Config = {
         },
         // Paleta de cores personalizada da Holding Promotora
         holding: {
-          primary: '#19263c', // Deep Navy Blue - Fundo principal
-          secondary: '#172743', // Darker Navy Blue - Fundo secundário
-          accent: '#364f69', // Muted Blue-Gray - Elementos de destaque
-          highlight: '#70aac9', // Light Sky Blue - Destaques e botões
-          white: '#ffffff', // Pure White - Texto e elementos claros
+          white: '#FFFFFF',        // Estilo 0
+          'blue-light': '#70AAC9',   // Estilo 02
+          'blue-medium': '#364F69',  // Estilo 01
+          'blue-dark': '#172743',    // Estilo 04
+          'blue-deep': '#19263C',    // Estilo 03
+          'blue-profound': '#0A2540', // Estilo 6
           // Variações para diferentes estados
+          'primary': '#19263c', // Deep Navy Blue - Fundo principal
+          'secondary': '#172743', // Darker Navy Blue - Fundo secundário
+          'accent': '#364f69', // Muted Blue-Gray - Elementos de destaque
+          'highlight': '#70aac9', // Light Sky Blue - Destaques e botões
           'primary-light': '#1f2d4a',
           'secondary-light': '#1c2e4a',
           'accent-light': '#4a5f7a',

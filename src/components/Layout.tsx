@@ -54,23 +54,8 @@ export default function Layout({ children }: LayoutProps) {
     }
   }, [user]);
 
-  // Adicionar useEffect para monitorar mudanças no localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const checkLocalStorage = () => {
-        const savedUser = localStorage.getItem('holding_user');
-        console.log(
-          '💾 Layout: Verificando localStorage:',
-          savedUser ? 'Usuário encontrado' : 'Nenhum usuário'
-        );
-      };
-
-      // Verificar a cada 3 segundos
-      const interval = setInterval(checkLocalStorage, 3000);
-
-      return () => clearInterval(interval);
-    }
-  }, []);
+  // REMOVIDO: useEffect que estava verificando localStorage constantemente
+  // Isso estava causando problemas e logout automático
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -80,21 +65,19 @@ export default function Layout({ children }: LayoutProps) {
     console.log('🚪 Layout: Logout solicitado');
     console.log('🚪 Layout: Usuário atual:', user);
     
-    // Verificar se é um logout acidental
-    if (user && user.id !== undefined) {
-      console.log('⚠️ Layout: Logout solicitado para usuário válido:', user.email);
-      
-      // Confirmar logout apenas se for usuário válido
-      if (confirm('Tem certeza que deseja fazer logout?')) {
-        console.log('✅ Layout: Logout confirmado pelo usuário');
-        logout();
-      } else {
-        console.log('❌ Layout: Logout cancelado pelo usuário');
-        return;
-      }
-    } else {
-      console.log('✅ Layout: Logout para usuário inválido, executando...');
+    // IMPORTANTE: Só fazer logout se for explicitamente solicitado
+    // Não fazer logout automático em caso de erro
+    if (!user || user.id === undefined) {
+      console.log('🔄 Logout cancelado - usuário já não está ativo');
+      return;
+    }
+    
+    // Confirmar logout apenas se for usuário válido
+    if (confirm('Tem certeza que deseja fazer logout?')) {
+      console.log('✅ Layout: Logout confirmado pelo usuário');
       logout();
+    } else {
+      console.log('❌ Layout: Logout cancelado pelo usuário');
     }
   };
 

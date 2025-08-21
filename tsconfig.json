@@ -17,7 +17,6 @@
     "noImplicitReturns": false,
     "noImplicitThis": false,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "strictNullChecks": false,
     "plugins": [
