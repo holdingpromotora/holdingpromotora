@@ -164,6 +164,7 @@ export default function LoginPage() {
                   onChange={e => setEmail(e.target.value)}
                   className="pl-10 bg-holding-accent/20 border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light focus:border-holding-highlight focus:ring-holding-highlight/20"
                   required
+                  autoComplete="username"
                 />
               </div>
             </div>
@@ -182,6 +183,7 @@ export default function LoginPage() {
                   onChange={e => setPassword(e.target.value)}
                   className="pl-10 pr-10 bg-holding-accent/20 border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light focus:border-holding-highlight focus:ring-holding-highlight/20"
                   required
+                  autoComplete="current-password"
                 />
                 <Button
                   type="button"
