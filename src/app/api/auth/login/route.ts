@@ -14,7 +14,11 @@ export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
 
-    console.log('🔐 Tentativa de login:', { email, password: '***' });
+    console.log('🔐 Tentativa de login:', {
+      email,
+      password: '***',
+      timestamp: new Date().toISOString(),
+    });
 
     if (!email || !password) {
       return NextResponse.json(
