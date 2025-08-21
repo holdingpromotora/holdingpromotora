@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome VARCHAR(200) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     senha_hash VARCHAR(255) NOT NULL,
-    nivel_acesso VARCHAR(20) NOT NULL CHECK (nivel_acesso IN ('admin', 'gerente', 'operador', 'visualizador', 'master')),
     ativo BOOLEAN DEFAULT true,
     ultimo_acesso TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -78,18 +77,16 @@ ON CONFLICT (nome) DO UPDATE SET
     icone = 'Crown';
 
 -- 7. Inserir ou atualizar usuário master
-INSERT INTO usuarios (nome, email, senha_hash, nivel_acesso, tipo_acesso_id) 
+INSERT INTO usuarios (nome, email, senha_hash, tipo_acesso_id) 
 VALUES (
     'Armando Gomes - Master', 
     'grupoarmandogomes@gmail.com', 
     '@252980Hol', 
-    'master',
     (SELECT id FROM tipos_acesso WHERE nome = 'MASTER')
 )
 ON CONFLICT (email) DO UPDATE SET 
     nome = 'Armando Gomes - Master',
     senha_hash = '@252980Hol',
-    nivel_acesso = 'master',
     tipo_acesso_id = (SELECT id FROM tipos_acesso WHERE nome = 'MASTER'),
     ativo = true,
     updated_at = CURRENT_TIMESTAMP;
@@ -163,13 +160,14 @@ SELECT
     'Usuário Master criado/atualizado:' as status,
     u.nome,
     u.email,
-    u.nivel_acesso,
+    ta.nome as tipo_acesso,
     u.ativo,
     COUNT(p.id) as total_permissoes
 FROM usuarios u
+LEFT JOIN tipos_acesso ta ON u.tipo_acesso_id = ta.id
 LEFT JOIN permissoes p ON p.ativo = true
 WHERE u.email = 'grupoarmandogomes@gmail.com'
-GROUP BY u.id, u.nome, u.email, u.nivel_acesso, u.ativo;
+GROUP BY u.id, u.nome, u.email, ta.nome, u.ativo;
 
 -- 12. Mostrar todas as permissões disponíveis
 SELECT 
