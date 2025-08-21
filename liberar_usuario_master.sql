@@ -3,6 +3,21 @@
 -- Senha: @252980Hol
 -- Acesso: Master com todas as permissões
 
+-- 0. Verificar estrutura existente e limpar dados conflitantes
+DO $$ 
+BEGIN
+    -- Remover usuário se existir
+    DELETE FROM usuarios WHERE email = 'grupoarmandogomes@gmail.com';
+    
+    -- Remover tipo de acesso MASTER se existir
+    DELETE FROM tipos_acesso WHERE nome = 'MASTER';
+    
+    -- Remover nível de acesso MASTER se existir
+    DELETE FROM niveis_acesso WHERE tipo_acesso_id IN (
+        SELECT id FROM tipos_acesso WHERE nome = 'MASTER'
+    );
+END $$;
+
 -- 1. Verificar se a tabela usuarios existe, se não, criar
 CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY,
@@ -99,30 +114,21 @@ CREATE TABLE IF NOT EXISTS niveis_acesso (
 -- 5. Adicionar colunas se não existirem na tabela usuarios
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS tipo_acesso_id INTEGER REFERENCES tipos_acesso(id);
 
--- 6. Criar tipo de acesso MASTER se não existir
+-- 6. Criar tipo de acesso MASTER
 INSERT INTO tipos_acesso (nome, descricao, nivel, cor, icone) 
-VALUES ('MASTER', 'Usuário com acesso total ao sistema', 10, 'bg-red-600', 'Crown')
-ON CONFLICT (nome) DO UPDATE SET 
-    descricao = 'Usuário com acesso total ao sistema',
-    nivel = 10,
-    cor = 'bg-red-600',
-    icone = 'Crown';
+VALUES ('MASTER', 'Usuário com acesso total ao sistema', 10, 'bg-red-600', 'Crown');
 
--- 7. Inserir ou atualizar usuário master
-INSERT INTO usuarios (nome, email, senha_hash, tipo_acesso_id) 
+-- 7. Inserir usuário master
+INSERT INTO usuarios (nome, email, senha_hash, tipo_acesso_id, ativo) 
 VALUES (
     'Armando Gomes - Master', 
     'grupoarmandogomes@gmail.com', 
     '@252980Hol', 
-    (SELECT id FROM tipos_acesso WHERE nome = 'MASTER')
-)
-ON CONFLICT (email) DO UPDATE SET 
-    nome = 'Armando Gomes - Master',
-    senha_hash = '@252980Hol',
-    tipo_acesso_id = (SELECT id FROM tipos_acesso WHERE nome = 'MASTER'),
-    ativo = true;
+    (SELECT id FROM tipos_acesso WHERE nome = 'MASTER'),
+    true
+);
 
--- 8. Inserir todas as permissões disponíveis se não existirem
+-- 8. Inserir todas as permissões disponíveis
 -- Usuários
 INSERT INTO permissoes (id, nome, descricao, categoria, acao, recurso, nivel_minimo) VALUES
 ('usuarios_visualizar', 'Visualizar Usuários', 'Pode visualizar lista de usuários', 'usuarios', 'visualizar', 'usuarios', 1)
@@ -235,10 +241,6 @@ INSERT INTO permissoes (id, nome, descricao, categoria, acao, recurso, nivel_min
 ON CONFLICT (id) DO NOTHING;
 
 -- 9. Criar nível de acesso MASTER com todas as permissões
--- Primeiro remover se existir
-DELETE FROM niveis_acesso WHERE tipo_acesso_id = (SELECT id FROM tipos_acesso WHERE nome = 'MASTER');
-
--- Depois inserir novo
 INSERT INTO niveis_acesso (tipo_acesso_id, permissoes) 
 VALUES (
     (SELECT id FROM tipos_acesso WHERE nome = 'MASTER'),
