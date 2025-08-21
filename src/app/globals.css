@@ -198,8 +198,73 @@
   }
 
   .holding-input:focus {
+    @apply outline-none ring-2 ring-holding-blue-light/50;
+    border-color: var(--holding-blue-light);
+    box-shadow: 0 0 0 3px rgba(112, 170, 201, 0.1);
+  }
+
+  /* Responsividade mobile */
+  @media (max-width: 640px) {
+    .holding-layout {
+      @apply px-2;
+    }
+    
+    .holding-card {
+      @apply mx-2 mb-4;
+    }
+    
+    .holding-btn-primary,
+    .holding-btn-secondary {
+      @apply px-4 py-2 text-sm w-full;
+    }
+    
+    .holding-sidebar.expanded {
+      @apply w-full;
+    }
+    
+    .holding-sidebar.collapsed {
+      @apply w-12;
+    }
+    
+    .nav-item {
+      @apply px-3 py-2 text-sm;
+    }
+    
+    .holding-input {
+      @apply px-3 py-2 text-sm;
+    }
+  }
+
+  /* Ajustes para telas muito pequenas */
+  @media (max-width: 475px) {
+    .holding-layout {
+      @apply px-1;
+    }
+    
+    .holding-card {
+      @apply mx-1 mb-3;
+    }
+    
+    .holding-btn-primary,
+    .holding-btn-secondary {
+      @apply px-3 py-2 text-xs;
+    }
+    
+    .nav-item {
+      @apply px-2 py-1.5 text-xs;
+    }
+    
+    .holding-input {
+      @apply px-2 py-1.5 text-xs;
+    }
+  }
+
+  .holding-input:hover {
     border-color: rgba(112, 170, 201, 0.5);
     box-shadow: 0 0 0 2px rgba(112, 170, 201, 0.2);
+  }
+
+  .holding-input:focus {
     box-shadow: var(--holding-shadow-md);
   }
 
