@@ -43,6 +43,15 @@ interface TipoAcesso {
   nivel: number;
   ativo: boolean;
   dataCriacao: string;
+  permissoes?: {
+    [categoria: string]: Array<{
+      id: string;
+      nome: string;
+      descricao: string;
+      acao: string;
+      recurso: string;
+    }>;
+  };
 }
 
 interface Permissao {
@@ -58,7 +67,10 @@ export default function NiveisAcessoPage() {
   const [permissoes, setPermissoes] = useState<Permissao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [permissoesCarregadas, setPermissoesCarregadas] = useState<Set<string>>(
+    new Set()
+  );
 
   // Estados para modais
   const [showTipoAcessoModal, setShowTipoAcessoModal] = useState(false);
@@ -633,6 +645,37 @@ export default function NiveisAcessoPage() {
     setShowPerfilModal(true);
   };
 
+  const carregarPermissoesTipoAcesso = async (tipo: TipoAcesso) => {
+    if (permissoesCarregadas.has(tipo.id)) {
+      return; // Já foi carregado
+    }
+
+    try {
+      const response = await fetch('/api/tipo-acesso-permissoes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tipo_acesso_id: tipo.id }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Atualizar o tipo de acesso com suas permissões
+          setTiposAcesso(prev =>
+            prev.map(t =>
+              t.id === tipo.id ? { ...t, permissoes: data.permissoes } : t
+            )
+          );
+          setPermissoesCarregadas(prev => new Set(prev).add(tipo.id));
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar permissões do tipo de acesso:', error);
+    }
+  };
+
   const handleEditarPermissoesTipoAcesso = (tipo: TipoAcesso) => {
     setEditandoPerfil({
       tipoAcessoId: tipo.id,
@@ -763,7 +806,9 @@ export default function NiveisAcessoPage() {
 
   if (isLoading) {
     return (
-      <div className={`${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}>
+      <div
+        className={`${sidebarExpanded ? 'pl-80' : 'pl-24'} p-4 md:p-8 space-y-6 md:space-y-8`}
+      >
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-holding-blue-light" />
@@ -776,7 +821,9 @@ export default function NiveisAcessoPage() {
 
   if (error) {
     return (
-      <div className={`${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}>
+      <div
+        className={`${sidebarExpanded ? 'pl-80' : 'pl-24'} p-4 md:p-8 space-y-6 md:space-y-8`}
+      >
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <AlertCircle className="w-8 h-8 mx-auto mb-4 text-red-500" />
@@ -791,7 +838,9 @@ export default function NiveisAcessoPage() {
   }
 
   return (
-    <div className={`${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}>
+    <div
+      className={`${sidebarExpanded ? 'pl-80' : 'pl-24'} p-4 md:p-8 space-y-6 md:space-y-8`}
+    >
       {/* Alertas */}
       {showAlert && (
         <div className="fixed top-6 right-6 z-50 max-w-sm md:max-w-md mx-4 animate-[slideIn_0.5s_ease-out] alert-container">
@@ -858,69 +907,70 @@ export default function NiveisAcessoPage() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-holding-white mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-holding-white mb-2">
             Níveis de Acesso
           </h1>
-          <p className="text-holding-blue-light">
+          <p className="text-holding-blue-light mb-4 md:mb-6 text-sm md:text-base">
             Gerencie tipos de acesso e permissões do sistema
           </p>
         </div>
 
-        <div className="flex items-center space-x-4">
+        {/* Botões de Ação - ABAIXO do subtítulo */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 niveis-acesso-buttons">
           <Button
             onClick={() => router.push('/usuarios')}
-            className="bg-holding-blue-light hover:bg-holding-blue-light/80 text-holding-white px-6 py-2"
+            className="bg-gradient-to-r from-holding-blue-light to-holding-blue-medium hover:from-holding-blue-medium hover:to-holding-blue-light text-holding-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto niveis-acesso-button"
           >
-            <Users className="w-4 h-4 mr-2" />
+            <Users className="w-5 h-5 mr-3" />
             Gerenciar Usuários
           </Button>
           <Button
             onClick={() => router.push('/usuarios/aprovacao')}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2"
+            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto niveis-acesso-button"
           >
-            <UserCheck className="w-4 h-4 mr-2" />
+            <UserCheck className="w-5 h-5 mr-3" />
             Aprovações
           </Button>
           <Button
             onClick={() => setShowTipoAcessoModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto niveis-acesso-button"
           >
-            <Shield className="w-4 h-4 mr-2" />
+            <Shield className="w-5 h-5 mr-3" />
             Criar Tipo de Acesso
           </Button>
           <Button
             onClick={() => setShowPerfilModal(true)}
-            className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2"
+            className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto niveis-acesso-button"
           >
-            <User className="w-4 h-4 mr-2" />
+            <User className="w-5 h-5 mr-3" />
             Configurar Permissões
           </Button>
           <Button
             onClick={() => setShowPermissaoModal(true)}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2"
+            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto niveis-acesso-button"
           >
-            <Key className="w-4 h-4 mr-2" />
+            <Key className="w-5 h-5 mr-3" />
             Criar Permissões
           </Button>
         </div>
       </div>
 
       {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         <Card className="glass-effect-accent border-holding-accent/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg text-holding-white flex items-center">
-              <Shield className="w-5 h-5 mr-2 text-holding-blue-light" />
+            <CardTitle className="text-base md:text-lg text-holding-white flex items-center">
+              <Shield className="w-4 h-4 md:w-5 md:h-5 mr-2 text-holding-blue-light" />
               Tipos de Acesso
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-holding-white">
+            <div className="text-2xl md:text-3xl font-bold text-holding-white">
               {tiposAcesso.length}
             </div>
-            <p className="text-holding-blue-light text-sm">
+            <p className="text-holding-blue-light text-xs md:text-sm">
               Total de tipos configurados
             </p>
           </CardContent>
@@ -928,16 +978,16 @@ export default function NiveisAcessoPage() {
 
         <Card className="glass-effect-accent border-holding-accent/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg text-holding-white flex items-center">
-              <Key className="w-5 h-5 mr-2 text-holding-blue-light" />
+            <CardTitle className="text-base md:text-lg text-holding-white flex items-center">
+              <Key className="w-4 h-4 md:w-5 md:h-5 mr-2 text-holding-blue-light" />
               Permissões
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-holding-white">
+            <div className="text-2xl md:text-3xl font-bold text-holding-white">
               {permissoes.length}
             </div>
-            <p className="text-holding-blue-light text-sm">
+            <p className="text-holding-blue-light text-xs md:text-sm">
               Total de permissões
             </p>
           </CardContent>
@@ -945,14 +995,16 @@ export default function NiveisAcessoPage() {
 
         <Card className="glass-effect-accent border-holding-accent/30">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg text-holding-white flex items-center">
-              <Users className="w-5 h-5 mr-2 text-holding-blue-light" />
+            <CardTitle className="text-base md:text-lg text-holding-white flex items-center">
+              <Users className="w-4 h-4 md:w-5 md:h-5 mr-2 text-holding-blue-light" />
               Usuários Ativos
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-holding-white">0</div>
-            <p className="text-holding-blue-light text-sm">
+            <div className="text-2xl md:text-3xl font-bold text-holding-white">
+              0
+            </div>
+            <p className="text-holding-blue-light text-xs md:text-sm">
               Com acesso liberado
             </p>
           </CardContent>
@@ -967,7 +1019,7 @@ export default function NiveisAcessoPage() {
             Tipos de Acesso Configurados
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-4 md:p-6">
           {tiposAcesso.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-holding-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -981,57 +1033,58 @@ export default function NiveisAcessoPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
               {tiposAcesso.map(tipo => (
                 <Card
                   key={tipo.id}
-                  className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
+                  className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group cursor-pointer"
+                  onClick={() => carregarPermissoesTipoAcesso(tipo)}
                 >
-                  <CardContent className="p-4">
+                  <CardContent className="p-3 md:p-4">
                     <div className="flex items-start justify-between mb-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <Shield className="w-6 h-6 text-holding-blue-light" />
+                      <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <Shield className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 text-holding-blue-light" />
                       </div>
                       <div className="flex items-center space-x-2">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleEditarPermissoesTipoAcesso(tipo)}
-                          className="w-8 h-8 p-0 border-holding-blue-light/30 text-holding-blue-light hover:bg-holding-blue-light/20 hover:border-holding-blue-light/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                          className="w-6 h-6 md:w-8 md:h-8 p-0 border-holding-blue-light/30 text-holding-blue-light hover:bg-holding-blue-light/20 hover:border-holding-blue-light/50 hover:scale-110 transition-all duration-200 rounded-lg"
                           title="Editar permissões do tipo de acesso"
                         >
-                          <Edit className="w-3 h-3" />
+                          <Edit className="w-2.5 h-2.5 md:w-3 md:h-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="w-8 h-8 p-0 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:scale-110 transition-all duration-200 rounded-lg"
+                          className="w-6 h-6 md:w-8 md:h-8 p-0 border-red-500/30 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:scale-110 transition-all duration-200 rounded-lg"
                           onClick={() => handleExcluirTipoAcesso(tipo.id)}
                           title="Excluir tipo de acesso"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-2.5 h-2.5 md:w-3 md:h-3" />
                         </Button>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <h3 className="text-base font-bold text-holding-white group-hover:text-holding-blue-light transition-colors duration-200">
+                    <div className="space-y-1.5 md:space-y-2">
+                      <h3 className="text-sm md:text-base font-bold text-holding-white group-hover:text-holding-blue-light transition-colors duration-200">
                         {tipo.nome}
                       </h3>
                       <p className="text-xs text-holding-blue-light/80 leading-relaxed">
                         {tipo.descricao}
                       </p>
 
-                      <div className="flex items-center space-x-2 pt-1">
+                      <div className="flex items-center space-x-1.5 md:space-x-2 pt-1">
                         <Badge
                           variant="secondary"
-                          className="bg-holding-blue-light/20 text-holding-blue-light border-holding-blue-light/30 px-2 py-0.5 text-xs font-medium"
+                          className="bg-holding-blue-light/20 text-holding-blue-light border-holding-blue-light/30 px-1.5 md:px-2 py-0.5 text-xs font-medium"
                         >
                           Nível {tipo.nivel}
                         </Badge>
                         <Badge
                           variant={tipo.ativo ? 'default' : 'destructive'}
-                          className={`px-2 py-0.5 text-xs font-medium ${
+                          className={`px-1.5 md:px-2 py-0.5 text-xs font-medium ${
                             tipo.ativo
                               ? 'bg-green-500/20 text-green-400 border-green-500/30'
                               : 'bg-red-500/20 text-red-400 border-red-500/30'
@@ -1042,50 +1095,85 @@ export default function NiveisAcessoPage() {
                       </div>
 
                       {/* Permissões de Acesso */}
-                      <div className="pt-2 border-t border-holding-blue-light/20">
+                      <div className="pt-1.5 md:pt-2 border-t border-holding-blue-light/20">
                         <h4 className="text-xs font-semibold text-holding-blue-light mb-1">
                           Permissões de Acesso:
                         </h4>
-                        <div className="space-y-1">
-                          {tipo.nivel >= 5 && (
-                            <div className="flex items-center space-x-2">
-                              <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
-                              <span className="text-xs text-holding-blue-light">
-                                Acesso total ao sistema
-                              </span>
-                            </div>
-                          )}
-                          {tipo.nivel >= 4 && (
-                            <div className="flex items-center space-x-2">
-                              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                              <span className="text-xs text-holding-blue-light">
-                                Gerenciar usuários e clientes
-                              </span>
-                            </div>
-                          )}
-                          {tipo.nivel >= 3 && (
-                            <div className="flex items-center space-x-2">
-                              <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
-                              <span className="text-xs text-holding-blue-light">
-                                Editar registros
-                              </span>
-                            </div>
-                          )}
-                          {tipo.nivel >= 2 && (
-                            <div className="flex items-center space-x-2">
-                              <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
-                              <span className="text-xs text-holding-blue-light">
-                                Visualizar dados
-                              </span>
-                            </div>
-                          )}
-                          {tipo.nivel >= 1 && (
-                            <div className="flex items-center space-x-2">
-                              <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-                              <span className="text-xs text-holding-blue-light">
-                                Acesso básico
-                              </span>
-                            </div>
+                        <div className="space-y-0.5 md:space-y-1">
+                          {tipo.permissoes ? (
+                            // Mostrar permissões reais carregadas do banco
+                            Object.entries(tipo.permissoes).map(
+                              ([categoria, perms]) => (
+                                <div
+                                  key={categoria}
+                                  className="space-y-0.5 md:space-y-1"
+                                >
+                                  {perms.slice(0, 3).map(perm => (
+                                    <div
+                                      key={perm.id}
+                                      className="flex items-center space-x-1.5 md:space-x-2"
+                                    >
+                                      <div className="w-1.5 h-1.5 bg-holding-blue-light rounded-full"></div>
+                                      <span className="text-xs text-holding-blue-light">
+                                        {perm.acao} {perm.recurso}
+                                      </span>
+                                    </div>
+                                  ))}
+                                  {perms.length > 3 && (
+                                    <div className="flex items-center space-x-1.5 md:space-x-2">
+                                      <div className="w-1.5 h-1.5 bg-holding-blue-light/50 rounded-full"></div>
+                                      <span className="text-xs text-holding-blue-light/70">
+                                        +{perms.length - 3} mais permissões
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            )
+                          ) : (
+                            // Mostrar permissões baseadas no nível (fallback)
+                            <>
+                              {tipo.nivel >= 5 && (
+                                <div className="flex items-center space-x-1.5 md:space-x-2">
+                                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div>
+                                  <span className="text-xs text-holding-blue-light">
+                                    Acesso total ao sistema
+                                  </span>
+                                </div>
+                              )}
+                              {tipo.nivel >= 4 && (
+                                <div className="flex items-center space-x-1.5 md:space-x-2">
+                                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                                  <span className="text-xs text-holding-blue-light">
+                                    Gerenciar usuários e clientes
+                                  </span>
+                                </div>
+                              )}
+                              {tipo.nivel >= 3 && (
+                                <div className="flex items-center space-x-1.5 md:space-x-2">
+                                  <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+                                  <span className="text-xs text-holding-blue-light">
+                                    Editar registros
+                                  </span>
+                                </div>
+                              )}
+                              {tipo.nivel >= 2 && (
+                                <div className="flex items-center space-x-1.5 md:space-x-2">
+                                  <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full"></div>
+                                  <span className="text-xs text-holding-blue-light">
+                                    Visualizar dados
+                                  </span>
+                                </div>
+                              )}
+                              {tipo.nivel >= 1 && (
+                                <div className="flex items-center space-x-1.5 md:space-x-2">
+                                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                                  <span className="text-xs text-holding-blue-light">
+                                    Acesso básico
+                                  </span>
+                                </div>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -1106,7 +1194,7 @@ export default function NiveisAcessoPage() {
             Permissões Disponíveis
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent className="p-4 md:p-6">
           <Tabs defaultValue="usuarios" className="w-full">
             <TabsList className="grid w-full grid-cols-5 bg-holding-blue-profound/80 border border-holding-blue-light/30">
               <TabsTrigger
@@ -1147,8 +1235,8 @@ export default function NiveisAcessoPage() {
             </TabsList>
 
             {/* Aba Usuários */}
-            <TabsContent value="usuarios" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+            <TabsContent value="usuarios" className="mt-4 md:mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
                 {permissoes
                   .filter(p => p.categoria === 'usuarios')
                   .map(permissao => (
@@ -1156,7 +1244,7 @@ export default function NiveisAcessoPage() {
                       key={permissao.id}
                       className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
                     >
-                      <CardContent className="p-4">
+                      <CardContent className="p-3 md:p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                             <Users className="w-6 h-6 text-holding-blue-light" />

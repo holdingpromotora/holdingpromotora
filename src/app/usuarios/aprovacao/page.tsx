@@ -475,29 +475,29 @@ export default function AprovacaoPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-holding-blue-deep via-holding-blue-dark to-holding-blue-profound">
       <div
-        className={`transition-all duration-300 ${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}
+        className={`transition-all duration-300 ${sidebarExpanded ? 'pl-80' : 'pl-24'} p-4 md:p-8 space-y-6 md:space-y-8`}
       >
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-holding-white mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold text-holding-white mb-2">
             Aprovação de Usuários
           </h1>
-          <p className="text-holding-blue-light mb-6">
+          <p className="text-holding-blue-light mb-4 md:mb-6 text-sm md:text-base">
             Gerencie aprovações e status dos usuários do sistema
           </p>
 
           {/* Botões de Ação */}
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
             <Button
               onClick={() => router.push('/usuarios')}
-              className="bg-gradient-to-r from-holding-blue-light to-holding-blue-medium hover:from-holding-blue-medium hover:to-holding-blue-light text-holding-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold"
+              className="bg-gradient-to-r from-holding-blue-light to-holding-blue-medium hover:from-holding-blue-medium hover:to-holding-blue-light text-holding-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto"
             >
               <Users size={18} className="mr-3" />
               Gerenciar Usuários
             </Button>
             <Button
               onClick={() => router.push('/usuarios/niveis-acesso')}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto"
             >
               <Shield size={18} className="mr-3" />
               Níveis de Acesso
@@ -518,76 +518,87 @@ export default function AprovacaoPage() {
         )}
 
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <Card className="bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/10 border-holding-blue-light/30 hover:from-holding-blue-medium/30 hover:to-holding-blue-light/20 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-            <CardContent className="p-6 relative">
+            <CardContent className="p-4 md:p-6 relative">
               {/* Ícone no canto superior esquerdo */}
-              <div className="absolute top-4 left-4 p-2 bg-holding-blue-light/20 rounded-lg">
-                <Users size={24} className="text-holding-blue-light" />
+              <div className="absolute top-3 md:top-4 left-3 md:left-4 p-2 bg-holding-blue-light/20 rounded-lg">
+                <Users
+                  size={20}
+                  className="md:w-6 md:h-6 w-5 h-5 text-holding-blue-light"
+                />
               </div>
 
               {/* Número no canto superior direito */}
-              <div className="absolute top-4 right-4 text-4xl font-bold text-holding-white">
+              <div className="absolute top-3 md:top-4 right-3 md:right-4 text-2xl md:text-4xl font-bold text-holding-white">
                 {estatisticas.total}
               </div>
 
               {/* Título abaixo do ícone */}
-              <div className="mt-16 mb-2">
-                <h3 className="text-lg text-holding-blue-light font-medium">
+              <div className="mt-12 md:mt-16 mb-2">
+                <h3 className="text-base md:text-lg text-holding-blue-light font-medium">
                   Total de Usuários
                 </h3>
               </div>
 
               {/* Descrição */}
-              <p className="text-holding-blue-light/70 text-sm">Total</p>
+              <p className="text-holding-blue-light/70 text-xs md:text-sm">
+                Total
+              </p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/10 border-holding-blue-light/30 hover:from-holding-blue-medium/30 hover:to-holding-blue-light/20 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-            <CardContent className="p-6 relative">
+            <CardContent className="p-4 md:p-6 relative">
               {/* Ícone no canto superior esquerdo */}
-              <div className="absolute top-4 left-4 p-2 bg-green-500/20 rounded-lg">
-                <Shield size={24} className="text-green-400" />
+              <div className="absolute top-3 md:top-4 left-3 md:left-4 p-2 bg-green-500/20 rounded-lg">
+                <Shield
+                  size={20}
+                  className="md:w-6 md:h-6 w-5 h-5 text-green-400"
+                />
               </div>
 
               {/* Número no canto superior direito */}
-              <div className="absolute top-4 right-4 text-4xl font-bold text-holding-white">
+              <div className="absolute top-3 md:top-4 right-3 md:right-4 text-2xl md:text-4xl font-bold text-holding-white">
                 {estatisticas.ativos}
               </div>
 
               {/* Título abaixo do ícone */}
-              <div className="mt-16 mb-2">
-                <h3 className="text-lg text-holding-blue-light font-medium">
+              <div className="mt-12 md:mt-16 mb-2">
+                <h3 className="text-base md:text-lg text-holding-blue-light font-medium">
                   Usuários Ativos
                 </h3>
               </div>
 
               {/* Descrição */}
-              <p className="text-green-400 text-sm">Ativos</p>
+              <p className="text-green-400 text-xs md:text-sm">Ativos</p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/10 border-holding-blue-light/30 hover:from-holding-blue-medium/30 hover:to-holding-blue-light/20 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-            <CardContent className="p-6 relative">
+            <CardContent className="p-4 md:p-6 relative">
               {/* Ícone no canto superior esquerdo */}
-              <div className="absolute top-4 left-4 p-2 bg-purple-500/20 rounded-lg">
-                <CheckCircle size={24} className="text-purple-400" />
+              <div className="absolute top-3 md:top-4 left-3 md:left-4 p-2 bg-purple-500/20 rounded-lg">
+                <CheckCircle
+                  size={20}
+                  className="md:w-6 md:h-6 w-5 h-5 text-purple-400"
+                />
               </div>
 
               {/* Número no canto superior direito */}
-              <div className="absolute top-4 right-4 text-4xl font-bold text-holding-white">
+              <div className="absolute top-3 md:top-4 right-3 md:right-4 text-2xl md:text-4xl font-bold text-holding-white">
                 {estatisticas.aprovados}
               </div>
 
               {/* Título abaixo do ícone */}
-              <div className="mt-16 mb-2">
-                <h3 className="text-lg text-holding-blue-light font-medium">
+              <div className="mt-12 md:mt-16 mb-2">
+                <h3 className="text-base md:text-lg text-holding-blue-light font-medium">
                   Usuários Aprovados
                 </h3>
               </div>
 
               {/* Descrição */}
-              <p className="text-purple-400 text-sm">Aprovados</p>
+              <p className="text-purple-400 text-xs md:text-sm">Aprovados</p>
             </CardContent>
           </Card>
         </div>
@@ -595,7 +606,7 @@ export default function AprovacaoPage() {
         {/* Pesquisa e Filtros */}
         <Card className="bg-gradient-to-r from-holding-blue-deep/20 to-holding-blue-dark/20 border-holding-blue-light/30 hover:from-holding-blue-deep/30 hover:to-holding-blue-dark/30 transition-all duration-300">
           <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-6 items-center">
+            <div className="flex flex-col gap-4 md:gap-6">
               <div className="flex-1 relative">
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-holding-blue-light">
                   <Search size={18} />
@@ -605,10 +616,10 @@ export default function AprovacaoPage() {
                   placeholder="Buscar usuários por nome ou email..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-14 py-4 bg-holding-blue-profound/80 border-holding-blue-light/40 text-holding-white placeholder:text-holding-blue-light/60 focus:border-holding-blue-light focus:ring-2 focus:ring-holding-blue-light/30 focus:bg-holding-blue-profound/90 transition-all duration-300 rounded-xl text-base"
+                  className="pl-14 py-3 md:py-4 bg-holding-blue-profound/80 border-holding-blue-light/40 text-holding-white placeholder:text-holding-blue-light/60 focus:border-holding-blue-light focus:ring-2 focus:ring-holding-blue-light/30 focus:bg-holding-blue-profound/90 transition-all duration-300 rounded-xl text-sm md:text-base w-full"
                 />
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                 <div className="flex items-center space-x-2 text-holding-blue-light">
                   <Filter size={18} />
                   <span className="text-sm font-medium">Filtrar por:</span>
@@ -618,7 +629,7 @@ export default function AprovacaoPage() {
                   onChange={e => {
                     setFilterStatus(e.target.value);
                   }}
-                  className="py-4 px-6 bg-holding-blue-profound/80 border border-holding-blue-light/40 text-holding-white rounded-xl focus:outline-none focus:ring-2 focus:ring-holding-blue-light/30 focus:border-holding-blue-light transition-all duration-300 text-base font-medium cursor-pointer hover:bg-holding-blue-profound/90"
+                  className="py-3 md:py-4 px-4 md:px-6 bg-holding-blue-profound/80 border border-holding-blue-light/40 text-holding-white rounded-xl focus:outline-none focus:ring-2 focus:ring-holding-blue-light/30 focus:border-holding-blue-light transition-all duration-300 text-sm md:text-base font-medium cursor-pointer hover:bg-holding-blue-profound/90 w-full sm:w-auto"
                 >
                   <option value="todos">Todos os Usuários</option>
                   <option value="pendente">Pendentes</option>

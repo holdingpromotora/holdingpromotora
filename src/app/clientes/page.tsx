@@ -505,24 +505,24 @@ export default function ClientesPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 card-grid">
                   {filteredClientes.map(cliente => (
                     <Card
                       key={cliente.id}
                       className="bg-gradient-to-br from-holding-blue-profound/70 to-holding-blue-profound/50 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/15 group overflow-hidden relative"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-holding-blue-light/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="p-5 relative z-10">
-                        {/* Header do Card */}
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/25 to-holding-blue-light/15 rounded-xl flex items-center justify-center">
-                            {cliente.tipo === 'PF' ? (
-                              <User className="w-6 h-6 text-holding-blue-light" />
-                            ) : (
-                              <Building2 className="w-6 h-6 text-holding-blue-light" />
-                            )}
-                          </div>
-                          <div className="flex flex-col gap-2 items-end">
+                                             <div className="p-5 relative z-10 card-content">
+                         {/* Header do Card */}
+                         <div className="flex items-start justify-between mb-4">
+                           <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/25 to-holding-blue-light/15 rounded-xl flex items-center justify-center card-icon">
+                             {cliente.tipo === 'PF' ? (
+                               <User className="w-6 h-6 text-holding-blue-light" />
+                             ) : (
+                               <Building2 className="w-6 h-6 text-holding-blue-light" />
+                             )}
+                           </div>
+                           <div className="flex flex-col gap-2 items-end card-badges">
                             <Badge
                               variant="secondary"
                               className={`px-3 py-1 text-xs font-medium rounded-full ${
@@ -544,19 +544,19 @@ export default function ClientesPage() {
                           </div>
                         </div>
 
-                        {/* Informações do Cliente */}
-                        <div className="space-y-3">
-                          <div>
-                            <h4 className="font-semibold text-holding-white text-base mb-1 line-clamp-2 leading-tight">
-                              {cliente.nome}
-                            </h4>
-                            <p className="text-holding-blue-light/80 text-sm line-clamp-1">
-                              {cliente.email}
-                            </p>
-                          </div>
+                                                 {/* Informações do Cliente */}
+                         <div className="space-y-3 card-info">
+                           <div>
+                             <h4 className="font-semibold text-holding-white text-base mb-1 line-clamp-2 leading-tight">
+                               {cliente.nome}
+                             </h4>
+                             <p className="text-holding-blue-light/80 text-sm line-clamp-1">
+                               {cliente.email}
+                             </p>
+                           </div>
 
-                          {/* Detalhes do Cliente */}
-                          <div className="space-y-2.5">
+                           {/* Detalhes do Cliente */}
+                           <div className="space-y-2.5">
                             <div className="flex items-center gap-2.5">
                               <FileText className="w-4 h-4 text-holding-blue-light/60" />
                               <span className="text-holding-blue-light/90 text-sm">
@@ -587,8 +587,8 @@ export default function ClientesPage() {
                           </div>
                         </div>
 
-                        {/* Ações */}
-                        <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-holding-blue-light/20">
+                                                 {/* Ações */}
+                         <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-holding-blue-light/20 card-actions">
                           <button className="p-2 text-holding-blue-light/70 hover:text-holding-blue-light hover:bg-holding-blue-light/10 rounded-lg transition-colors duration-200">
                             <Eye className="w-4 h-4" />
                           </button>

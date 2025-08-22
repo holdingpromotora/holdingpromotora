@@ -606,25 +606,27 @@ export default function UsuariosPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 card-grid">
                   {usuarios.map(user => (
                     <Card
                       key={user.id}
                       className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
                     >
-                      <CardContent className="p-4">
+                      <CardContent className="p-4 card-content">
                         <div className="flex items-start justify-between mb-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 card-icon">
                             {getPerfilIcon(user.perfil_nome)}
                           </div>
-                          {getStatusBadge(
-                            user.status,
-                            user.aprovado,
-                            user.ativo
-                          )}
+                          <div className="card-badges">
+                            {getStatusBadge(
+                              user.status,
+                              user.aprovado,
+                              user.ativo
+                            )}
+                          </div>
                         </div>
 
-                        <div className="mb-3">
+                        <div className="mb-3 card-info">
                           <h4 className="font-semibold text-holding-white text-lg mb-1">
                             {user.nome}
                           </h4>
@@ -662,7 +664,7 @@ export default function UsuariosPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between pt-3 border-t border-holding-blue-light/20">
+                        <div className="flex items-center justify-between pt-3 border-t border-holding-blue-light/20 card-actions">
                           <div className="flex items-center space-x-2 md:space-x-1">
                             <Button
                               size="sm"
