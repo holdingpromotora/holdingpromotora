@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,12 +51,14 @@ interface Banco {
 
 export default function CadastroClientePessoaFisicaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('edit');
+  const isEditing = !!editId;
+
   const [formData, setFormData] = useState({
     nome: '',
-    nomeMae: '',
     rg: '',
     cpf: '',
-    numeroBeneficioMatricula: '',
     dataNascimento: '',
     email: '',
     telefone: '',
@@ -79,6 +81,8 @@ export default function CadastroClientePessoaFisicaPage() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Carregar bancos do Supabase
   useEffect(() => {
@@ -122,6 +126,69 @@ export default function CadastroClientePessoaFisicaPage() {
 
     carregarBancos();
   }, []);
+
+  // Carregar dados do cliente se for edição
+  useEffect(() => {
+    const carregarClienteParaEdicao = async () => {
+      if (!editId) return;
+
+      try {
+        setLoading(true);
+        console.log('🔄 Carregando cliente PF para edição, ID:', editId);
+
+        const { data, error } = await supabase
+          .from('pessoas_fisicas')
+          .select('*')
+          .eq('id', editId)
+          .single();
+
+        if (error) {
+          console.error('❌ Erro ao carregar cliente para edição:', error);
+          return;
+        }
+
+        console.log('✅ Dados carregados:', data);
+
+        // Preencher formulário com dados existentes - apenas campos que existem na tabela
+        const novosDados = {
+          nome: data.nome || '',
+          rg: data.rg || '',
+          cpf: data.cpf || '',
+          dataNascimento: data.data_nascimento || '',
+          email: data.email || '',
+          telefone: data.telefone || '',
+          cep: data.cep || '',
+          endereco: data.endereco || '',
+          numero: data.numero || '',
+          complemento: data.complemento || '',
+          bairro: data.bairro || '',
+          cidade: data.cidade || '',
+          estado: data.estado || '',
+          bancoId: data.banco_id?.toString() || '',
+          agencia: data.agencia || '',
+          contaDigito: data.conta_digito || '',
+          tipoConta: data.tipo_conta || 'Corrente',
+          tipoPix: data.tipo_pix || 'CPF',
+          chavePix: data.chave_pix || '',
+        };
+
+        console.log('📝 Novos dados para o formulário:', novosDados);
+        setFormData(novosDados);
+        console.log('✅ Formulário preenchido com dados');
+      } catch (error) {
+        console.error('❌ Erro ao carregar cliente para edição:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    carregarClienteParaEdicao();
+  }, [editId]);
+
+  // Log do estado do formulário quando mudar
+  useEffect(() => {
+    console.log('📋 Estado atual do formulário:', formData);
+  }, [formData]);
 
   // Máscaras
   const aplicarMascaraRG = (valor: string) => {
@@ -248,6 +315,8 @@ export default function CadastroClientePessoaFisicaPage() {
     e.preventDefault();
 
     try {
+      setSaving(true);
+
       // Validação básica
       if (!formData.nome || !formData.email || !formData.cpf) {
         setDialogMessage('Preencha os campos obrigatórios: Nome, Email e CPF');
@@ -274,13 +343,11 @@ export default function CadastroClientePessoaFisicaPage() {
         return;
       }
 
-      // Preparar dados para inserção
-      const dadosParaInserir = {
+      // Preparar dados para inserção/atualização - apenas campos que existem na tabela
+      const dadosParaSalvar = {
         nome: formData.nome,
-        nome_mae: formData.nomeMae || null,
         rg: formData.rg || null,
         cpf: formData.cpf,
-        numero_beneficio_matricula: formData.numeroBeneficioMatricula || null,
         data_nascimento: formData.dataNascimento || null,
         email: formData.email,
         telefone: formData.telefone || null,
@@ -300,30 +367,58 @@ export default function CadastroClientePessoaFisicaPage() {
         ativo: true,
       };
 
-      // Inserir no banco
-      const { data, error } = await supabase
-        .from('clientes_pessoa_fisica')
-        .insert([dadosParaInserir])
-        .select();
+      let result;
 
-      if (error) {
-        console.error('Erro ao salvar:', error);
-        setDialogMessage(`Erro ao salvar: ${error.message}`);
-        setShowErrorDialog(true);
-        return;
+      if (isEditing && editId) {
+        // Atualizar cliente existente
+        const { data, error } = await supabase
+          .from('pessoas_fisicas')
+          .update({
+            ...dadosParaSalvar,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editId)
+          .select();
+
+        if (error) {
+          console.error('Erro ao atualizar:', error);
+          setDialogMessage(`Erro ao atualizar: ${error.message}`);
+          setShowErrorDialog(true);
+          return;
+        }
+
+        result = data;
+        setDialogMessage('Cliente pessoa física atualizado com sucesso!');
+      } else {
+        // Inserir novo cliente
+        const { data, error } = await supabase
+          .from('pessoas_fisicas')
+          .insert([dadosParaSalvar])
+          .select();
+
+        if (error) {
+          console.error('Erro ao salvar:', error);
+          setDialogMessage(`Erro ao salvar: ${error.message}`);
+          setShowErrorDialog(true);
+          return;
+        }
+
+        result = data;
+        setDialogMessage('Cliente pessoa física cadastrado com sucesso!');
       }
 
-      if (data && data.length > 0) {
-        setDialogMessage('Cliente pessoa física cadastrado com sucesso!');
+      if (result && result.length > 0) {
         setShowSuccessDialog(true);
       } else {
-        setDialogMessage('Erro: Nenhum dado foi retornado da inserção');
+        setDialogMessage('Erro: Nenhum dado foi retornado da operação');
         setShowErrorDialog(true);
       }
     } catch (error) {
       console.error('Erro:', error);
       setDialogMessage('Erro interno do sistema');
       setShowErrorDialog(true);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -470,11 +565,21 @@ export default function CadastroClientePessoaFisicaPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-holding-white">
-                Cadastro de Cliente - Pessoa Física
+                {isEditing
+                  ? 'Editar Cliente - Pessoa Física'
+                  : 'Cadastro de Cliente - Pessoa Física'}
               </h1>
               <p className="text-holding-accent-light mt-2">
-                Preencha os dados para cadastrar um novo cliente pessoa física
+                {isEditing
+                  ? 'Edite os dados do cliente pessoa física selecionado'
+                  : 'Preencha os dados para cadastrar um novo cliente pessoa física'}
               </p>
+              {isEditing && loading && (
+                <div className="flex items-center space-x-2 mt-2 text-holding-blue-light">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-holding-blue-light"></div>
+                  <span>Carregando dados do cliente...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -500,21 +605,6 @@ export default function CadastroClientePessoaFisicaPage() {
                       placeholder="Digite o nome completo"
                       className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
                       required
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <User className="w-4 h-4" />
-                      <span>Nome da Mãe</span>
-                    </Label>
-                    <Input
-                      value={formData.nomeMae}
-                      onChange={e =>
-                        handleInputChange('nomeMae', e.target.value)
-                      }
-                      placeholder="Digite o nome da mãe"
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
                     />
                   </div>
 
@@ -547,24 +637,6 @@ export default function CadastroClientePessoaFisicaPage() {
                         required
                       />
                     </div>
-                  </div>
-
-                  <div>
-                    <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <CreditCard className="w-4 h-4" />
-                      <span>Número do Benefício/Matrícula</span>
-                    </Label>
-                    <Input
-                      value={formData.numeroBeneficioMatricula}
-                      onChange={e =>
-                        handleInputChange(
-                          'numeroBeneficioMatricula',
-                          e.target.value
-                        )
-                      }
-                      placeholder="Digite o número do benefício ou matrícula"
-                      className="mt-1 bg-holding-secondary border-holding-accent/30 text-holding-white placeholder:text-holding-accent-light"
-                    />
                   </div>
 
                   <div>
@@ -867,10 +939,17 @@ export default function CadastroClientePessoaFisicaPage() {
             <div className="mt-6 flex justify-center">
               <Button
                 type="submit"
+                disabled={saving}
                 className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white px-8 py-3"
               >
                 <Save className="w-5 h-5 mr-2" />
-                Cadastrar Cliente
+                {saving
+                  ? isEditing
+                    ? 'Atualizando...'
+                    : 'Cadastrando...'
+                  : isEditing
+                    ? 'Atualizar Cliente'
+                    : 'Cadastrar Cliente'}
               </Button>
             </div>
           </form>
@@ -886,7 +965,11 @@ export default function CadastroClientePessoaFisicaPage() {
                   <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
                     <div className="w-6 h-6 bg-green-500 rounded-full"></div>
                   </div>
-                  <span>Cliente Cadastrado com Sucesso!</span>
+                  <span>
+                    {isEditing
+                      ? 'Cliente Atualizado com Sucesso!'
+                      : 'Cliente Cadastrado com Sucesso!'}
+                  </span>
                 </AlertDialogTitle>
                 <AlertDialogDescription className="text-holding-accent-light">
                   {dialogMessage}
@@ -896,33 +979,35 @@ export default function CadastroClientePessoaFisicaPage() {
                 <AlertDialogAction
                   onClick={() => {
                     setShowSuccessDialog(false);
-                    setFormData({
-                      nome: '',
-                      nomeMae: '',
-                      rg: '',
-                      cpf: '',
-                      numeroBeneficioMatricula: '',
-                      dataNascimento: '',
-                      email: '',
-                      telefone: '',
-                      cep: '',
-                      endereco: '',
-                      numero: '',
-                      complemento: '',
-                      bairro: '',
-                      cidade: '',
-                      estado: '',
-                      bancoId: '',
-                      agencia: '',
-                      contaDigito: '',
-                      tipoConta: 'Corrente',
-                      tipoPix: 'CPF',
-                      chavePix: '',
-                    });
+                    if (isEditing) {
+                      router.push('/clientes');
+                    } else {
+                      setFormData({
+                        nome: '',
+                        rg: '',
+                        cpf: '',
+                        dataNascimento: '',
+                        email: '',
+                        telefone: '',
+                        cep: '',
+                        endereco: '',
+                        numero: '',
+                        complemento: '',
+                        bairro: '',
+                        cidade: '',
+                        estado: '',
+                        bancoId: '',
+                        agencia: '',
+                        contaDigito: '',
+                        tipoConta: 'Corrente',
+                        tipoPix: 'CPF',
+                        chavePix: '',
+                      });
+                    }
                   }}
                   className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white"
                 >
-                  Cadastrar Novo Cliente
+                  {isEditing ? 'Voltar aos Clientes' : 'Cadastrar Novo Cliente'}
                 </AlertDialogAction>
                 <AlertDialogAction
                   onClick={() => {

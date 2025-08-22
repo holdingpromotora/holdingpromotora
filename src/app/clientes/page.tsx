@@ -31,6 +31,9 @@ import {
   FileSpreadsheet,
   Building2,
   User,
+  XCircle,
+  Calendar,
+  Pencil,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -40,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 interface Cliente {
   id: string; // Mudado de number para string para aceitar prefixos pf_ e pj_
@@ -73,21 +77,25 @@ export default function ClientesPage() {
       // Buscar pessoas físicas
       const { data: pfData, error: pfError } = await supabase
         .from('pessoas_fisicas')
-        .select('*')
+        .select(
+          'id, nome, cpf, email, telefone, endereco, cidade, estado, ativo, created_at'
+        )
         .eq('ativo', true);
 
       if (pfError) {
-        console.error('Erro ao carregar pessoas físicas:', pfError);
+        console.error('❌ Erro ao carregar pessoas físicas:', pfError);
       }
 
       // Buscar pessoas jurídicas
       const { data: pjData, error: pjError } = await supabase
         .from('pessoas_juridicas')
-        .select('*')
+        .select(
+          'id, razao_social, cnpj, proprietario_email, proprietario_telefone, endereco, cidade, estado, ativo, created_at'
+        )
         .eq('ativo', true);
 
       if (pjError) {
-        console.error('Erro ao carregar pessoas jurídicas:', pjError);
+        console.error('❌ Erro ao carregar pessoas jurídicas:', pjError);
       }
 
       // Combinar e formatar dados
@@ -110,8 +118,8 @@ export default function ClientesPage() {
         nome: cliente.razao_social,
         tipo: 'PJ' as const,
         documento: cliente.cnpj,
-        email: cliente.email,
-        telefone: cliente.telefone || '',
+        email: cliente.proprietario_email,
+        telefone: cliente.proprietario_telefone || '',
         endereco: cliente.endereco || '',
         cidade: cliente.cidade || '',
         estado: cliente.estado || '',
@@ -119,9 +127,10 @@ export default function ClientesPage() {
         dataCadastro: cliente.created_at || new Date().toISOString(),
       }));
 
-      setClientes([...clientesPF, ...clientesPJ]);
+      const todosClientes = [...clientesPF, ...clientesPJ];
+      setClientes(todosClientes);
     } catch (error) {
-      console.error('Erro ao carregar clientes:', error);
+      console.error('❌ Erro geral ao carregar clientes:', error);
     } finally {
       setLoading(false);
     }
@@ -169,6 +178,18 @@ export default function ClientesPage() {
         <span className="holding-badge holding-badge-warning">
           Pessoa Jurídica
         </span>
+      );
+    }
+  };
+
+  const handleEditarCliente = (cliente: Cliente) => {
+    if (cliente.tipo === 'PF') {
+      router.push(
+        `/clientes/cadastro-pf?edit=${cliente.id.replace('pf_', '')}`
+      );
+    } else {
+      router.push(
+        `/clientes/cadastro-pj?edit=${cliente.id.replace('pj_', '')}`
       );
     }
   };
@@ -316,22 +337,6 @@ export default function ClientesPage() {
                 Cadastro, edição e controle de clientes do sistema
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
-              <Button
-                onClick={() => router.push('/clientes/cadastro-pf')}
-                className="holding-btn-primary w-full sm:w-auto"
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
-                Novo Cliente PF
-              </Button>
-              <Button
-                onClick={() => router.push('/clientes/cadastro-pj')}
-                className="holding-btn-primary w-full sm:w-auto"
-              >
-                <Building2 className="w-4 h-4 mr-2" />
-                Novo Cliente PJ
-              </Button>
-            </div>
           </div>
         </div>
 
@@ -342,14 +347,14 @@ export default function ClientesPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mobile-stacked-buttons">
               <Button
                 onClick={() => router.push('/clientes/cadastro-pf')}
-                className="holding-btn-primary w-full sm:w-auto mobile-action-button"
+                className="holding-btn-primary w-full sm:w-auto mobile-action-button rounded-xl"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
                 Novo Cliente PF
               </Button>
               <Button
                 onClick={() => router.push('/clientes/cadastro-pj')}
-                className="holding-btn-primary w-full sm:w-auto mobile-action-button"
+                className="holding-btn-primary w-full sm:w-auto mobile-action-button rounded-xl"
               >
                 <Building2 className="w-4 h-4 mr-2" />
                 Novo Cliente PJ
@@ -394,38 +399,70 @@ export default function ClientesPage() {
           </div>
 
           {/* Estatísticas */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="holding-card stats-card">
-              <div className="stats-card-icon">
-                <Users className="w-8 h-8 text-holding-blue-light" />
-              </div>
-              <div className="stats-card-text">
-                <div className="text-2xl font-bold text-holding-white">
-                  {totalClientes}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-gradient-to-br from-holding-blue-profound/80 to-holding-blue-profound/60 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/20 group overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-holding-blue-light/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="p-6 relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-2xl flex items-center justify-center">
+                    <Users className="w-8 h-8 text-holding-blue-light" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-holding-white mb-1">
+                      {totalClientes}
+                    </div>
+                    <div className="text-holding-blue-light/80 text-sm font-medium">
+                      Total
+                    </div>
+                  </div>
                 </div>
-                <div className="text-holding-blue-light">Total de Clientes</div>
+                <div className="text-holding-blue-light text-lg font-semibold">
+                  Total de Clientes
+                </div>
               </div>
             </Card>
-            <Card className="holding-card stats-card">
-              <div className="stats-card-icon">
-                <User className="w-8 h-8 text-holding-blue-light" />
-              </div>
-              <div className="stats-card-text">
-                <div className="text-2xl font-bold text-holding-white">
-                  {clientesPF}
+
+            <Card className="bg-gradient-to-br from-holding-blue-profound/80 to-holding-blue-profound/60 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/20 group overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-holding-blue-light/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="p-6 relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 rounded-2xl flex items-center justify-center">
+                    <User className="w-8 h-8 text-emerald-400" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-holding-white mb-1">
+                      {clientesPF}
+                    </div>
+                    <div className="text-emerald-400/80 text-sm font-medium">
+                      PF
+                    </div>
+                  </div>
                 </div>
-                <div className="text-holding-blue-light">Pessoas Físicas</div>
+                <div className="text-holding-blue-light text-lg font-semibold">
+                  Pessoas Físicas
+                </div>
               </div>
             </Card>
-            <Card className="holding-card stats-card">
-              <div className="stats-card-icon">
-                <Building2 className="w-8 h-8 text-holding-blue-light" />
-              </div>
-              <div className="stats-card-text">
-                <div className="text-2xl font-bold text-holding-white">
-                  {clientesPJ}
+
+            <Card className="bg-gradient-to-br from-holding-blue-profound/80 to-holding-blue-profound/60 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/20 group overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-holding-blue-light/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="p-6 relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-purple-500/10 rounded-2xl flex items-center justify-center">
+                    <Building2 className="w-8 h-8 text-purple-400" />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-3xl font-bold text-holding-white mb-1">
+                      {clientesPJ}
+                    </div>
+                    <div className="text-purple-400/80 text-sm font-medium">
+                      PJ
+                    </div>
+                  </div>
                 </div>
-                <div className="text-holding-blue-light">Pessoas Jurídicas</div>
+                <div className="text-holding-blue-light text-lg font-semibold">
+                  Pessoas Jurídicas
+                </div>
               </div>
             </Card>
           </div>
@@ -433,115 +470,151 @@ export default function ClientesPage() {
 
         {/* Lista de Clientes */}
         <Card className="holding-card">
-          <CardHeader>
-            <CardTitle className="text-holding-white flex items-center space-x-2">
-              <Building className="w-5 h-5 text-holding-blue-light" />
-              <span>Lista de Clientes</span>
-              <span className="text-holding-blue-light text-sm font-normal">
-                ({filteredClientes.length} cliente
-                {filteredClientes.length !== 1 ? 's' : ''})
-              </span>
-            </CardTitle>
+          <CardHeader className="p-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-holding-white flex items-center space-x-3">
+                <div className="w-6 h-6 text-holding-blue-light">
+                  <Users size={24} />
+                </div>
+                <span>
+                  Lista de Clientes ({filteredClientes.length} clientes)
+                </span>
+              </h3>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="holding-table">
-                <thead>
-                  <tr>
-                    <th>Nome/Razão Social</th>
-                    <th>Tipo</th>
-                    <th>Documento</th>
-                    <th>Email</th>
-                    <th>Telefone</th>
-                    <th>Endereço</th>
-                    <th>Status</th>
-                    <th>Data de Cadastro</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan={9} className="text-center py-8">
-                        <RefreshCw className="w-8 h-8 text-holding-blue-light animate-spin mx-auto" />
-                        <p className="text-holding-blue-light text-lg mt-2">
-                          Carregando clientes...
-                        </p>
-                      </td>
-                    </tr>
-                  ) : filteredClientes.length === 0 ? (
-                    <tr>
-                      <td colSpan={9} className="text-center py-8">
-                        <Building className="w-16 h-16 text-holding-blue-light/50 mx-auto mb-4" />
-                        <p className="text-holding-blue-light text-lg mb-2">
-                          Nenhum cliente encontrado
-                        </p>
-                        <p className="text-holding-blue-light/70 text-sm">
-                          Tente ajustar os filtros de busca
-                        </p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredClientes.map(cliente => (
-                      <tr
-                        key={cliente.id}
-                        className="hover:bg-holding-blue-light/5 transition-colors"
-                      >
-                        <td className="font-medium text-holding-white">
-                          {cliente.nome}
-                        </td>
-                        <td>{getTipoBadge(cliente.tipo)}</td>
-                        <td className="text-holding-blue-light">
-                          {cliente.documento}
-                        </td>
-                        <td className="text-holding-blue-light">
-                          {cliente.email}
-                        </td>
-                        <td className="text-holding-blue-light">
-                          {cliente.telefone}
-                        </td>
-                        <td className="text-holding-blue-light">
-                          {cliente.endereco}, {cliente.cidade}/{cliente.estado}
-                        </td>
-                        <td>{getStatusBadge(cliente.status)}</td>
-                        <td className="text-holding-blue-light">
-                          {new Date(cliente.dataCadastro).toLocaleDateString(
-                            'pt-BR'
-                          )}
-                        </td>
-                        <td>
-                          <div className="flex items-center space-x-2 md:space-x-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-10 h-10 md:w-8 md:h-8 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 transition-all duration-200"
-                              title="Visualizar"
-                            >
-                              <Eye className="w-5 h-5 md:w-4 md:h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-10 h-10 md:w-8 md:h-8 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 transition-all duration-200"
-                              title="Editar"
-                            >
-                              <Edit className="w-5 h-5 md:w-4 md:h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-10 h-10 md:w-8 md:h-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-all duration-200"
-                              title="Excluir"
-                            >
-                              <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
-                            </Button>
+          <CardContent className="p-0">
+            <div className="p-6">
+              {loading ? (
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 bg-holding-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="text-holding-blue-light animate-spin">
+                      <RefreshCw size={40} />
+                    </div>
+                  </div>
+                  <p className="text-holding-blue-light text-lg font-medium mb-2">
+                    Carregando clientes...
+                  </p>
+                  <p className="text-holding-blue-light/70 text-sm">
+                    Aguarde um momento.
+                  </p>
+                </div>
+              ) : filteredClientes.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 bg-holding-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="text-holding-blue-light">
+                      <XCircle size={40} />
+                    </div>
+                  </div>
+                  <p className="text-holding-blue-light text-lg font-medium mb-2">
+                    Nenhum cliente encontrado
+                  </p>
+                  <p className="text-holding-blue-light/70 text-sm">
+                    Tente ajustar os filtros de busca
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+                  {filteredClientes.map(cliente => (
+                    <Card
+                      key={cliente.id}
+                      className="bg-gradient-to-br from-holding-blue-profound/70 to-holding-blue-profound/50 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/15 group overflow-hidden relative"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-holding-blue-light/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="p-5 relative z-10">
+                        {/* Header do Card */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/25 to-holding-blue-light/15 rounded-xl flex items-center justify-center">
+                            {cliente.tipo === 'PF' ? (
+                              <User className="w-6 h-6 text-holding-blue-light" />
+                            ) : (
+                              <Building2 className="w-6 h-6 text-holding-blue-light" />
+                            )}
                           </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                          <div className="flex flex-col gap-2 items-end">
+                            <Badge
+                              variant="secondary"
+                              className={`px-3 py-1 text-xs font-medium rounded-full ${
+                                cliente.tipo === 'PF'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                  : 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                              }`}
+                            >
+                              {cliente.tipo === 'PF'
+                                ? 'Pessoa Física'
+                                : 'Pessoa Jurídica'}
+                            </Badge>
+                            <Badge
+                              variant="secondary"
+                              className="px-3 py-1 text-xs font-medium rounded-full bg-green-500/20 text-green-400 border-green-500/30"
+                            >
+                              Ativo
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {/* Informações do Cliente */}
+                        <div className="space-y-3">
+                          <div>
+                            <h4 className="font-semibold text-holding-white text-base mb-1 line-clamp-2 leading-tight">
+                              {cliente.nome}
+                            </h4>
+                            <p className="text-holding-blue-light/80 text-sm line-clamp-1">
+                              {cliente.email}
+                            </p>
+                          </div>
+
+                          {/* Detalhes do Cliente */}
+                          <div className="space-y-2.5">
+                            <div className="flex items-center gap-2.5">
+                              <FileText className="w-4 h-4 text-holding-blue-light/60" />
+                              <span className="text-holding-blue-light/90 text-sm">
+                                Doc: {cliente.documento}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                              <Phone className="w-4 h-4 text-holding-blue-light/60" />
+                              <span className="text-holding-blue-light/90 text-sm">
+                                Tel: {cliente.telefone}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                              <MapPin className="w-4 h-4 text-holding-blue-light/60" />
+                              <span className="text-holding-blue-light/90 text-sm">
+                                Local: {cliente.cidade}/{cliente.estado}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                              <Calendar className="w-4 h-4 text-holding-blue-light/60" />
+                              <span className="text-holding-blue-light/90 text-sm">
+                                Cadastro:{' '}
+                                {new Date(
+                                  cliente.dataCadastro
+                                ).toLocaleDateString('pt-BR')}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Ações */}
+                        <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-holding-blue-light/20">
+                          <button className="p-2 text-holding-blue-light/70 hover:text-holding-blue-light hover:bg-holding-blue-light/10 rounded-lg transition-colors duration-200">
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEditarCliente(cliente)}
+                            className="p-2 text-holding-blue-light/70 hover:text-holding-blue-light hover:bg-holding-blue-light/10 rounded-lg transition-colors duration-200"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button className="p-2 text-holding-blue-light/70 hover:text-holding-blue-light hover:bg-holding-blue-light/10 rounded-lg transition-colors duration-200">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

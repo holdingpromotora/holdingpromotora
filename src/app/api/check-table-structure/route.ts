@@ -3,79 +3,113 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    console.log('🔄 Verificando estrutura da tabela usuarios...');
+    console.log('🔍 Verificando estrutura das tabelas...');
 
-    // Verificar se a tabela existe e sua estrutura
-    const { data: tableInfo, error: tableError } = await supabase
-      .from('usuarios')
-      .select('*')
-      .limit(0);
-
-    if (tableError) {
-      console.error('❌ Erro ao verificar tabela usuarios:', tableError);
-      return NextResponse.json(
-        {
-          success: false,
-          error: tableError.message,
-          details: tableError,
-        },
-        { status: 500 }
-      );
-    }
-
-    // Tentar buscar um usuário específico para ver a estrutura
-    const { data: sampleUser, error: sampleError } = await supabase
-      .from('usuarios')
+    // Verificar estrutura da tabela pessoas_fisicas
+    console.log('📋 Verificando pessoas_fisicas...');
+    const { data: pfStructure, error: pfStructureError } = await supabase
+      .from('pessoas_fisicas')
       .select('*')
       .limit(1);
 
-    if (sampleError) {
-      console.error('❌ Erro ao buscar usuário de exemplo:', sampleError);
+    if (pfStructureError) {
+      console.error('❌ Erro ao verificar estrutura PF:', pfStructureError);
       return NextResponse.json(
         {
           success: false,
-          error: sampleError.message,
-          details: sampleError,
+          error: 'Erro na tabela pessoas_fisicas',
+          details: pfStructureError,
+          table: 'pessoas_fisicas',
         },
         { status: 500 }
       );
     }
 
-    // Verificar se as colunas necessárias existem
-    const requiredColumns = [
-      'id',
-      'nome',
-      'email',
-      'tipo_acesso_id',
-      'perfil_nome',
-      'ativo',
-    ];
-    const availableColumns =
-      sampleUser && sampleUser.length > 0 ? Object.keys(sampleUser[0]) : [];
+    // Verificar estrutura da tabela pessoas_juridicas
+    console.log('📋 Verificando pessoas_juridicas...');
+    const { data: pjStructure, error: pjStructureError } = await supabase
+      .from('pessoas_juridicas')
+      .select('*')
+      .limit(1);
 
-    const missingColumns = requiredColumns.filter(
-      col => !availableColumns.includes(col)
-    );
+    if (pjStructureError) {
+      console.error('❌ Erro ao verificar estrutura PJ:', pjStructureError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Erro na tabela pessoas_juridicas',
+          details: pjStructureError,
+          table: 'pessoas_juridicas',
+        },
+        { status: 500 }
+      );
+    }
 
-    console.log('📊 Colunas disponíveis:', availableColumns);
-    console.log('❌ Colunas faltando:', missingColumns);
+    // Verificar se há dados nas tabelas
+    console.log('🔍 Verificando dados nas tabelas...');
+
+    const { count: pfCount, error: pfCountError } = await supabase
+      .from('pessoas_fisicas')
+      .select('*', { count: 'exact', head: true });
+
+    if (pfCountError) {
+      console.error('❌ Erro ao contar PF:', pfCountError);
+    }
+
+    const { count: pjCount, error: pjCountError } = await supabase
+      .from('pessoas_juridicas')
+      .select('*', { count: 'exact', head: true });
+
+    if (pjCountError) {
+      console.error('❌ Erro ao contar PJ:', pjCountError);
+    }
+
+    // Verificar campos específicos
+    console.log('🔍 Verificando campos específicos...');
+
+    const { data: pfSample, error: pfSampleError } = await supabase
+      .from('pessoas_fisicas')
+      .select(
+        'id, nome, cpf, email, telefone, endereco, cidade, estado, ativo, created_at'
+      )
+      .limit(1);
+
+    const { data: pjSample, error: pjSampleError } = await supabase
+      .from('pessoas_juridicas')
+      .select(
+        'id, razao_social, cnpj, proprietario_email, proprietario_telefone, endereco, cidade, estado, ativo, created_at'
+      )
+      .limit(1);
+
+    console.log('✅ Estrutura das tabelas verificada!');
+    console.log(`📊 PF encontrados: ${pfCount || 0}`);
+    console.log(`📊 PJ encontrados: ${pjCount || 0}`);
 
     return NextResponse.json({
       success: true,
-      message: 'Estrutura da tabela verificada',
-      tableExists: true,
-      availableColumns,
-      missingColumns,
-      sampleUser: sampleUser?.[0] || null,
-      requiredColumns,
+      message: 'Estrutura das tabelas verificada com sucesso!',
+      data: {
+        pessoas_fisicas: {
+          count: pfCount || 0,
+          structure: pfStructure?.length > 0 ? Object.keys(pfStructure[0]) : [],
+          sample: pfSample?.[0] || null,
+          error: pfStructureError || pfCountError || pfSampleError,
+        },
+        pessoas_juridicas: {
+          count: pjCount || 0,
+          structure: pjStructure?.length > 0 ? Object.keys(pjStructure[0]) : [],
+          sample: pjSample?.[0] || null,
+          error: pjStructureError || pjCountError || pjSampleError,
+        },
+      },
     });
   } catch (error) {
-    console.error('❌ Erro inesperado:', error);
+    console.error('❌ Erro geral na verificação:', error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Erro inesperado ao verificar estrutura da tabela',
-        details: error,
+        error: 'Erro interno do servidor',
+        details: error instanceof Error ? error.message : 'Erro desconhecido',
       },
       { status: 500 }
     );

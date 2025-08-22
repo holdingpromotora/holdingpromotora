@@ -31,28 +31,7 @@
   }
   
   /* ===== CARDS COM ÍCONES À ESQUERDA ===== */
-  
-  /* Cards de estatísticas */
-  .stats-card {
-    display: flex !important;
-    align-items: center !important;
-    text-align: left !important;
-    padding: 1rem !important;
-  }
-  
-  /* Ícones nos cards */
-  .stats-card-icon {
-    margin-right: 0.75rem !important;
-    margin-left: 0 !important;
-    flex-shrink: 0 !important;
-  }
-  
-  /* Texto dos cards */
-  .stats-card-text {
-    text-align: left !important;
-    margin-left: 0 !important;
-  }
-  
+
   /* ===== TÍTULOS HARMÔNICOS ===== */
   
   /* Títulos principais */

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -59,7 +59,10 @@ interface DadosReceita {
 }
 
 export default function CadastroClientePessoaJuridicaPage() {
-  console.log('🚀 Componente CadastroClientePessoaJuridicaPage renderizado');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('edit');
+  const isEditing = !!editId;
 
   const [formData, setFormData] = useState({
     cnpj: '',
@@ -86,21 +89,23 @@ export default function CadastroClientePessoaJuridicaPage() {
     chavePix: '',
   });
 
-  console.log('📋 Estado inicial do formulário:', formData);
+  // Log do estado inicial
+  useEffect(() => {
+    console.log('🚀 Estado inicial do formulário PJ:', formData);
+  }, []);
 
   const [bancos, setBancos] = useState<Banco[]>([]);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState('');
   const [isLoadingCNPJ, setIsLoadingCNPJ] = useState(false);
-  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Carregar bancos do Supabase
   useEffect(() => {
     const carregarBancos = async () => {
       try {
-        console.log('🔍 Carregando bancos do Supabase...');
-
         const { data: bancosData, error } = await supabase
           .from('bancos')
           .select('*')
@@ -120,11 +125,10 @@ export default function CadastroClientePessoaJuridicaPage() {
           ];
           setBancos(bancosMock);
         } else {
-          console.log('✅ Bancos carregados com sucesso:', bancosData);
           setBancos(bancosData || []);
         }
       } catch (error) {
-        console.error('❌ Erro inesperado ao carregar bancos:', error);
+        console.error('Erro inesperado ao carregar bancos:', error);
         const bancosMock = [
           { id: 1, codigo: '001', nome: 'Banco do Brasil' },
           { id: 2, codigo: '104', nome: 'Caixa Econômica Federal' },
@@ -140,6 +144,107 @@ export default function CadastroClientePessoaJuridicaPage() {
 
     carregarBancos();
   }, []);
+
+  // Carregar dados do cliente se for edição
+  useEffect(() => {
+    console.log('🔄 useEffect executado para edição');
+    console.log('🆔 editId:', editId);
+    console.log('📝 isEditing:', isEditing);
+
+    const carregarClienteParaEdicao = async () => {
+      if (!editId) {
+        console.log('❌ editId não encontrado, saindo...');
+        return;
+      }
+
+      try {
+        setLoading(true);
+        console.log('🔄 Carregando cliente PJ para edição, ID:', editId);
+
+        const { data, error } = await supabase
+          .from('pessoas_juridicas')
+          .select('*')
+          .eq('id', editId)
+          .single();
+
+        if (error) {
+          console.error('❌ Erro ao carregar cliente para edição:', error);
+          return;
+        }
+
+        console.log('✅ Dados carregados:', data);
+
+        // Preencher formulário com dados existentes - mapeamento corrigido
+        const novosDados = {
+          cnpj: data.cnpj || '',
+          razaoSocial: data.razao_social || '',
+          nomeFantasia: data.nome_fantasia || '',
+          cep: data.cep || '',
+          endereco: data.endereco || '',
+          numero: data.numero || '',
+          complemento: data.complemento || '',
+          bairro: data.bairro || '',
+          cidade: data.cidade || '',
+          estado: data.estado || '',
+          representanteNome: data.proprietario_nome || '',
+          representanteRg: data.proprietario_rg || '',
+          representanteCpf: data.proprietario_cpf || '',
+          representanteDataNascimento: data.proprietario_data_nascimento || '',
+          representanteEmail: data.proprietario_email || '',
+          representanteTelefone: data.proprietario_telefone || '',
+          bancoId: data.banco_id?.toString() || '',
+          agencia: data.agencia || '',
+          contaDigito: data.conta_digito || '',
+          tipoConta: data.tipo_conta || 'Corrente',
+          tipoPix: data.tipo_pix || 'CNPJ',
+          chavePix: data.chave_pix || '',
+        };
+
+        console.log('📝 Novos dados para o formulário:', novosDados);
+        console.log('🔍 Verificando campos específicos:');
+        console.log('  - CNPJ:', novosDados.cnpj);
+        console.log('  - Razão Social:', novosDados.razaoSocial);
+        console.log('  - Nome Fantasia:', novosDados.nomeFantasia);
+        console.log('  - CEP:', novosDados.cep);
+        console.log('  - Endereço:', novosDados.endereco);
+        console.log('  - Cidade:', novosDados.cidade);
+        console.log('  - Estado:', novosDados.estado);
+        console.log('  - Representante Nome:', novosDados.representanteNome);
+        console.log('  - Representante Email:', novosDados.representanteEmail);
+        console.log('  - Banco ID:', novosDados.bancoId);
+
+        setFormData(novosDados);
+        console.log('✅ Formulário preenchido com dados');
+
+        // Verificar se o estado foi atualizado
+        setTimeout(() => {
+          console.log('⏰ Estado após setFormData (timeout):', formData);
+        }, 100);
+      } catch (error) {
+        console.error('❌ Erro ao carregar cliente para edição:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    carregarClienteParaEdicao();
+  }, [editId]);
+
+  // Log do estado do formulário quando mudar
+  useEffect(() => {
+    console.log('📋 Estado atual do formulário PJ:', formData);
+    console.log('🔍 Campos específicos:');
+    console.log('  - CNPJ:', formData.cnpj);
+    console.log('  - Razão Social:', formData.razaoSocial);
+    console.log('  - Nome Fantasia:', formData.nomeFantasia);
+    console.log('  - CEP:', formData.cep);
+    console.log('  - Endereço:', formData.endereco);
+    console.log('  - Cidade:', formData.cidade);
+    console.log('  - Estado:', formData.estado);
+    console.log('  - Representante Nome:', formData.representanteNome);
+    console.log('  - Representante Email:', formData.representanteEmail);
+    console.log('  - Banco ID:', formData.bancoId);
+  }, [formData]);
 
   // Função para aplicar máscara no CNPJ
   const aplicarMascaraCNPJ = (valor: string) => {
@@ -319,11 +424,11 @@ export default function CadastroClientePessoaJuridicaPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('📝 Iniciando submissão do formulário...');
-    console.log('📋 Dados do formulário:', formData);
 
     try {
-      const dadosParaInserir = {
+      setSaving(true);
+
+      const dadosParaSalvar = {
         cnpj: formData.cnpj.replace(/\D/g, ''),
         razao_social: formData.razaoSocial,
         nome_fantasia: formData.nomeFantasia,
@@ -334,13 +439,16 @@ export default function CadastroClientePessoaJuridicaPage() {
         bairro: formData.bairro,
         cidade: formData.cidade,
         estado: formData.estado,
-        representante_nome: formData.representanteNome,
-        representante_rg: formData.representanteRg.replace(/\D/g, ''),
-        representante_cpf: formData.representanteCpf.replace(/\D/g, ''),
-        representante_data_nascimento: formData.representanteDataNascimento,
-        email: formData.representanteEmail,
-        telefone: formData.representanteTelefone.replace(/\D/g, ''),
-        banco_id: parseInt(formData.bancoId),
+        proprietario_nome: formData.representanteNome,
+        proprietario_rg: formData.representanteRg.replace(/\D/g, ''),
+        proprietario_cpf: formData.representanteCpf.replace(/\D/g, ''),
+        proprietario_data_nascimento: formData.representanteDataNascimento,
+        proprietario_email: formData.representanteEmail,
+        proprietario_telefone: formData.representanteTelefone.replace(
+          /\D/g,
+          ''
+        ),
+        banco_id: formData.bancoId ? parseInt(formData.bancoId) : null,
         agencia: formData.agencia,
         conta_digito: formData.contaDigito,
         tipo_conta: formData.tipoConta,
@@ -348,29 +456,60 @@ export default function CadastroClientePessoaJuridicaPage() {
         chave_pix: formData.chavePix,
       };
 
-      console.log('📤 Enviando dados para o Supabase:', dadosParaInserir);
+      let result;
 
-      const { data, error } = await supabase
-        .from('clientes_pessoa_juridica')
-        .insert([dadosParaInserir])
-        .select();
+      if (isEditing && editId) {
+        // Atualizar cliente existente
+        const { data, error } = await supabase
+          .from('pessoas_juridicas')
+          .update({
+            ...dadosParaSalvar,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editId)
+          .select();
 
-      if (error) {
-        console.error('❌ Erro ao salvar no Supabase:', error);
-        setDialogMessage(`Erro ao cadastrar cliente: ${error.message}`);
-        setShowErrorDialog(true);
-        return;
+        if (error) {
+          console.error('Erro ao atualizar:', error);
+          setDialogMessage(`Erro ao atualizar cliente: ${error.message}`);
+          setShowErrorDialog(true);
+          return;
+        }
+
+        result = data;
+        setDialogMessage('Cliente Pessoa Jurídica atualizado com sucesso!');
+      } else {
+        // Inserir novo cliente
+        const { data, error } = await supabase
+          .from('pessoas_juridicas')
+          .insert([dadosParaSalvar])
+          .select();
+
+        if (error) {
+          console.error('Erro ao salvar:', error);
+          setDialogMessage(`Erro ao cadastrar cliente: ${error.message}`);
+          setShowErrorDialog(true);
+          return;
+        }
+
+        result = data;
+        setDialogMessage('Cliente Pessoa Jurídica cadastrado com sucesso!');
       }
 
-      console.log('✅ Cliente cadastrado com sucesso:', data);
-      setDialogMessage('Cliente Pessoa Jurídica cadastrado com sucesso!');
-      setShowSuccessDialog(true);
+      if (result && result.length > 0) {
+        setShowSuccessDialog(true);
+      } else {
+        setDialogMessage('Erro: Nenhum dado foi retornado da operação');
+        setShowErrorDialog(true);
+      }
     } catch (error) {
-      console.error('❌ Erro inesperado:', error);
+      console.error('Erro inesperado:', error);
       setDialogMessage(
-        'Erro inesperado ao cadastrar cliente. Tente novamente.'
+        'Erro inesperado ao processar cliente. Tente novamente.'
       );
       setShowErrorDialog(true);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -546,11 +685,21 @@ export default function CadastroClientePessoaJuridicaPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-holding-white">
-                Cadastro de Cliente - Pessoa Jurídica
+                {isEditing
+                  ? 'Editar Cliente - Pessoa Jurídica'
+                  : 'Cadastro de Cliente - Pessoa Jurídica'}
               </h1>
               <p className="text-holding-accent-light mt-2">
-                Preencha os dados para cadastrar um novo cliente pessoa jurídica
+                {isEditing
+                  ? 'Edite os dados do cliente pessoa jurídica selecionado'
+                  : 'Preencha os dados para cadastrar um novo cliente pessoa jurídica'}
               </p>
+              {isEditing && loading && (
+                <div className="flex items-center space-x-2 mt-2 text-holding-blue-light">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-holding-blue-light"></div>
+                  <span>Carregando dados do cliente...</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -990,10 +1139,16 @@ export default function CadastroClientePessoaJuridicaPage() {
               <Button
                 type="submit"
                 className="holding-btn-primary"
-                disabled={isLoadingCNPJ}
+                disabled={isLoadingCNPJ || saving}
               >
                 <Save className="w-4 h-4 mr-2" />
-                {isLoadingCNPJ ? 'Salvando...' : 'Salvar Cliente'}
+                {saving
+                  ? isEditing
+                    ? 'Atualizando...'
+                    : 'Salvando...'
+                  : isEditing
+                    ? 'Atualizar Cliente'
+                    : 'Salvar Cliente'}
               </Button>
             </div>
           </form>
@@ -1004,12 +1159,23 @@ export default function CadastroClientePessoaJuridicaPage() {
       <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Sucesso!</AlertDialogTitle>
+            <AlertDialogTitle>
+              {isEditing ? 'Cliente Atualizado!' : 'Sucesso!'}
+            </AlertDialogTitle>
             <AlertDialogDescription>{dialogMessage}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={handleSuccessClose}>
-              OK
+            <AlertDialogAction
+              onClick={() => {
+                setShowSuccessDialog(false);
+                if (isEditing) {
+                  router.push('/clientes');
+                } else {
+                  handleSuccessClose();
+                }
+              }}
+            >
+              {isEditing ? 'Voltar aos Clientes' : 'OK'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

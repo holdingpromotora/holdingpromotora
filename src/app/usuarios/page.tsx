@@ -387,44 +387,44 @@ export default function UsuariosPage() {
       >
         {/* Header */}
         <div className="holding-fade-in">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h1 className="text-4xl font-bold text-holding-white mb-4">
-                Gerenciamento de Usuários
-              </h1>
-              <p className="text-xl text-holding-blue-light">
-                Usuários aprovados e ativos com acesso ao aplicativo
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-              <Button
-                onClick={() => router.push('/usuarios/aprovacao')}
-                className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
-              >
-                <div className="w-4 h-4 mr-2">
-                  <UserCheck size={16} />
-                </div>
-                Aprovação
-              </Button>
-              <Button
-                onClick={() => router.push('/usuarios/niveis-acesso')}
-                className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
-              >
-                <div className="w-4 h-4 mr-2">
-                  <Shield size={16} />
-                </div>
-                Níveis de Acesso
-              </Button>
-              <Button
-                onClick={() => setShowTipoUsuarioDialog(true)}
-                className="holding-btn-primary w-full sm:w-auto"
-              >
-                <div className="w-4 h-4 mr-2">
-                  <UserPlus size={16} />
-                </div>
-                Novo Usuário
-              </Button>
-            </div>
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-holding-white mb-4">
+              Gerenciamento de Usuários
+            </h1>
+            <p className="text-xl text-holding-blue-light mb-6">
+              Usuários aprovados e ativos com acesso ao aplicativo
+            </p>
+          </div>
+
+          {/* Botões de Ação - ABAIXO do subtítulo */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-8">
+            <Button
+              onClick={() => router.push('/usuarios/aprovacao')}
+              className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto rounded-xl"
+            >
+              <div className="w-4 h-4 mr-2">
+                <UserCheck size={16} />
+              </div>
+              Aprovação
+            </Button>
+            <Button
+              onClick={() => router.push('/usuarios/niveis-acesso')}
+              className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto rounded-xl"
+            >
+              <div className="w-4 h-4 mr-2">
+                <Shield size={16} />
+              </div>
+              Níveis de Acesso
+            </Button>
+            <Button
+              onClick={() => setShowTipoUsuarioDialog(true)}
+              className="holding-btn-primary w-full sm:w-auto rounded-xl"
+            >
+              <div className="w-4 h-4 mr-2">
+                <UserPlus size={16} />
+              </div>
+              Novo Usuário
+            </Button>
           </div>
         </div>
 
@@ -461,38 +461,70 @@ export default function UsuariosPage() {
         </div>
 
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="holding-card stats-card">
-            <div className="stats-card-icon">
-              <Users className="w-8 h-8 text-holding-blue-light" />
-            </div>
-            <div className="stats-card-text">
-              <div className="text-2xl font-bold text-holding-white">
-                {usuarios.length}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="bg-gradient-to-br from-holding-blue-profound/80 to-holding-blue-profound/60 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/20 group overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-holding-blue-light/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="p-6 relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-holding-blue-light/25 to-holding-blue-light/15 rounded-2xl flex items-center justify-center">
+                  <Users className="w-8 h-8 text-holding-blue-light" />
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-bold text-holding-white mb-1">
+                    {usuarios.length}
+                  </div>
+                  <div className="text-holding-blue-light/80 text-sm font-medium">
+                    Total
+                  </div>
+                </div>
               </div>
-              <div className="text-holding-blue-light">Total de Usuários</div>
+              <div className="text-holding-blue-light text-lg font-semibold">
+                Total de Usuários
+              </div>
             </div>
           </Card>
-          <Card className="holding-card stats-card">
-            <div className="stats-card-icon">
-              <Shield className="w-8 h-8 text-holding-blue-light" />
-            </div>
-            <div className="stats-card-text">
-              <div className="text-2xl font-bold text-holding-white">
-                {usuarios.filter(u => u.status === 'Ativo').length}
+
+          <Card className="bg-gradient-to-br from-holding-blue-profound/80 to-holding-blue-profound/60 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/20 group overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="p-6 relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-emerald-500/25 to-emerald-500/15 rounded-2xl flex items-center justify-center">
+                  <Shield className="w-8 h-8 text-emerald-400" />
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-bold text-holding-white mb-1">
+                    {usuarios.filter(u => u.status === 'Ativo').length}
+                  </div>
+                  <div className="text-emerald-400/80 text-sm font-medium">
+                    Ativos
+                  </div>
+                </div>
               </div>
-              <div className="text-holding-blue-light">Usuários Ativos</div>
+              <div className="text-holding-blue-light text-lg font-semibold">
+                Usuários Ativos
+              </div>
             </div>
           </Card>
-          <Card className="holding-card stats-card">
-            <div className="stats-card-icon">
-              <CheckCircle className="w-8 h-8 text-holding-blue-light" />
-            </div>
-            <div className="stats-card-text">
-              <div className="text-2xl font-bold text-holding-white">
-                {usuarios.filter(u => u.status === 'Aprovado').length}
+
+          <Card className="bg-gradient-to-br from-holding-blue-profound/80 to-holding-blue-profound/60 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/20 group overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="p-6 relative z-10">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500/25 to-purple-500/15 rounded-2xl flex items-center justify-center">
+                  <CheckCircle className="w-8 h-8 text-purple-400" />
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-bold text-holding-white mb-1">
+                    {usuarios.filter(u => u.status === 'Aprovado').length}
+                  </div>
+                  <div className="text-purple-400/80 text-sm font-medium">
+                    Aprovados
+                  </div>
+                </div>
               </div>
-              <div className="text-holding-blue-light">Usuários Aprovados</div>
+              <div className="text-holding-blue-light text-lg font-semibold">
+                Usuários Aprovados
+              </div>
             </div>
           </Card>
         </div>
