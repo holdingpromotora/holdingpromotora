@@ -493,7 +493,7 @@ export default function UsuariosPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-holding-white mb-1">
-                    {usuarios.filter(u => u.status === 'Ativo').length}
+                    {usuarios.filter(u => u.status === 'ativo').length}
                   </div>
                   <div className="text-emerald-400/80 text-sm font-medium">
                     Ativos
@@ -515,7 +515,7 @@ export default function UsuariosPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-holding-white mb-1">
-                    {usuarios.filter(u => u.status === 'Aprovado').length}
+                    {usuarios.filter(u => u.status === 'aprovado').length}
                   </div>
                   <div className="text-purple-400/80 text-sm font-medium">
                     Aprovados

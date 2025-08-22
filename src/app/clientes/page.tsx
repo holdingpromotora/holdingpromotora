@@ -36,13 +36,7 @@ import {
   Pencil,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 import { Badge } from '@/components/ui/badge';
 
 interface Cliente {
@@ -374,26 +368,24 @@ export default function ClientesPage() {
                 />
               </div>
               <div className="flex gap-2">
-                <Select value={tipoFiltro} onValueChange={setTipoFiltro}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todos os Tipos</SelectItem>
-                    <SelectItem value="PF">Pessoa Física</SelectItem>
-                    <SelectItem value="PJ">Pessoa Jurídica</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={statusFiltro} onValueChange={setStatusFiltro}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Todos os Status</SelectItem>
-                    <SelectItem value="Ativo">Ativo</SelectItem>
-                    <SelectItem value="Inativo">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+                  value={tipoFiltro}
+                  onChange={e => setTipoFiltro(e.target.value)}
+                  className="w-40 px-3 py-2 bg-holding-blue-profound/60 border border-holding-blue-light/30 text-holding-white rounded-lg focus:outline-none focus:ring-2 focus:ring-holding-blue-light/50 focus:border-holding-blue-light"
+                >
+                  <option value="">Todos os Tipos</option>
+                  <option value="PF">Pessoa Física</option>
+                  <option value="PJ">Pessoa Jurídica</option>
+                </select>
+                <select
+                  value={statusFiltro}
+                  onChange={e => setStatusFiltro(e.target.value)}
+                  className="w-40 px-3 py-2 bg-holding-blue-profound/60 border border-holding-blue-light/30 text-holding-white rounded-lg focus:outline-none focus:ring-2 focus:ring-holding-blue-light/50 focus:border-holding-blue-light"
+                >
+                  <option value="">Todos os Status</option>
+                  <option value="Ativo">Ativo</option>
+                  <option value="Inativo">Inativo</option>
+                </select>
               </div>
             </div>
           </div>
