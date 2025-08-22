@@ -18,6 +18,7 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
+  UserCheck,
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -265,43 +266,44 @@ export default function DashboardPage() {
         className={`transition-all duration-300 ${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}
       >
         {/* Header */}
-        <div className="holding-fade-in">
-          <h1 className="text-4xl font-bold text-holding-white mb-2">
+        <div className="mobile-section-spacing">
+          <h1 className="dashboard-title text-3xl font-bold text-holding-white mb-2">
             Dashboard
           </h1>
-          <p className="text-xl text-holding-blue-light">
+          <p className="page-subtitle text-holding-blue-light">
             Visão geral do sistema e métricas principais
           </p>
         </div>
 
         {/* Métricas Principais */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {metrics.map((metric, index) => (
-            <Card key={index} className="holding-stat-card">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div
-                    className={`w-12 h-12 bg-gradient-to-br ${metric.bgColor} rounded-xl flex items-center justify-center`}
-                  >
-                    <metric.icon className="w-6 h-6 text-holding-blue-light" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-holding-white">
-                      {metric.value}
-                    </p>
-                    <p className="text-holding-blue-light text-sm">
-                      {metric.title}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4 flex items-center justify-end">
-                  <span className="text-green-400 text-sm font-medium">
-                    {metric.change}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="holding-card stats-card">
+            <div className="stats-card-icon">
+              <Users className="w-8 h-8 text-holding-blue-light" />
+            </div>
+            <div className="stats-card-text">
+              <div className="text-2xl font-bold text-holding-white">156</div>
+              <div className="text-holding-blue-light">Total de Clientes</div>
+            </div>
+          </Card>
+          <Card className="holding-card stats-card">
+            <div className="stats-card-icon">
+              <UserCheck className="w-8 h-8 text-holding-blue-light" />
+            </div>
+            <div className="stats-card-text">
+              <div className="text-2xl font-bold text-holding-white">24</div>
+              <div className="text-holding-blue-light">Usuários Ativos</div>
+            </div>
+          </Card>
+          <Card className="holding-card stats-card">
+            <div className="stats-card-icon">
+              <TrendingUp className="w-8 h-8 text-holding-blue-light" />
+            </div>
+            <div className="stats-card-text">
+              <div className="text-2xl font-bold text-holding-white">89%</div>
+              <div className="text-holding-blue-light">Taxa de Aprovação</div>
+            </div>
+          </Card>
         </div>
 
         {/* Ações Rápidas */}

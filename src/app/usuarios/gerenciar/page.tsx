@@ -373,74 +373,47 @@ export default function GerenciarUsuariosPage() {
         className={`transition-all duration-300 ${sidebarExpanded ? 'pl-64' : 'pl-16'} p-6`}
       >
         <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-holding-white mb-2">
-              Gerenciamento de Usuários
-            </h1>
-            <p className="text-holding-blue-light">
-              Gerencie usuários aprovados e suas permissões no sistema
-            </p>
-          </div>
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="mobile-section-spacing">
+              <h1 className="page-title text-2xl font-bold text-holding-white">
+                Gerenciamento de Usuários
+              </h1>
+              <p className="page-subtitle text-holding-blue-light">
+                Gerencie usuários, permissões e níveis de acesso
+              </p>
+            </div>
 
-          {/* Estatísticas */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-            <Card className="glass-effect-accent border-holding-accent/30">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-holding-white flex items-center">
-                  <div className="text-holding-white mr-2">
-                    <Users size={20} />
-                  </div>
-                  Total de Usuários
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-holding-white">
-                  {usuarios.length}
+            {/* Estatísticas */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="holding-card stats-card">
+                <div className="stats-card-icon">
+                  <Users className="w-8 h-8 text-holding-blue-light" />
                 </div>
-                <p className="text-holding-blue-light text-sm">
-                  Total de usuários aprovados
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-effect-accent border-holding-accent/30">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-holding-white flex items-center">
-                  <div className="text-holding-white mr-2">
-                    <CheckCircle size={20} />
-                  </div>
-                  Usuários Ativos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-holding-white">
-                  {usuarios.filter(u => u.ativo).length}
+                <div className="stats-card-text">
+                  <div className="text-2xl font-bold text-holding-white">{usuarios.length}</div>
+                  <div className="text-holding-blue-light">Total de Usuários</div>
                 </div>
-                <p className="text-holding-blue-light text-sm">
-                  Com acesso liberado
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-effect-accent border-holding-accent/30">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-holding-white flex items-center">
-                  <div className="text-holding-white mr-2">
-                    <Shield size={20} />
-                  </div>
-                  Categorias de Permissão
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-holding-white">
-                  {Object.keys(permissoes).length}
+              </Card>
+              <Card className="holding-card stats-card">
+                <div className="stats-card-icon">
+                  <Shield className="w-8 h-8 text-holding-blue-light" />
                 </div>
-                <p className="text-holding-blue-light text-sm">
-                  Categorias disponíveis
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                <div className="stats-card-text">
+                  <div className="text-2xl font-bold text-holding-white">{usuarios.filter(u => u.ativo).length}</div>
+                  <div className="text-holding-blue-light">Usuários Ativos</div>
+                </div>
+              </Card>
+              <Card className="holding-card stats-card">
+                <div className="stats-card-icon">
+                  <UserCheck2 className="w-8 h-8 text-holding-blue-light" />
+                </div>
+                <div className="stats-card-text">
+                  <div className="text-2xl font-bold text-holding-white">{usuarios.filter(u => u.aprovado).length}</div>
+                  <div className="text-holding-blue-light">Usuários Aprovados</div>
+                </div>
+              </Card>
+            </div>
 
           {/* Filtros */}
           <Card className="glass-effect-accent border-holding-accent/30 mb-6 md:mb-8">

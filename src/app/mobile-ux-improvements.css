@@ -1,0 +1,113 @@
+/* Melhorias de UX Mobile - Holding Promotora */
+
+/* Ajustes para telas pequenas (mobile) */
+@media (max-width: 768px) {
+  
+  /* ===== BOTÕES ACIMA DO FILTRO ===== */
+  
+  /* Container dos botões de ação */
+  .action-buttons-container {
+    order: -1; /* Move para antes do filtro */
+    margin-bottom: 1rem;
+    width: 100%;
+  }
+  
+  /* Botões com bordas arredondadas e tamanho otimizado */
+  .mobile-action-button {
+    border-radius: 12px !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+    height: auto !important;
+    min-height: 2.5rem !important;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  /* Botões empilhados verticalmente */
+  .mobile-stacked-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+  }
+  
+  /* ===== CARDS COM ÍCONES À ESQUERDA ===== */
+  
+  /* Cards de estatísticas */
+  .stats-card {
+    display: flex !important;
+    align-items: center !important;
+    text-align: left !important;
+    padding: 1rem !important;
+  }
+  
+  /* Ícones nos cards */
+  .stats-card-icon {
+    margin-right: 0.75rem !important;
+    margin-left: 0 !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Texto dos cards */
+  .stats-card-text {
+    text-align: left !important;
+    margin-left: 0 !important;
+  }
+  
+  /* ===== TÍTULOS HARMÔNICOS ===== */
+  
+  /* Títulos principais */
+  .page-title {
+    font-size: 1.5rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Subtítulos */
+  .page-subtitle {
+    font-size: 0.875rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Dashboard title */
+  .dashboard-title {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  /* ===== LAYOUT GERAL ===== */
+  
+  /* Espaçamento entre seções */
+  .mobile-section-spacing {
+    margin-bottom: 1.5rem !important;
+  }
+  
+  /* Container principal */
+  .main-content-container {
+    padding: 1rem !important;
+  }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 480px) {
+  
+  /* Títulos ainda menores para telas muito pequenas */
+  .page-title {
+    font-size: 1.25rem !important;
+  }
+  
+  .dashboard-title {
+    font-size: 1.5rem !important;
+  }
+  
+  /* Botões mais compactos */
+  .mobile-action-button {
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.8rem !important;
+  }
+  
+  /* Cards mais compactos */
+  .stats-card {
+    padding: 0.75rem !important;
+  }
+}

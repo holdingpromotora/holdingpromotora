@@ -29,8 +29,17 @@ import {
   Mail,
   Calculator,
   FileSpreadsheet,
+  Building2,
+  User,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface Cliente {
   id: string; // Mudado de number para string para aceitar prefixos pf_ e pj_
@@ -51,8 +60,8 @@ export default function ClientesPage() {
   const [sidebarExpanded, setSidebarExpanded] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('overview');
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [filterTipo, setFilterTipo] = React.useState('todos');
-  const [filterStatus, setFilterStatus] = React.useState('todos');
+  const [tipoFiltro, setTipoFiltro] = React.useState('');
+  const [statusFiltro, setStatusFiltro] = React.useState('');
   const [clientes, setClientes] = React.useState<Cliente[]>([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -128,11 +137,15 @@ export default function ClientesPage() {
       cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cliente.documento.includes(searchTerm) ||
       cliente.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesTipo = filterTipo === 'todos' || cliente.tipo === filterTipo;
+    const matchesTipo = tipoFiltro === '' || cliente.tipo === tipoFiltro;
     const matchesStatus =
-      filterStatus === 'todos' || cliente.status === filterStatus;
+      statusFiltro === '' || cliente.status === statusFiltro;
     return matchesSearch && matchesTipo && matchesStatus;
   });
+
+  const totalClientes = clientes.length;
+  const clientesPF = clientes.filter(c => c.tipo === 'PF').length;
+  const clientesPJ = clientes.filter(c => c.tipo === 'PJ').length;
 
   const toggleSidebar = () => {
     setSidebarExpanded(!sidebarExpanded);
@@ -315,7 +328,7 @@ export default function ClientesPage() {
                 onClick={() => router.push('/clientes/cadastro-pj')}
                 className="holding-btn-primary w-full sm:w-auto"
               >
-                <Building className="w-4 h-4 mr-2" />
+                <Building2 className="w-4 h-4 mr-2" />
                 Novo Cliente PJ
               </Button>
             </div>
@@ -323,115 +336,99 @@ export default function ClientesPage() {
         </div>
 
         {/* Barra de Pesquisa e Filtros */}
-        <div className="holding-card p-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-holding-blue-light w-4 h-4" />
-              <Input
-                type="text"
-                placeholder="Buscar clientes por nome, documento ou email..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="holding-input pl-10"
-              />
-            </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-holding-blue-light" />
-              <select
-                value={filterTipo}
-                onChange={e => setFilterTipo(e.target.value)}
-                className="holding-input"
+        <div className="space-y-6">
+          {/* Botões de ação - ACIMA do filtro para mobile */}
+          <div className="action-buttons-container">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mobile-stacked-buttons">
+              <Button
+                onClick={() => router.push('/clientes/cadastro-pf')}
+                className="holding-btn-primary w-full sm:w-auto mobile-action-button"
               >
-                <option value="todos">Todos os Tipos</option>
-                <option value="PF">Pessoa Física</option>
-                <option value="PJ">Pessoa Jurídica</option>
-              </select>
-              <select
-                value={filterStatus}
-                onChange={e => setFilterStatus(e.target.value)}
-                className="holding-input"
+                <UserPlus className="w-4 h-4 mr-2" />
+                Novo Cliente PF
+              </Button>
+              <Button
+                onClick={() => router.push('/clientes/cadastro-pj')}
+                className="holding-btn-primary w-full sm:w-auto mobile-action-button"
               >
-                <option value="todos">Todos os Status</option>
-                <option value="Ativo">Ativo</option>
-                <option value="Inativo">Inativo</option>
-              </select>
+                <Building2 className="w-4 h-4 mr-2" />
+                Novo Cliente PJ
+              </Button>
             </div>
           </div>
-        </div>
 
-        {/* Estatísticas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
-          <Card className="holding-stat-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/20 rounded-xl flex items-center justify-center">
-                  <Users className="w-6 h-6 text-holding-blue-light" />
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-holding-white">
-                    {clientes.length}
-                  </p>
-                  <p className="text-holding-blue-light text-sm">
-                    Total de Clientes
-                  </p>
-                </div>
+          {/* Filtros */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <Input
+                  placeholder="Buscar clientes por nome, documento ou email..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="holding-input"
+                />
               </div>
-            </CardContent>
-          </Card>
+              <div className="flex gap-2">
+                <Select value={tipoFiltro} onValueChange={setTipoFiltro}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos os Tipos</SelectItem>
+                    <SelectItem value="PF">Pessoa Física</SelectItem>
+                    <SelectItem value="PJ">Pessoa Jurídica</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={statusFiltro} onValueChange={setStatusFiltro}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos os Status</SelectItem>
+                    <SelectItem value="Ativo">Ativo</SelectItem>
+                    <SelectItem value="Inativo">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
 
-          <Card className="holding-stat-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-medium/20 rounded-xl flex items-center justify-center">
-                  <Users className="w-6 h-6 text-holding-blue-light" />
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-holding-white">
-                    {clientes.filter(c => c.tipo === 'PF').length}
-                  </p>
-                  <p className="text-holding-blue-light text-sm">
-                    Pessoas Físicas
-                  </p>
-                </div>
+          {/* Estatísticas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="holding-card stats-card">
+              <div className="stats-card-icon">
+                <Users className="w-8 h-8 text-holding-blue-light" />
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="holding-stat-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-dark/20 to-holding-blue-deep/20 rounded-xl flex items-center justify-center">
-                  <Building className="w-6 h-6 text-holding-blue-light" />
+              <div className="stats-card-text">
+                <div className="text-2xl font-bold text-holding-white">
+                  {totalClientes}
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-holding-white">
-                    {clientes.filter(c => c.tipo === 'PJ').length}
-                  </p>
-                  <p className="text-holding-blue-light text-sm">
-                    Pessoas Jurídicas
-                  </p>
-                </div>
+                <div className="text-holding-blue-light">Total de Clientes</div>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="holding-stat-card">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-deep/20 to-holding-blue-profound/20 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-holding-blue-light" />
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-holding-white">
-                    {clientes.filter(c => c.status === 'Ativo').length}
-                  </p>
-                  <p className="text-holding-blue-light text-sm">
-                    Clientes Ativos
-                  </p>
-                </div>
+            </Card>
+            <Card className="holding-card stats-card">
+              <div className="stats-card-icon">
+                <User className="w-8 h-8 text-holding-blue-light" />
               </div>
-            </CardContent>
-          </Card>
+              <div className="stats-card-text">
+                <div className="text-2xl font-bold text-holding-white">
+                  {clientesPF}
+                </div>
+                <div className="text-holding-blue-light">Pessoas Físicas</div>
+              </div>
+            </Card>
+            <Card className="holding-card stats-card">
+              <div className="stats-card-icon">
+                <Building2 className="w-8 h-8 text-holding-blue-light" />
+              </div>
+              <div className="stats-card-text">
+                <div className="text-2xl font-bold text-holding-white">
+                  {clientesPJ}
+                </div>
+                <div className="text-holding-blue-light">Pessoas Jurídicas</div>
+              </div>
+            </Card>
+          </div>
         </div>
 
         {/* Lista de Clientes */}

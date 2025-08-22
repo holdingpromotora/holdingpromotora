@@ -46,12 +46,19 @@ import {
   Usuario,
   FiltroUsuarios,
 } from '@/lib/usuarios-service';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function UsuariosPage() {
   const router = useRouter();
   const [sidebarExpanded, setSidebarExpanded] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [filterStatus, setFilterStatus] = React.useState('todos');
+  const [statusFiltro, setStatusFiltro] = React.useState('');
   const [filterPerfil, setFilterPerfil] = React.useState('todos');
   const [showTipoUsuarioDialog, setShowTipoUsuarioDialog] =
     React.useState(false);
@@ -79,7 +86,7 @@ export default function UsuariosPage() {
 
       const filtros: FiltroUsuarios = {
         searchTerm,
-        status: filterStatus !== 'todos' ? filterStatus : undefined,
+        status: statusFiltro !== '' ? statusFiltro : undefined,
         perfil: filterPerfil !== 'todos' ? filterPerfil : undefined,
         // Mostrar apenas usuários aprovados e ativos (que têm acesso ao aplicativo)
         aprovado: true,
@@ -104,7 +111,7 @@ export default function UsuariosPage() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filterStatus, filterPerfil]);
+  }, [searchTerm, statusFiltro, filterPerfil]);
 
   // Carregar usuários na montagem do componente
   React.useEffect(() => {
@@ -441,101 +448,52 @@ export default function UsuariosPage() {
                 <Filter size={16} />
               </div>
               <select
-                value={filterStatus}
-                onChange={e => setFilterStatus(e.target.value)}
+                value={statusFiltro}
+                onChange={e => setStatusFiltro(e.target.value)}
                 className="holding-input py-3 px-4"
               >
-                <option value="todos">Todos os Status</option>
-                <option value="pendente">Pendente</option>
-                <option value="aprovado">Aprovado</option>
-                <option value="rejeitado">Rejeitado</option>
-                <option value="ativo">Ativo</option>
-                <option value="inativo">Inativo</option>
+                <option value="">Todos os Status</option>
+                <option value="Ativo">Ativo</option>
+                <option value="Inativo">Inativo</option>
               </select>
             </div>
           </div>
         </div>
 
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-8 md:mb-12">
-          <Card className="holding-stat-card">
-            <CardContent className="p-4 md:p-8">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/20 rounded-xl flex items-center justify-center">
-                  <div className="w-6 h-6 md:w-8 md:h-8 text-holding-blue-light">
-                    <Users size={24} className="md:w-8 md:h-8" />
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl md:text-3xl font-bold text-holding-white">
-                    {estatisticas.total}
-                  </p>
-                  <p className="text-holding-blue-light text-xs md:text-sm">
-                    Total de Usuários
-                  </p>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="holding-card stats-card">
+            <div className="stats-card-icon">
+              <Users className="w-8 h-8 text-holding-blue-light" />
+            </div>
+            <div className="stats-card-text">
+              <div className="text-2xl font-bold text-holding-white">
+                {usuarios.length}
               </div>
-            </CardContent>
+              <div className="text-holding-blue-light">Total de Usuários</div>
+            </div>
           </Card>
-
-          <Card className="holding-stat-card">
-            <CardContent className="p-4 md:p-8">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-medium/20 rounded-xl flex items-center justify-center">
-                  <div className="w-6 h-6 md:w-8 md:h-8 text-holding-blue-light">
-                    <Shield size={24} className="md:w-8 md:h-8" />
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl md:text-3xl font-bold text-holding-white">
-                    {estatisticas.ativos}
-                  </p>
-                  <p className="text-holding-blue-light text-xs md:text-sm">
-                    Usuários Ativos
-                  </p>
-                </div>
+          <Card className="holding-card stats-card">
+            <div className="stats-card-icon">
+              <Shield className="w-8 h-8 text-holding-blue-light" />
+            </div>
+            <div className="stats-card-text">
+              <div className="text-2xl font-bold text-holding-white">
+                {usuarios.filter(u => u.status === 'Ativo').length}
               </div>
-            </CardContent>
+              <div className="text-holding-blue-light">Usuários Ativos</div>
+            </div>
           </Card>
-
-          <Card className="holding-stat-card">
-            <CardContent className="p-4 md:p-8">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-holding-blue-dark/20 to-holding-blue-deep/20 rounded-xl flex items-center justify-center">
-                  <div className="w-6 h-6 md:w-8 md:h-8 text-holding-blue-light">
-                    <UserPlus size={24} className="md:w-8 md:h-8" />
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl md:text-3xl font-bold text-holding-white">
-                    {estatisticas.aprovados}
-                  </p>
-                  <p className="text-holding-blue-light text-xs md:text-sm">
-                    Usuários Aprovados
-                  </p>
-                </div>
+          <Card className="holding-card stats-card">
+            <div className="stats-card-icon">
+              <CheckCircle className="w-8 h-8 text-holding-blue-light" />
+            </div>
+            <div className="stats-card-text">
+              <div className="text-2xl font-bold text-holding-white">
+                {usuarios.filter(u => u.status === 'Aprovado').length}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="holding-stat-card">
-            <CardContent className="p-4 md:p-8">
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-holding-blue-deep/20 to-holding-blue-profound/20 rounded-xl flex items-center justify-center">
-                  <div className="w-6 h-6 md:w-8 md:h-8 text-holding-blue-light">
-                    <AlertCircle size={24} className="md:w-8 md:h-8" />
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl md:text-3xl font-bold text-holding-white">
-                    {estatisticas.pendentes}
-                  </p>
-                  <p className="text-holding-blue-light text-xs md:text-sm">
-                    Usuários Pendentes
-                  </p>
-                </div>
-              </div>
-            </CardContent>
+              <div className="text-holding-blue-light">Usuários Aprovados</div>
+            </div>
           </Card>
         </div>
 
@@ -710,7 +668,10 @@ export default function UsuariosPage() {
                                   onClick={() => handleAprovarUsuario(user.id)}
                                 >
                                   <div className="text-green-400">
-                                    <CheckCircle size={20} className="md:w-4 md:h-4" />
+                                    <CheckCircle
+                                      size={20}
+                                      className="md:w-4 md:h-4"
+                                    />
                                   </div>
                                 </Button>
                                 <Button
@@ -721,7 +682,10 @@ export default function UsuariosPage() {
                                   onClick={() => handleRejeitarUsuario(user.id)}
                                 >
                                   <div className="text-red-400">
-                                    <XCircle size={20} className="md:w-4 md:h-4" />
+                                    <XCircle
+                                      size={20}
+                                      className="md:w-4 md:h-4"
+                                    />
                                   </div>
                                 </Button>
                               </>
