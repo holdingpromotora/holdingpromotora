@@ -1,0 +1,183 @@
+/* ===== MELHORIAS GERAIS PARA BOTÕES ===== */
+
+/* Botões principais com melhor proporção */
+.holding-btn-primary,
+.bg-gradient-to-r,
+.bg-green-600,
+.bg-blue-600,
+.bg-orange-600,
+.bg-purple-600,
+.bg-emerald-500,
+.bg-red-600,
+.bg-holding-blue-light,
+.bg-holding-blue-medium {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  padding-top: 0.625rem !important;
+  padding-bottom: 0.625rem !important;
+  min-width: fit-content !important;
+  width: auto !important;
+  border-radius: 0.75rem !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Botões de ação pequenos (visualizar, editar, etc.) */
+.w-8.h-8,
+.w-10.h-10,
+.w-6.h-6,
+[class*="w-8 h-8"],
+[class*="w-10 h-10"],
+[class*="w-6 h-6"] {
+  padding: 0.5rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Botões de filtro e busca */
+.holding-input,
+select,
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Botões de modal e popup */
+.AlertDialogAction,
+.AlertDialogCancel,
+[class*="AlertDialog"] {
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  min-width: fit-content !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Botões de formulário */
+button[type="submit"],
+button[type="button"],
+input[type="submit"] {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  padding-top: 0.625rem !important;
+  padding-bottom: 0.625rem !important;
+  min-width: fit-content !important;
+  border-radius: 0.75rem !important;
+  font-weight: 600 !important;
+}
+
+/* Botões de navegação */
+.nav button,
+.sidebar button,
+.holding-sidebar button {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  min-width: fit-content !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Botões de card */
+.card button,
+.Card button,
+[class*="card"] button {
+  padding: 0.5rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
+  border-radius: 0.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Botões de tabela */
+table button,
+.table button {
+  padding: 0.375rem !important;
+  min-width: 1.75rem !important;
+  min-height: 1.75rem !important;
+  border-radius: 0.375rem !important;
+}
+
+/* Hover effects para todos os botões */
+button:hover,
+.Button:hover,
+[class*="btn"]:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Focus states para acessibilidade */
+button:focus,
+.Button:focus,
+[class*="btn"]:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+}
+
+/* Botões desabilitados */
+button:disabled,
+.Button:disabled,
+[class*="btn"]:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Responsividade para botões */
+@media (max-width: 768px) {
+  .holding-btn-primary,
+  .bg-gradient-to-r,
+  .bg-green-600,
+  .bg-blue-600,
+  .bg-orange-600,
+  .bg-purple-600 {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  .w-8.h-8,
+  .w-10.h-10,
+  .w-6.h-6 {
+    padding: 0.375rem !important;
+    min-width: 1.75rem !important;
+    min-height: 1.75rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .holding-btn-primary,
+  .bg-gradient-to-r,
+  .bg-green-600,
+  .bg-blue-600,
+  .bg-orange-600,
+  .bg-purple-600 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .w-8.h-8,
+  .w-10.h-10,
+  .w-6.h-6 {
+    padding: 0.25rem !important;
+    min-width: 1.5rem !important;
+    min-height: 1.5rem !important;
+  }
+}

@@ -383,24 +383,24 @@ export default function UsuariosPage() {
 
       {/* Conteúdo Principal */}
       <div
-        className={`transition-all duration-300 ${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}
+        className={`transition-all duration-300 ${sidebarExpanded ? 'pl-80' : 'pl-24'} p-2 space-y-4`}
       >
         {/* Header */}
         <div className="holding-fade-in">
-          <div className="mb-8">
+          <div className="mb-4">
             <h1 className="text-4xl font-bold text-holding-white mb-4">
               Gerenciamento de Usuários
             </h1>
-            <p className="text-xl text-holding-blue-light mb-6">
+            <p className="text-xl text-holding-blue-light mb-4">
               Usuários aprovados e ativos com acesso ao aplicativo
             </p>
           </div>
 
           {/* Botões de Ação - ABAIXO do subtítulo */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
             <Button
               onClick={() => router.push('/usuarios/aprovacao')}
-              className="bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto rounded-xl"
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl"
             >
               <div className="w-4 h-4 mr-2">
                 <UserCheck size={16} />
@@ -409,7 +409,7 @@ export default function UsuariosPage() {
             </Button>
             <Button
               onClick={() => router.push('/usuarios/niveis-acesso')}
-              className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto rounded-xl"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl"
             >
               <div className="w-4 h-4 mr-2">
                 <Shield size={16} />
@@ -418,7 +418,7 @@ export default function UsuariosPage() {
             </Button>
             <Button
               onClick={() => setShowTipoUsuarioDialog(true)}
-              className="holding-btn-primary w-full sm:w-auto rounded-xl"
+              className="holding-btn-primary px-6 py-2.5 rounded-xl"
             >
               <div className="w-4 h-4 mr-2">
                 <UserPlus size={16} />
@@ -429,7 +429,7 @@ export default function UsuariosPage() {
         </div>
 
         {/* Barra de Pesquisa e Filtros */}
-        <div className="holding-card p-8">
+        <div className="holding-card p-4">
           <div className="flex flex-col md:flex-row gap-6 items-center">
             <div className="flex-1 relative">
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-holding-blue-light w-4 h-4">
@@ -461,15 +461,15 @@ export default function UsuariosPage() {
         </div>
 
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="bg-gradient-to-br from-holding-blue-profound/80 to-holding-blue-profound/60 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/20 group overflow-hidden relative">
             <div className="absolute inset-0 bg-gradient-to-r from-holding-blue-light/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="p-6 relative z-10">
+            <div className="p-5 relative z-10">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-holding-blue-light/25 to-holding-blue-light/15 rounded-2xl flex items-center justify-center">
                   <Users className="w-8 h-8 text-holding-blue-light" />
                 </div>
-                <div className="text-right">
+                <div className="text-left">
                   <div className="text-3xl font-bold text-holding-white mb-1">
                     {usuarios.length}
                   </div>
@@ -486,12 +486,12 @@ export default function UsuariosPage() {
 
           <Card className="bg-gradient-to-br from-holding-blue-profound/80 to-holding-blue-profound/60 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/20 group overflow-hidden relative">
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="p-6 relative z-10">
+            <div className="p-5 relative z-10">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-emerald-500/25 to-emerald-500/15 rounded-2xl flex items-center justify-center">
                   <Shield className="w-8 h-8 text-emerald-400" />
                 </div>
-                <div className="text-right">
+                <div className="text-left">
                   <div className="text-3xl font-bold text-holding-white mb-1">
                     {usuarios.filter(u => u.status === 'ativo').length}
                   </div>
@@ -508,12 +508,12 @@ export default function UsuariosPage() {
 
           <Card className="bg-gradient-to-br from-holding-blue-profound/80 to-holding-blue-profound/60 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/20 group overflow-hidden relative">
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <div className="p-6 relative z-10">
+            <div className="p-5 relative z-10">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-purple-500/25 to-purple-500/15 rounded-2xl flex items-center justify-center">
                   <CheckCircle className="w-8 h-8 text-purple-400" />
                 </div>
-                <div className="text-right">
+                <div className="text-left">
                   <div className="text-3xl font-bold text-holding-white mb-1">
                     {usuarios.filter(u => u.status === 'aprovado').length}
                   </div>
@@ -531,38 +531,36 @@ export default function UsuariosPage() {
 
         {/* Lista de Usuários */}
         <Card className="holding-card">
-          <CardHeader className="p-8">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center space-x-6">
-                <h3 className="text-xl font-semibold text-holding-white flex items-center space-x-4">
-                  <div className="w-6 h-6 text-holding-blue-light">
-                    <Users size={24} />
-                  </div>
-                  Usuários com Acesso ao Aplicativo
-                </h3>
+          <CardHeader className="p-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-6 h-6 text-holding-blue-light">
+                <Users size={24} />
               </div>
+              <h3 className="text-xl font-semibold text-holding-white">
+                Usuários com Acesso ao Aplicativo
+              </h3>
 
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 ml-auto">
+                <div className="w-4 h-4 text-holding-blue-light">
+                  <RefreshCw size={16} />
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={carregarUsuarios}
                   disabled={loading}
-                  className="text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 px-4 py-2"
+                  className="text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 px-2 py-1 h-auto"
                 >
-                  <div
-                    className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`}
-                  >
-                    <RefreshCw size={16} />
-                  </div>
-                  Atualizar
+                  <span className={`${loading ? 'animate-spin' : ''}`}>
+                    Atualizar
+                  </span>
                 </Button>
               </div>
             </div>
             <CardTitle className="text-holding-white"></CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="p-6">
+            <div className="p-4">
               {loading ? (
                 <div className="text-center py-16">
                   <div className="w-20 h-20 bg-holding-blue-light/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -612,12 +610,12 @@ export default function UsuariosPage() {
                       key={user.id}
                       className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
                     >
-                      <CardContent className="p-4 card-content">
-                        <div className="flex items-start justify-between mb-3">
+                      <CardContent className="p-4 card-content user-card">
+                        <div className="flex items-start justify-between mb-3 user-card-header">
                           <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 card-icon">
                             {getPerfilIcon(user.perfil_nome)}
                           </div>
-                          <div className="card-badges">
+                          <div className="card-badges badge-container">
                             {getStatusBadge(
                               user.status,
                               user.aprovado,
@@ -626,7 +624,7 @@ export default function UsuariosPage() {
                           </div>
                         </div>
 
-                        <div className="mb-3 card-info">
+                        <div className="mb-3 card-info user-card-info">
                           <h4 className="font-semibold text-holding-white text-lg mb-1">
                             {user.nome}
                           </h4>
@@ -635,8 +633,8 @@ export default function UsuariosPage() {
                           </p>
                         </div>
 
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center space-x-2 text-sm">
+                        <div className="space-y-2 mb-4 user-details">
+                          <div className="flex items-center space-x-2 text-sm info-item">
                             <div className="w-4 h-4 bg-holding-blue-light/20 rounded flex items-center justify-center">
                               <div className="text-holding-blue-light">
                                 <UserCheck size={12} />
@@ -649,7 +647,7 @@ export default function UsuariosPage() {
                               {user.perfil_nome || 'N/A'}
                             </span>
                           </div>
-                          <div className="flex items-center space-x-2 text-sm">
+                          <div className="flex items-center space-x-2 text-sm info-item">
                             <div className="w-4 h-4 bg-holding-blue-light/20 rounded flex items-center justify-center">
                               <div className="text-holding-blue-light">
                                 <Clock size={12} />
@@ -664,7 +662,7 @@ export default function UsuariosPage() {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between pt-3 border-t border-holding-blue-light/20 card-actions">
+                        <div className="flex items-center justify-between pt-3 border-t border-holding-blue-light/20 card-actions user-card-actions">
                           <div className="flex items-center space-x-2 md:space-x-1">
                             <Button
                               size="sm"

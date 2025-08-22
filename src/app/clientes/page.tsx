@@ -339,20 +339,20 @@ export default function ClientesPage() {
           {/* Botões de ação - ACIMA do filtro para mobile */}
           <div className="action-buttons-container">
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3 mobile-stacked-buttons">
-              <Button
-                onClick={() => router.push('/clientes/cadastro-pf')}
-                className="holding-btn-primary w-full sm:w-auto mobile-action-button rounded-xl"
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
-                Novo Cliente PF
-              </Button>
-              <Button
-                onClick={() => router.push('/clientes/cadastro-pj')}
-                className="holding-btn-primary w-full sm:w-auto mobile-action-button rounded-xl"
-              >
-                <Building2 className="w-4 h-4 mr-2" />
-                Novo Cliente PJ
-              </Button>
+                             <Button
+                 onClick={() => router.push('/clientes/cadastro-pf')}
+                 className="holding-btn-primary px-6 py-2.5 mobile-action-button rounded-xl"
+               >
+                 <UserPlus className="w-4 h-4 mr-2" />
+                 Novo Cliente PF
+               </Button>
+               <Button
+                 onClick={() => router.push('/clientes/cadastro-pj')}
+                 className="holding-btn-primary px-6 py-2.5 mobile-action-button rounded-xl"
+               >
+                 <Building2 className="w-4 h-4 mr-2" />
+                 Novo Cliente PJ
+               </Button>
             </div>
           </div>
 
@@ -512,17 +512,17 @@ export default function ClientesPage() {
                       className="bg-gradient-to-br from-holding-blue-profound/70 to-holding-blue-profound/50 border border-holding-blue-light/40 hover:border-holding-blue-light/60 transition-all duration-300 hover:shadow-xl hover:shadow-holding-blue-light/15 group overflow-hidden relative"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-holding-blue-light/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                                             <div className="p-5 relative z-10 card-content">
-                         {/* Header do Card */}
-                         <div className="flex items-start justify-between mb-4">
-                           <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/25 to-holding-blue-light/15 rounded-xl flex items-center justify-center card-icon">
-                             {cliente.tipo === 'PF' ? (
-                               <User className="w-6 h-6 text-holding-blue-light" />
-                             ) : (
-                               <Building2 className="w-6 h-6 text-holding-blue-light" />
-                             )}
-                           </div>
-                           <div className="flex flex-col gap-2 items-end card-badges">
+                                                                   <div className="p-5 relative z-10 card-content client-card">
+                        {/* Header do Card */}
+                        <div className="flex items-start justify-between mb-4 client-card-header">
+                          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/25 to-holding-blue-light/15 rounded-xl flex items-center justify-center card-icon">
+                            {cliente.tipo === 'PF' ? (
+                              <User className="w-6 h-6 text-holding-blue-light" />
+                            ) : (
+                              <Building2 className="w-6 h-6 text-holding-blue-light" />
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-2 items-end card-badges badge-container">
                             <Badge
                               variant="secondary"
                               className={`px-3 py-1 text-xs font-medium rounded-full ${
@@ -544,38 +544,38 @@ export default function ClientesPage() {
                           </div>
                         </div>
 
-                                                 {/* Informações do Cliente */}
-                         <div className="space-y-3 card-info">
-                           <div>
-                             <h4 className="font-semibold text-holding-white text-base mb-1 line-clamp-2 leading-tight">
-                               {cliente.nome}
-                             </h4>
-                             <p className="text-holding-blue-light/80 text-sm line-clamp-1">
-                               {cliente.email}
-                             </p>
-                           </div>
+                        {/* Informações do Cliente */}
+                        <div className="space-y-3 card-info client-card-info">
+                          <div>
+                            <h4 className="font-semibold text-holding-white text-base mb-1 line-clamp-2 leading-tight">
+                              {cliente.nome}
+                            </h4>
+                            <p className="text-holding-blue-light/80 text-sm line-clamp-1">
+                              {cliente.email}
+                            </p>
+                          </div>
 
-                           {/* Detalhes do Cliente */}
-                           <div className="space-y-2.5">
-                            <div className="flex items-center gap-2.5">
+                          {/* Detalhes do Cliente */}
+                          <div className="space-y-2.5 client-details">
+                            <div className="flex items-center gap-2.5 info-item">
                               <FileText className="w-4 h-4 text-holding-blue-light/60" />
                               <span className="text-holding-blue-light/90 text-sm">
                                 Doc: {cliente.documento}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-2.5 info-item">
                               <Phone className="w-4 h-4 text-holding-blue-light/60" />
                               <span className="text-holding-blue-light/90 text-sm">
                                 Tel: {cliente.telefone}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-2.5 info-item">
                               <MapPin className="w-4 h-4 text-holding-blue-light/60" />
                               <span className="text-holding-blue-light/90 text-sm">
                                 Local: {cliente.cidade}/{cliente.estado}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-2.5 info-item">
                               <Calendar className="w-4 h-4 text-holding-blue-light/60" />
                               <span className="text-holding-blue-light/90 text-sm">
                                 Cadastro:{' '}
@@ -587,8 +587,8 @@ export default function ClientesPage() {
                           </div>
                         </div>
 
-                                                 {/* Ações */}
-                         <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-holding-blue-light/20 card-actions">
+                        {/* Ações */}
+                        <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-holding-blue-light/20 card-actions client-card-actions">
                           <button className="p-2 text-holding-blue-light/70 hover:text-holding-blue-light hover:bg-holding-blue-light/10 rounded-lg transition-colors duration-200">
                             <Eye className="w-4 h-4" />
                           </button>

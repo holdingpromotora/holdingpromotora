@@ -490,14 +490,14 @@ export default function AprovacaoPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
             <Button
               onClick={() => router.push('/usuarios')}
-              className="bg-gradient-to-r from-holding-blue-light to-holding-blue-medium hover:from-holding-blue-medium hover:to-holding-blue-light text-holding-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto"
+              className="bg-gradient-to-r from-holding-blue-light to-holding-blue-medium hover:from-holding-blue-medium hover:to-holding-blue-light text-holding-white px-6 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold"
             >
               <Users size={18} className="mr-3" />
               Gerenciar Usuários
             </Button>
             <Button
               onClick={() => router.push('/usuarios/niveis-acesso')}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto"
+              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold"
             >
               <Shield size={18} className="mr-3" />
               Níveis de Acesso
@@ -519,10 +519,10 @@ export default function AprovacaoPage() {
 
         {/* Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-          <Card className="bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/10 border-holding-blue-light/30 hover:from-holding-blue-medium/30 hover:to-holding-blue-light/20 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-            <CardContent className="p-4 md:p-6 relative">
+          <Card className="bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/10 border-holding-blue-light/30 hover:from-holding-blue-medium/30 hover:to-holding-blue-light/20 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl stats-card">
+            <CardContent className="p-4 md:p-6 relative stats-card-content">
               {/* Ícone no canto superior esquerdo */}
-              <div className="absolute top-3 md:top-4 left-3 md:left-4 p-2 bg-holding-blue-light/20 rounded-lg">
+              <div className="absolute top-3 md:top-4 left-3 md:left-4 p-2 bg-holding-blue-light/20 rounded-lg stats-card-icon">
                 <Users
                   size={20}
                   className="md:w-6 md:h-6 w-5 h-5 text-holding-blue-light"
@@ -548,10 +548,10 @@ export default function AprovacaoPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/10 border-holding-blue-light/30 hover:from-holding-blue-medium/30 hover:to-holding-blue-light/20 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-            <CardContent className="p-4 md:p-6 relative">
+          <Card className="bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/10 border-holding-blue-light/30 hover:from-holding-blue-medium/30 hover:to-holding-blue-light/20 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl stats-card">
+            <CardContent className="p-4 md:p-6 relative stats-card-content">
               {/* Ícone no canto superior esquerdo */}
-              <div className="absolute top-3 md:top-4 left-3 md:left-4 p-2 bg-green-500/20 rounded-lg">
+              <div className="absolute top-3 md:top-4 left-3 md:left-4 p-2 bg-green-500/20 rounded-lg stats-card-icon">
                 <Shield
                   size={20}
                   className="md:w-6 md:h-6 w-5 h-5 text-green-400"
@@ -575,10 +575,10 @@ export default function AprovacaoPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/10 border-holding-blue-light/30 hover:from-holding-blue-medium/30 hover:to-holding-blue-light/20 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-            <CardContent className="p-4 md:p-6 relative">
+          <Card className="bg-gradient-to-br from-holding-blue-medium/20 to-holding-blue-light/10 border-holding-blue-light/30 hover:from-holding-blue-medium/30 hover:to-holding-blue-light/20 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl stats-card">
+            <CardContent className="p-4 md:p-6 relative stats-card-content">
               {/* Ícone no canto superior esquerdo */}
-              <div className="absolute top-3 md:top-4 left-3 md:left-4 p-2 bg-purple-500/20 rounded-lg">
+              <div className="absolute top-3 md:top-4 left-3 md:left-4 p-2 bg-purple-500/20 rounded-lg stats-card-icon">
                 <CheckCircle
                   size={20}
                   className="md:w-6 md:h-6 w-5 h-5 text-purple-400"
@@ -747,8 +747,8 @@ export default function AprovacaoPage() {
                             key={user.id}
                             className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
                           >
-                            <CardContent className="p-4">
-                              <div className="flex items-start justify-between mb-3">
+                            <CardContent className="p-4 user-card">
+                              <div className="flex items-start justify-between mb-3 user-card-header">
                                 <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                                   {getPerfilIcon(user.perfil_nome)}
                                 </div>
@@ -759,7 +759,7 @@ export default function AprovacaoPage() {
                                 )}
                               </div>
 
-                              <div className="mb-3">
+                              <div className="mb-3 user-card-info">
                                 <h4 className="font-semibold text-holding-white text-lg mb-1">
                                   {user.nome}
                                 </h4>
@@ -768,8 +768,8 @@ export default function AprovacaoPage() {
                                 </p>
                               </div>
 
-                              <div className="space-y-2 mb-4">
-                                <div className="flex items-center space-x-2 text-sm">
+                              <div className="space-y-2 mb-4 user-details">
+                                <div className="flex items-center space-x-2 text-sm info-item">
                                   <div className="w-4 h-4 bg-holding-blue-light/20 rounded flex items-center justify-center">
                                     <div className="text-holding-blue-light">
                                       <UserCheck2 size={12} />
@@ -782,7 +782,7 @@ export default function AprovacaoPage() {
                                     {user.perfil_nome || 'N/A'}
                                   </span>
                                 </div>
-                                <div className="flex items-center space-x-2 text-sm">
+                                <div className="flex items-center space-x-2 text-sm info-item">
                                   <div className="w-4 h-4 bg-holding-blue-light/20 rounded flex items-center justify-center">
                                     <div className="text-holding-blue-light">
                                       <Calendar size={12} />
@@ -822,8 +822,8 @@ export default function AprovacaoPage() {
                                 </div>
                               )}
 
-                              <div className="flex items-center justify-between pt-3 border-t border-holding-blue-light/20">
-                                <div className="flex items-center space-x-2">
+                              <div className="flex items-center justify-between pt-3 border-t border-holding-blue-light/20 user-card-actions">
+                                <div className="flex items-center space-x-2 action-buttons">
                                   <Button
                                     size="sm"
                                     variant="outline"
@@ -940,8 +940,8 @@ export default function AprovacaoPage() {
                             key={user.id}
                             className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group"
                           >
-                            <CardContent className="p-4">
-                              <div className="flex items-start justify-between mb-3">
+                            <CardContent className="p-4 user-card">
+                              <div className="flex items-start justify-between mb-3 user-card-header">
                                 <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                                   {getPerfilIcon(user.perfil_nome)}
                                 </div>
@@ -952,7 +952,7 @@ export default function AprovacaoPage() {
                                 )}
                               </div>
 
-                              <div className="mb-3">
+                              <div className="mb-3 user-card-info">
                                 <h4 className="font-semibold text-holding-white text-lg mb-1">
                                   {user.nome}
                                 </h4>
@@ -961,8 +961,8 @@ export default function AprovacaoPage() {
                                 </p>
                               </div>
 
-                              <div className="space-y-2 mb-4">
-                                <div className="flex items-center space-x-2 text-sm">
+                              <div className="space-y-2 mb-4 user-details">
+                                <div className="flex items-center space-x-2 text-sm info-item">
                                   <div className="w-4 h-4 bg-holding-blue-light/20 rounded flex items-center justify-center">
                                     <div className="text-holding-blue-light">
                                       <UserCheck2 size={12} />
@@ -975,7 +975,7 @@ export default function AprovacaoPage() {
                                     {user.perfil_nome || 'N/A'}
                                   </span>
                                 </div>
-                                <div className="flex items-center space-x-2 text-sm">
+                                <div className="flex items-center space-x-2 text-sm info-item">
                                   <div className="w-4 h-4 bg-holding-blue-light/20 rounded flex items-center justify-center">
                                     <div className="text-holding-blue-light">
                                       <Calendar size={12} />
@@ -990,8 +990,8 @@ export default function AprovacaoPage() {
                                 </div>
                               </div>
 
-                              <div className="flex items-center justify-between pt-3 border-t border-holding-blue-light/20">
-                                <div className="flex items-center space-x-2">
+                              <div className="flex items-center justify-between pt-3 border-t border-holding-blue-light/20 user-card-actions">
+                                <div className="flex items-center space-x-2 action-buttons">
                                   <Button
                                     size="sm"
                                     variant="outline"

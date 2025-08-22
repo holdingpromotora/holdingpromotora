@@ -5,6 +5,7 @@ import './mobile-responsive.css';
 import './additional-mobile.css';
 import './final-mobile-fixes.css';
 import './mobile-ux-improvements.css';
+import './button-improvements.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 
 const inter = Inter({ subsets: ['latin'] });

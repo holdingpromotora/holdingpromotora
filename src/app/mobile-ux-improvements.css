@@ -2,16 +2,15 @@
 
 /* Ajustes para telas pequenas (mobile) */
 @media (max-width: 768px) {
-  
   /* ===== BOTÕES ACIMA DO FILTRO ===== */
-  
+
   /* Container dos botões de ação */
   .action-buttons-container {
     order: -1; /* Move para antes do filtro */
     margin-bottom: 1rem;
     width: 100%;
   }
-  
+
   /* Botões com bordas arredondadas e tamanho otimizado */
   .mobile-action-button {
     border-radius: 12px !important;
@@ -21,7 +20,7 @@
     min-height: 2.5rem !important;
     transition: all 0.2s ease-in-out;
   }
-  
+
   /* Botões empilhados verticalmente */
   .mobile-stacked-buttons {
     display: flex !important;
@@ -29,7 +28,7 @@
     gap: 0.5rem !important;
     width: 100% !important;
   }
-  
+
   /* ===== CARDS COM ÍCONES À ESQUERDA ===== */
 
   /* Melhorias no alinhamento e disposição dos cards */
@@ -37,79 +36,79 @@
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
   }
-  
+
   /* Cards individuais com melhor alinhamento */
   .card-grid > div {
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
-  
+
   /* Conteúdo interno dos cards mais à esquerda */
   .card-content {
     padding-left: 0.75rem !important;
     padding-right: 0.75rem !important;
   }
-  
+
   /* Ícones dos cards mais à esquerda */
   .card-icon {
     margin-left: 0 !important;
     left: 0.75rem !important;
   }
-  
+
   /* Badges dos cards mais à esquerda */
   .card-badges {
     margin-left: 0 !important;
     padding-left: 0.75rem !important;
   }
-  
+
   /* Informações dos cards mais à esquerda */
   .card-info {
     padding-left: 0.75rem !important;
     margin-left: 0 !important;
   }
-  
+
   /* Ações dos cards mais à esquerda */
   .card-actions {
     padding-left: 0.75rem !important;
     margin-left: 0 !important;
   }
-  
+
   /* ===== TÍTULOS HARMÔNICOS ===== */
-  
+
   /* Títulos principais */
   .page-title {
     font-size: 1.5rem !important;
     line-height: 1.2 !important;
     margin-bottom: 0.5rem !important;
   }
-  
+
   /* Subtítulos */
   .page-subtitle {
     font-size: 0.875rem !important;
     line-height: 1.4 !important;
     margin-bottom: 1rem !important;
   }
-  
+
   /* Dashboard title */
   .dashboard-title {
     font-size: 1.75rem !important;
     line-height: 1.2 !important;
   }
-  
+
   /* ===== LAYOUT GERAL ===== */
-  
+
   /* Espaçamento entre seções */
   .mobile-section-spacing {
     margin-bottom: 1.5rem !important;
   }
-  
+
   /* Container principal */
   .main-content-container {
     padding: 1rem !important;
   }
-  
+
   /* ===== BOTÕES DE NÍVEIS DE ACESSO ===== */
-  
+
   /* Botões empilhados verticalmente no mobile */
   .niveis-acesso-buttons {
     display: flex !important;
@@ -117,7 +116,7 @@
     gap: 0.75rem !important;
     width: 100% !important;
   }
-  
+
   /* Botões com tamanho otimizado para mobile */
   .niveis-acesso-button {
     width: 100% !important;
@@ -129,51 +128,526 @@
 
 /* Ajustes para telas muito pequenas */
 @media (max-width: 480px) {
-  
   /* Títulos ainda menores para telas muito pequenas */
   .page-title {
     font-size: 1.25rem !important;
   }
-  
+
   .dashboard-title {
     font-size: 1.5rem !important;
   }
-  
+
   /* Botões mais compactos */
   .mobile-action-button {
     padding: 0.375rem 0.75rem !important;
     font-size: 0.8rem !important;
   }
-  
+
   /* Cards mais compactos */
   .stats-card {
     padding: 0.75rem !important;
   }
-  
+
   /* Ajustes adicionais para cards em telas muito pequenas */
   .card-grid {
     padding-left: 0.25rem !important;
     padding-right: 0.25rem !important;
   }
-  
+
   .card-content {
     padding-left: 0.5rem !important;
     padding-right: 0.5rem !important;
   }
-  
+
   .card-icon {
     left: 0.5rem !important;
   }
-  
+
   .card-badges {
     padding-left: 0.5rem !important;
   }
-  
+
   .card-info {
     padding-left: 0.5rem !important;
   }
-  
+
   .card-actions {
     padding-left: 0.5rem !important;
+  }
+}
+
+/* ===== RESPONSIVIDADE MOBILE - MELHORIAS DE UX ===== */
+
+/* Ajustes para telas mobile (até 768px) */
+@media (max-width: 768px) {
+  /* ===== TÍTULOS PRINCIPAIS ===== */
+
+  /* Título principal da página */
+  .page-title {
+    font-size: 1.5rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Subtítulos */
+  .page-subtitle {
+    font-size: 0.875rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Dashboard title */
+  .dashboard-title {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* ===== PADRÃO PARA TODOS OS TÍTULOS ===== */
+
+  /* Títulos h1 com text-4xl (Gerenciamento de Usuários, Gerenciamento de Clientes, etc.) */
+  h1.text-4xl {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Títulos h1 com text-3xl (Dashboard, Cadastro PF/PJ, etc.) */
+  h1.text-3xl {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Títulos h2 com text-4xl (página principal) */
+  h2.text-4xl {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Títulos h2 com text-3xl */
+  h2.text-3xl {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Títulos h3 com text-3xl */
+  h3.text-3xl {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Títulos com text-2xl md:text-3xl (Aprovação, Níveis de Acesso) */
+  .text-2xl.md\:text-3xl {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Títulos com text-2xl md:text-4xl (cards de estatísticas) */
+  .text-2xl.md\:text-4xl {
+    font-size: 1.75rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* ===== LAYOUT GERAL ===== */
+
+  /* Espaçamento entre seções */
+  .mobile-section-spacing {
+    margin-bottom: 1.5rem !important;
+  }
+
+  /* Container principal */
+  .main-content-container {
+    padding: 1rem !important;
+  }
+
+  /* ===== BOTÕES DE NÍVEIS DE ACESSO ===== */
+
+  /* Botões empilhados verticalmente no mobile */
+  .niveis-acesso-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+  }
+
+  /* Botões com tamanho otimizado para mobile */
+  .niveis-acesso-button {
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* ===== MELHORIAS GERAIS PARA TODOS OS CARDS ===== */
+
+  /* Todos os cards do aplicativo */
+  .card,
+  .Card,
+  [class*='card'],
+  [class*='Card'] {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Conteúdo interno dos cards */
+  .card-content,
+  .CardContent,
+  [class*='card-content'],
+  [class*='CardContent'] {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Headers dos cards */
+  .card-header,
+  .CardHeader,
+  [class*='card-header'],
+  [class*='CardHeader'] {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  /* Títulos dos cards */
+  .card-title,
+  .CardTitle,
+  [class*='card-title'],
+  [class*='CardTitle'] {
+    text-align: left !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* ===== CARDS ESPECÍFICOS ===== */
+
+  /* Cards de estatísticas (Dashboard) */
+  .stats-card {
+    padding: 1rem !important;
+  }
+
+  .stats-card-icon {
+    left: 1rem !important;
+    margin-left: 0 !important;
+  }
+
+  .stats-card-text {
+    padding-left: 1rem !important;
+    margin-left: 0 !important;
+    text-align: left !important;
+  }
+
+  /* Cards de clientes */
+  .client-card {
+    padding: 1rem !important;
+  }
+
+  .client-card-header {
+    padding-left: 0.75rem !important;
+    margin-left: 0 !important;
+  }
+
+  .client-card-info {
+    padding-left: 0.75rem !important;
+    margin-left: 0 !important;
+    text-align: left !important;
+  }
+
+  .client-card-actions {
+    padding-left: 0.75rem !important;
+    margin-left: 0 !important;
+    justify-content: flex-start !important;
+  }
+
+  /* Cards de usuários */
+  .user-card {
+    padding: 1rem !important;
+  }
+
+  .user-card-header {
+    padding-left: 0.75rem !important;
+    margin-left: 0 !important;
+  }
+
+  .user-card-info {
+    padding-left: 0.75rem !important;
+    margin-left: 0 !important;
+    text-align: left !important;
+  }
+
+  .user-card-actions {
+    padding-left: 0.75rem !important;
+    margin-left: 0 !important;
+    justify-content: flex-start !important;
+  }
+
+  /* Cards de níveis de acesso */
+  .access-level-card {
+    padding: 1rem !important;
+  }
+
+  .access-level-card-header {
+    padding-left: 0.75rem !important;
+    margin-left: 0 !important;
+  }
+
+  .access-level-card-content {
+    padding-left: 0.75rem !important;
+    margin-left: 0 !important;
+    text-align: left !important;
+  }
+
+  /* Cards de permissões */
+  .permission-card {
+    padding: 0.75rem !important;
+  }
+
+  .permission-card-content {
+    padding-left: 0.5rem !important;
+    margin-left: 0 !important;
+    text-align: left !important;
+  }
+
+  /* ===== ALINHAMENTO DE TEXTO GERAL ===== */
+
+  /* Todos os textos dentro dos cards */
+  .card p,
+  .card span,
+  .card div,
+  .Card p,
+  .Card span,
+  .Card div {
+    text-align: left !important;
+  }
+
+  /* Informações de contato e detalhes */
+  .contact-info,
+  .details-info,
+  .user-details,
+  .client-details {
+    padding-left: 0.75rem !important;
+    margin-left: 0 !important;
+    text-align: left !important;
+  }
+
+  /* Badges e status */
+  .badge-container,
+  .status-badges {
+    padding-left: 0.75rem !important;
+    margin-left: 0 !important;
+    justify-content: flex-start !important;
+  }
+
+  /* Botões de ação */
+  .action-buttons,
+  .card-actions {
+    padding-left: 0.75rem !important;
+    margin-left: 0 !important;
+    justify-content: flex-start !important;
+    gap: 0.5rem !important;
+  }
+
+  /* ===== ESPAÇAMENTO INTERNO MELHORADO ===== */
+
+  /* Espaçamento entre elementos dos cards */
+  .card > * + *,
+  .Card > * + * {
+    margin-top: 0.75rem !important;
+  }
+
+  /* Espaçamento entre informações */
+  .info-item + .info-item {
+    margin-top: 0.5rem !important;
+  }
+
+  /* Espaçamento entre seções do card */
+  .card-section + .card-section {
+    margin-top: 1rem !important;
+    padding-top: 0.75rem !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 480px) {
+  /* Títulos ainda menores para telas muito pequenas */
+  .page-title {
+    font-size: 1.25rem !important;
+  }
+
+  .dashboard-title {
+    font-size: 1.5rem !important;
+  }
+
+  /* ===== PADRÃO PARA TODOS OS TÍTULOS EM TELAS MUITO PEQUENAS ===== */
+
+  /* Todos os títulos principais ficam com o mesmo tamanho */
+  h1.text-4xl,
+  h1.text-3xl,
+  h2.text-4xl,
+  h2.text-3xl,
+  h3.text-3xl,
+  .text-2xl.md\:text-3xl,
+  .text-2xl.md\:text-4xl {
+    font-size: 1.5rem !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Botões mais compactos */
+  .mobile-action-button {
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Cards mais compactos */
+  .stats-card {
+    padding: 0.75rem !important;
+  }
+
+  /* ===== CARDS MAIS COMPACTOS EM TELAS MUITO PEQUENAS ===== */
+
+  /* Todos os cards */
+  .card,
+  .Card,
+  [class*='card'],
+  [class*='Card'] {
+    padding: 0.5rem !important;
+  }
+
+  /* Conteúdo interno dos cards */
+  .card-content,
+  .CardContent,
+  [class*='card-content'],
+  [class*='CardContent'] {
+    padding: 0.5rem !important;
+  }
+
+  /* Headers dos cards */
+  .card-header,
+  .CardHeader,
+  [class*='card-header'],
+  [class*='CardHeader'] {
+    padding: 0.5rem !important;
+  }
+
+  /* Ajustes adicionais para cards em telas muito pequenas */
+  .card-grid {
+    padding-left: 0.25rem !important;
+    padding-right: 0.25rem !important;
+  }
+
+  .card-content {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  .card-icon {
+    left: 0.5rem !important;
+  }
+
+  .card-badges {
+    padding-left: 0.5rem !important;
+  }
+
+  .card-info {
+    padding-left: 0.5rem !important;
+  }
+
+  .card-actions {
+    padding-left: 0.5rem !important;
+  }
+
+  /* ===== ALINHAMENTO MAIS À ESQUERDA EM TELAS MUITO PEQUENAS ===== */
+
+  /* Todos os elementos dos cards mais à esquerda */
+  .card > *,
+  .Card > * {
+    padding-left: 0.25rem !important;
+    margin-left: 0 !important;
+  }
+
+  /* Informações mais compactas */
+  .info-item {
+    padding-left: 0.25rem !important;
+    margin-left: 0 !important;
+  }
+
+  /* Botões de ação mais compactos */
+  .action-buttons,
+  .card-actions {
+    padding-left: 0.25rem !important;
+    margin-left: 0 !important;
+    gap: 0.25rem !important;
+  }
+
+  /* ===== MELHORIAS ESPECÍFICAS PARA BOTÕES ===== */
+
+  /* Botões principais com melhor proporção */
+  .holding-btn-primary,
+  .bg-gradient-to-r,
+  .bg-green-600,
+  .bg-blue-600,
+  .bg-orange-600,
+  .bg-purple-600 {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.625rem !important;
+    min-width: fit-content !important;
+    width: auto !important;
+  }
+
+  /* Botões de ação pequenos (visualizar, editar, etc.) */
+  .w-8.h-8,
+  .w-10.h-10,
+  .w-6.h-6 {
+    padding: 0.5rem !important;
+    min-width: 2rem !important;
+    min-height: 2rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Botões de filtro e busca */
+  .holding-input,
+  select {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  /* Botões de modal e popup */
+  .AlertDialogAction,
+  .AlertDialogCancel {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    min-width: fit-content !important;
+  }
+
+  /* ===== BOTÕES MAIS COMPACTOS EM TELAS MUITO PEQUENAS ===== */
+
+  /* Botões principais mais compactos */
+  .holding-btn-primary,
+  .bg-gradient-to-r,
+  .bg-green-600,
+  .bg-blue-600,
+  .bg-orange-600,
+  .bg-purple-600 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Botões de ação ainda mais compactos */
+  .w-8.h-8,
+  .w-10.h-10,
+  .w-6.h-6 {
+    padding: 0.375rem !important;
+    min-width: 1.75rem !important;
+    min-height: 1.75rem !important;
   }
 }

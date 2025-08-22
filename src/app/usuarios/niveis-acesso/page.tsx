@@ -921,35 +921,35 @@ export default function NiveisAcessoPage() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 niveis-acesso-buttons">
           <Button
             onClick={() => router.push('/usuarios')}
-            className="bg-gradient-to-r from-holding-blue-light to-holding-blue-medium hover:from-holding-blue-medium hover:to-holding-blue-light text-holding-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto niveis-acesso-button"
+            className="bg-gradient-to-r from-holding-blue-light to-holding-blue-medium hover:from-holding-blue-medium hover:to-holding-blue-light text-holding-white px-6 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold niveis-acesso-button"
           >
             <Users className="w-5 h-5 mr-3" />
             Gerenciar Usuários
           </Button>
           <Button
             onClick={() => router.push('/usuarios/aprovacao')}
-            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto niveis-acesso-button"
+            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold niveis-acesso-button"
           >
             <UserCheck className="w-5 h-5 mr-3" />
             Aprovações
           </Button>
           <Button
             onClick={() => setShowTipoAcessoModal(true)}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto niveis-acesso-button"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold niveis-acesso-button"
           >
             <Shield className="w-5 h-5 mr-3" />
             Criar Tipo de Acesso
           </Button>
           <Button
             onClick={() => setShowPerfilModal(true)}
-            className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto niveis-acesso-button"
+            className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-6 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold niveis-acesso-button"
           >
             <User className="w-5 h-5 mr-3" />
             Configurar Permissões
           </Button>
           <Button
             onClick={() => setShowPermissaoModal(true)}
-            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold w-full sm:w-auto niveis-acesso-button"
+            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-6 py-2.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 border-0 font-semibold niveis-acesso-button"
           >
             <Key className="w-5 h-5 mr-3" />
             Criar Permissões
@@ -959,14 +959,14 @@ export default function NiveisAcessoPage() {
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        <Card className="glass-effect-accent border-holding-accent/30">
-          <CardHeader className="pb-2">
+        <Card className="glass-effect-accent border-holding-accent/30 access-level-card">
+          <CardHeader className="pb-2 access-level-card-header">
             <CardTitle className="text-base md:text-lg text-holding-white flex items-center">
               <Shield className="w-4 h-4 md:w-5 md:h-5 mr-2 text-holding-blue-light" />
               Tipos de Acesso
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="access-level-card-content">
             <div className="text-2xl md:text-3xl font-bold text-holding-white">
               {tiposAcesso.length}
             </div>
@@ -976,14 +976,14 @@ export default function NiveisAcessoPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-effect-accent border-holding-accent/30">
-          <CardHeader className="pb-2">
+        <Card className="glass-effect-accent border-holding-accent/30 access-level-card">
+          <CardHeader className="pb-2 access-level-card-header">
             <CardTitle className="text-base md:text-lg text-holding-white flex items-center">
               <Key className="w-4 h-4 md:w-5 md:h-5 mr-2 text-holding-blue-light" />
               Permissões
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="access-level-card-content">
             <div className="text-2xl md:text-3xl font-bold text-holding-white">
               {permissoes.length}
             </div>
@@ -993,14 +993,14 @@ export default function NiveisAcessoPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-effect-accent border-holding-accent/30">
-          <CardHeader className="pb-2">
+        <Card className="glass-effect-accent border-holding-accent/30 access-level-card">
+          <CardHeader className="pb-2 access-level-card-header">
             <CardTitle className="text-base md:text-lg text-holding-white flex items-center">
               <Users className="w-4 h-4 md:w-5 md:h-5 mr-2 text-holding-blue-light" />
               Usuários Ativos
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="access-level-card-content">
             <div className="text-2xl md:text-3xl font-bold text-holding-white">
               0
             </div>
@@ -1040,12 +1040,12 @@ export default function NiveisAcessoPage() {
                   className="bg-gradient-to-br from-holding-blue-profound/60 to-holding-blue-profound/40 border border-holding-blue-light/30 hover:border-holding-blue-light/50 transition-all duration-300 hover:shadow-lg hover:shadow-holding-blue-light/10 group cursor-pointer"
                   onClick={() => carregarPermissoesTipoAcesso(tipo)}
                 >
-                  <CardContent className="p-3 md:p-4">
-                    <div className="flex items-start justify-between mb-3">
+                  <CardContent className="p-3 md:p-4 access-level-card-content">
+                    <div className="flex items-start justify-between mb-3 access-level-card-header">
                       <div className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-holding-blue-light/20 to-holding-blue-light/10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                         <Shield className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 text-holding-blue-light" />
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 action-buttons">
                         <Button
                           size="sm"
                           variant="outline"
