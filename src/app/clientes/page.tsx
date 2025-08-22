@@ -33,7 +33,7 @@ import {
 import { supabase } from '@/lib/supabase';
 
 interface Cliente {
-  id: number;
+  id: string; // Mudado de number para string para aceitar prefixos pf_ e pj_
   nome: string;
   tipo: 'PF' | 'PJ';
   documento: string;
@@ -83,7 +83,7 @@ export default function ClientesPage() {
 
       // Combinar e formatar dados
       const clientesPF = (pfData || []).map(cliente => ({
-        id: cliente.id,
+        id: `pf_${cliente.id}`, // Prefixo único para PF
         nome: cliente.nome,
         tipo: 'PF' as const,
         documento: cliente.cpf,
@@ -97,7 +97,7 @@ export default function ClientesPage() {
       }));
 
       const clientesPJ = (pjData || []).map(cliente => ({
-        id: cliente.id,
+        id: `pj_${cliente.id}`, // Prefixo único para PJ
         nome: cliente.razao_social,
         tipo: 'PJ' as const,
         documento: cliente.cnpj,
@@ -303,17 +303,17 @@ export default function ClientesPage() {
                 Cadastro, edição e controle de clientes do sistema
               </p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-3">
               <Button
                 onClick={() => router.push('/clientes/cadastro-pf')}
-                className="holding-btn-primary"
+                className="holding-btn-primary w-full sm:w-auto"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
                 Novo Cliente PF
               </Button>
               <Button
                 onClick={() => router.push('/clientes/cadastro-pj')}
-                className="holding-btn-primary"
+                className="holding-btn-primary w-full sm:w-auto"
               >
                 <Building className="w-4 h-4 mr-2" />
                 Novo Cliente PJ
@@ -360,7 +360,7 @@ export default function ClientesPage() {
         </div>
 
         {/* Estatísticas */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           <Card className="holding-stat-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -513,30 +513,30 @@ export default function ClientesPage() {
                           )}
                         </td>
                         <td>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 md:space-x-1">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="w-8 h-8 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20"
+                              className="w-10 h-10 md:w-8 md:h-8 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 transition-all duration-200"
                               title="Visualizar"
                             >
-                              <Eye className="w-4 h-4" />
+                              <Eye className="w-5 h-5 md:w-4 md:h-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="w-8 h-8 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20"
+                              className="w-10 h-10 md:w-8 md:h-8 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 transition-all duration-200"
                               title="Editar"
                             >
-                              <Edit className="w-4 h-4" />
+                              <Edit className="w-5 h-5 md:w-4 md:h-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="w-8 h-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                              className="w-10 h-10 md:w-8 md:h-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20 transition-all duration-200"
                               title="Excluir"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
                             </Button>
                           </div>
                         </td>

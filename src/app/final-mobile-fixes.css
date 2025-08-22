@@ -1,0 +1,332 @@
+/* Correções Finais para Mobile - Holding Promotora */
+
+/* Correções específicas para problemas identificados */
+@media (max-width: 768px) {
+  /* Correção para sidebar */
+  .holding-sidebar {
+    width: 4rem;
+  }
+  
+  .holding-sidebar.expanded {
+    width: 100%;
+    max-width: 20rem;
+  }
+  
+  /* Correção para conteúdo principal */
+  .transition-all.duration-300 {
+    padding-left: 4rem;
+  }
+  
+  /* Correção para inputs */
+  .pl-12 {
+    padding-left: 2.5rem;
+  }
+  
+  /* Correção para cards */
+  .glass-effect-accent {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Melhorias específicas para botões em mobile */
+  .w-10.h-10 {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  /* Botões de header */
+  .w-full.sm\\:w-auto {
+    width: 100%;
+  }
+  
+  /* Espaçamento entre botões em coluna */
+  .space-y-3.sm\\:space-y-0 {
+    row-gap: 0.75rem;
+  }
+  
+  /* Botões com ícones */
+  .w-5.h-5.md\\:w-4.md\\:h-4 {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  
+  /* Transições suaves */
+  .transition-all.duration-200 {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  /* Hover effects para mobile */
+  .hover\\:scale-110:hover {
+    transform: scale(1.05);
+  }
+}
+
+/* Correções para telas muito pequenas */
+@media (max-width: 640px) {
+  /* Sidebar ainda menor */
+  .holding-sidebar {
+    width: 3.5rem;
+  }
+  
+  .transition-all.duration-300 {
+    padding-left: 3.5rem;
+  }
+  
+  /* Espaçamentos menores */
+  .p-6 {
+    padding: 0.75rem;
+  }
+  
+  .p-8 {
+    padding: 0.75rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 0.75rem;
+  }
+  
+  .gap-6 {
+    gap: 0.5rem;
+  }
+  
+  .gap-4 {
+    gap: 0.5rem;
+  }
+  
+  /* Títulos menores */
+  h1 {
+    font-size: 1.25rem;
+  }
+  
+  h2 {
+    font-size: 1.125rem;
+  }
+  
+  h3 {
+    font-size: 1rem;
+  }
+  
+  /* Textos menores */
+  .text-3xl {
+    font-size: 1.5rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.25rem;
+  }
+  
+  .text-xl {
+    font-size: 1.125rem;
+  }
+  
+  .text-lg {
+    font-size: 1rem;
+  }
+  
+  .text-sm {
+    font-size: 0.875rem;
+  }
+}
+
+/* Correções para dispositivos ultra pequenos */
+@media (max-width: 480px) {
+  /* Sidebar mínimo */
+  .holding-sidebar {
+    width: 3rem;
+  }
+  
+  .holding-sidebar.expanded {
+    width: 100%;
+    max-width: 18rem;
+  }
+  
+  .transition-all.duration-300 {
+    padding-left: 3rem;
+  }
+  
+  /* Espaçamentos ultra compactos */
+  .p-6 {
+    padding: 0.5rem;
+  }
+  
+  .p-8 {
+    padding: 0.5rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .gap-6 {
+    gap: 0.5rem;
+  }
+  
+  .gap-4 {
+    gap: 0.5rem;
+  }
+  
+  /* Títulos ultra compactos */
+  h1 {
+    font-size: 1.125rem;
+  }
+  
+  h2 {
+    font-size: 1rem;
+  }
+  
+  h3 {
+    font-size: 0.875rem;
+  }
+  
+  /* Textos ultra compactos */
+  .text-3xl {
+    font-size: 1.25rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.125rem;
+  }
+  
+  .text-xl {
+    font-size: 1rem;
+  }
+  
+  .text-lg {
+    font-size: 0.875rem;
+  }
+  
+  .text-sm {
+    font-size: 0.75rem;
+  }
+  
+  /* Ícones ultra compactos */
+  .w-16.h-16 {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .w-12.h-12 {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  .w-8.h-8 {
+    width: 1rem;
+    height: 1rem;
+  }
+  
+  .w-6.h-6 {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  
+  .w-5.h-5 {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+}
+
+/* Correções para orientação landscape */
+@media (max-width: 768px) and (orientation: landscape) {
+  .holding-sidebar {
+    width: 5rem;
+  }
+  
+  .transition-all.duration-300 {
+    padding-left: 5rem;
+  }
+  
+  .p-6 {
+    padding: 0.75rem;
+  }
+  
+  .p-8 {
+    padding: 0.75rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 0.75rem;
+  }
+  
+  .gap-6 {
+    gap: 0.75rem;
+  }
+  
+  .gap-4 {
+    gap: 0.75rem;
+  }
+}
+
+/* Correções para dispositivos com tela alta */
+@media (max-width: 768px) and (min-height: 800px) {
+  .holding-layout {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  .p-6 {
+    padding: 1rem;
+  }
+  
+  .p-8 {
+    padding: 1rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 1.5rem;
+  }
+  
+  .gap-6 {
+    gap: 1rem;
+  }
+  
+  .gap-4 {
+    gap: 1rem;
+  }
+}
+
+/* Correções para dispositivos com tela baixa */
+@media (max-width: 768px) and (max-height: 600px) {
+  .holding-layout {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  
+  .p-6 {
+    padding: 0.5rem;
+  }
+  
+  .p-8 {
+    padding: 0.5rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .gap-6 {
+    gap: 0.5rem;
+  }
+  
+  .gap-4 {
+    gap: 0.5rem;
+  }
+  
+  .py-8 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .space-y-6 {
+    row-gap: 0.5rem;
+  }
+  
+  .space-y-4 {
+    row-gap: 0.5rem;
+  }
+  
+  .space-y-2 {
+    row-gap: 0.25rem;
+  }
+}

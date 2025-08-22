@@ -29,6 +29,7 @@ import {
   MapPin,
   Key,
   Save,
+  X,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -50,6 +51,8 @@ interface Banco {
 
 export default function CadastroPessoaFisicaPage() {
   const router = useRouter();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editUserId, setEditUserId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     nome: '',
     rg: '',
@@ -79,6 +82,97 @@ export default function CadastroPessoaFisicaPage() {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState('');
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+
+  // Verificar se está em modo de edição
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+
+    if (editId) {
+      setIsEditMode(true);
+      setEditUserId(parseInt(editId));
+      carregarDadosUsuario(parseInt(editId));
+    }
+  }, []);
+
+  // Esconder sidebar no modo de edição
+  useEffect(() => {
+    if (isEditMode) {
+      const sidebar = document.querySelector('[data-sidebar]') as HTMLElement;
+      if (sidebar) {
+        sidebar.style.display = 'none';
+      }
+    }
+
+    // Restaurar sidebar ao sair
+    return () => {
+      const sidebar = document.querySelector('[data-sidebar]') as HTMLElement;
+      if (sidebar) {
+        sidebar.style.display = 'block';
+      }
+    };
+  }, [isEditMode]);
+
+  // Carregar dados do usuário para edição
+  const carregarDadosUsuario = async (userId: number) => {
+    try {
+      console.log('🔄 Carregando dados do usuário para edição:', userId);
+
+      // Buscar dados básicos do usuário
+      const { data: usuario, error: usuarioError } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (usuarioError) {
+        console.error('Erro ao carregar usuário:', usuarioError);
+        return;
+      }
+
+      // Buscar dados específicos da pessoa física
+      const { data: pessoaFisica, error: pfError } = await supabase
+        .from('pessoas_fisicas')
+        .select('*')
+        .eq('email', usuario.email)
+        .single();
+
+      if (pfError) {
+        console.log(
+          '⚠️ Dados de pessoa física não encontrados, usando dados básicos:',
+          pfError
+        );
+      }
+
+      if (usuario) {
+        setFormData({
+          nome: usuario.nome || '',
+          rg: pessoaFisica?.rg || '',
+          cpf: pessoaFisica?.cpf || '',
+          dataNascimento: pessoaFisica?.data_nascimento || '',
+          email: usuario.email || '',
+          telefone: pessoaFisica?.telefone || '',
+          cep: pessoaFisica?.cep || '',
+          endereco: pessoaFisica?.endereco || '',
+          numero: pessoaFisica?.numero || '',
+          complemento: pessoaFisica?.complemento || '',
+          bairro: pessoaFisica?.bairro || '',
+          cidade: pessoaFisica?.cidade || '',
+          estado: pessoaFisica?.estado || '',
+          bancoId: pessoaFisica?.banco_id || '',
+          agencia: pessoaFisica?.agencia || '',
+          contaDigito: pessoaFisica?.conta_digito || '',
+          tipoConta: pessoaFisica?.tipo_conta || 'Corrente',
+          tipoPix: pessoaFisica?.tipo_pix || 'CPF',
+          chavePix: pessoaFisica?.chave_pix || '',
+          usuario: pessoaFisica?.usuario || '',
+          senha: '', // Não carregar senha por segurança
+        });
+      }
+    } catch (err) {
+      console.error('Erro ao carregar dados do usuário:', err);
+    }
+  };
 
   // Carregar bancos do Supabase
   useEffect(() => {
@@ -455,12 +549,52 @@ export default function CadastroPessoaFisicaPage() {
 
       console.log('✅ Conexão com banco OK');
 
-      // Inserir no banco (igual ao teste que funcionou)
-      console.log('🔍 Tentando inserir no banco...');
-      const { data, error } = await supabase
-        .from('pessoas_fisicas')
-        .insert([dadosParaInserir])
-        .select();
+      let data: any;
+      let error: any;
+
+      if (isEditMode && editUserId) {
+        // Modo de edição - UPDATE
+        console.log('🔄 Modo de edição - Atualizando dados...');
+        console.log('👤 ID do usuário:', editUserId);
+
+        // Buscar dados do usuário para obter o email
+        const { data: userData, error: userError } = await supabase
+          .from('usuarios')
+          .select('email')
+          .eq('id', editUserId)
+          .single();
+
+        if (userError || !userData) {
+          console.error('❌ Erro ao buscar dados do usuário:', userError);
+          setDialogMessage('Erro ao buscar dados do usuário');
+          setShowErrorDialog(true);
+          return;
+        }
+
+        // Atualizar dados na tabela pessoas_fisicas
+        const { data: updateData, error: updateError } = await supabase
+          .from('pessoas_fisicas')
+          .update(dadosParaInserir)
+          .eq('email', userData.email)
+          .select();
+
+        data = updateData;
+        error = updateError;
+
+        if (!error && data && data.length > 0) {
+          console.log('✅ Pessoa física atualizada com sucesso:', data);
+        }
+      } else {
+        // Modo de criação - INSERT
+        console.log('🔍 Modo de criação - Inserindo no banco...');
+        const { data: insertData, error: insertError } = await supabase
+          .from('pessoas_fisicas')
+          .insert([dadosParaInserir])
+          .select();
+
+        data = insertData;
+        error = insertError;
+      }
 
       console.log('🔍 Resposta do Supabase:', { data, error });
 
@@ -476,9 +610,20 @@ export default function CadastroPessoaFisicaPage() {
       if (data && data.length > 0) {
         console.log('✅ Dados inseridos com sucesso:', data);
         setDialogMessage(
-          'Pessoa física cadastrada com sucesso! Aguardando aprovação.'
+          isEditMode
+            ? 'Usuário atualizado com sucesso! Você será redirecionado para o gerenciamento de usuários.'
+            : 'Pessoa física cadastrada com sucesso! Aguardando aprovação.'
         );
         setShowSuccessDialog(true);
+
+        // Redirecionar após sucesso
+        setTimeout(() => {
+          if (isEditMode) {
+            router.push('/usuarios/aprovacao');
+          } else {
+            router.push('/usuarios');
+          }
+        }, 3000);
       } else {
         console.error('❌ Nenhum dado retornado da inserção');
         setDialogMessage('Erro: Nenhum dado foi retornado da inserção');
@@ -493,106 +638,40 @@ export default function CadastroPessoaFisicaPage() {
 
   return (
     <div className="min-h-screen holding-layout">
-      {/* Sidebar Recolhível */}
-      <div
-        className={`holding-sidebar ${sidebarExpanded ? 'expanded' : 'collapsed'}`}
-      >
-        <nav className="flex flex-col items-center py-8 space-y-6">
-          {/* Botão Toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-12 h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg mb-8"
-            onClick={toggleSidebar}
-            title={sidebarExpanded ? 'Recolher Menu' : 'Expandir Menu'}
-          >
-            {sidebarExpanded ? (
-              <ChevronLeft className="w-5 h-5" />
-            ) : (
-              <ChevronRight className="w-5 h-5" />
-            )}
-          </Button>
+      {/* Sidebar Recolhível - Ocultar em modo de edição */}
+      {!isEditMode && (
+        <div
+          data-sidebar
+          className={`holding-sidebar ${sidebarExpanded ? 'expanded' : 'collapsed'}`}
+        >
+          <nav className="flex flex-col items-center py-8 space-y-6">
+            {/* Botão Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-12 h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg mb-8"
+              onClick={toggleSidebar}
+              title={sidebarExpanded ? 'Recolher Menu' : 'Expandir Menu'}
+            >
+              {sidebarExpanded ? (
+                <div className="w-5 h-5">
+                  <ChevronLeft size={20} />
+                </div>
+              ) : (
+                <div className="w-5 h-5">
+                  <ChevronRight size={20} />
+                </div>
+              )}
+            </Button>
 
-          {/* Logo */}
-          <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-medium to-holding-blue-light rounded-xl flex items-center justify-center mb-8">
-            <Shield className="w-6 h-6 text-holding-white" />
-          </div>
+            {/* Logo */}
+            <div className="w-12 h-12 bg-gradient-to-br from-holding-blue-medium to-holding-blue-light rounded-xl flex items-center justify-center mb-8">
+              <div className="w-6 h-6 text-holding-white">
+                <Shield size={24} />
+              </div>
+            </div>
 
-          {/* Navegação Principal */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`${
-              sidebarExpanded
-                ? 'w-full justify-start px-4'
-                : 'w-12 justify-center'
-            } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
-            onClick={() => router.push('/dashboard')}
-            title="Dashboard"
-          >
-            <BarChart3 className="w-5 h-5" />
-            {sidebarExpanded && (
-              <span className="ml-3 text-sm font-medium">Dashboard</span>
-            )}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`${
-              sidebarExpanded
-                ? 'w-full justify-start px-4'
-                : 'w-12 justify-center'
-            } h-12 p-0 text-holding-white hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg bg-holding-blue-light/20`}
-            onClick={() => router.push('/usuarios')}
-            title="Usuários"
-          >
-            <Users className="w-5 h-5" />
-            {sidebarExpanded && (
-              <span className="ml-3 text-sm font-medium">Usuários</span>
-            )}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`${
-              sidebarExpanded
-                ? 'w-full justify-start px-4'
-                : 'w-12 justify-center'
-            } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
-            onClick={() => router.push('/clientes')}
-            title="Clientes"
-          >
-            <Building className="w-5 h-5" />
-            {sidebarExpanded && (
-              <span className="ml-3 text-sm font-medium">Clientes</span>
-            )}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`${
-              sidebarExpanded
-                ? 'w-full justify-start px-4'
-                : 'w-12 justify-center'
-            } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
-            onClick={() => router.push('/settings')}
-            title="Configurações"
-          >
-            <Settings className="w-5 h-5" />
-            {sidebarExpanded && (
-              <span className="ml-3 text-sm font-medium">Configurações</span>
-            )}
-          </Button>
-
-          {/* Logout */}
-          <div
-            className={`pt-8 border-t border-holding-blue-light/30 ${
-              sidebarExpanded ? 'w-full' : 'w-8'
-            }`}
-          >
+            {/* Navegação Principal */}
             <Button
               variant="ghost"
               size="sm"
@@ -600,38 +679,125 @@ export default function CadastroPessoaFisicaPage() {
                 sidebarExpanded
                   ? 'w-full justify-start px-4'
                   : 'w-12 justify-center'
-              } h-12 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg`}
-              onClick={() => {
-                console.log('Logout solicitado');
-                if (confirm('Tem certeza que deseja sair do sistema?')) {
-                  localStorage.removeItem('holding_user');
-                  window.location.href = '/login';
-                }
-              }}
-              title="Sair"
+              } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
+              onClick={() => router.push('/dashboard')}
+              title="Dashboard"
             >
-              <LogOut className="w-5 h-5" />
+              <div className="w-5 h-5">
+                <BarChart3 size={20} />
+              </div>
               {sidebarExpanded && (
-                <span className="ml-3 text-sm font-medium">Sair</span>
+                <span className="ml-3 text-sm font-medium">Dashboard</span>
               )}
             </Button>
-          </div>
-        </nav>
-      </div>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`${
+                sidebarExpanded
+                  ? 'w-full justify-start px-4'
+                  : 'w-12 justify-center'
+              } h-12 p-0 text-holding-white hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg bg-holding-blue-light/20`}
+              onClick={() => router.push('/usuarios')}
+              title="Usuários"
+            >
+              <div className="w-5 h-5">
+                <Users size={20} />
+              </div>
+              {sidebarExpanded && (
+                <span className="ml-3 text-sm font-medium">Usuários</span>
+              )}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`${
+                sidebarExpanded
+                  ? 'w-full justify-start px-4'
+                  : 'w-12 justify-center'
+              } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
+              onClick={() => router.push('/clientes')}
+              title="Clientes"
+            >
+              <div className="w-5 h-5">
+                <Building size={20} />
+              </div>
+              {sidebarExpanded && (
+                <span className="ml-3 text-sm font-medium">Clientes</span>
+              )}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`${
+                sidebarExpanded
+                  ? 'w-full justify-start px-4'
+                  : 'w-12 justify-center'
+              } h-12 p-0 text-holding-blue-light hover:text-holding-white hover:bg-holding-blue-light/20 rounded-lg`}
+              onClick={() => router.push('/settings')}
+              title="Configurações"
+            >
+              <div className="w-5 h-5">
+                <Settings size={20} />
+              </div>
+              {sidebarExpanded && (
+                <span className="ml-3 text-sm font-medium">Configurações</span>
+              )}
+            </Button>
+
+            {/* Logout */}
+            <div
+              className={`pt-8 border-t border-holding-blue-light/30 ${
+                sidebarExpanded ? 'w-full' : 'w-8'
+              }`}
+            >
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`${
+                  sidebarExpanded
+                    ? 'w-full justify-start px-4'
+                    : 'w-12 justify-center'
+                } h-12 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg`}
+                onClick={() => {
+                  console.log('Logout solicitado');
+                  if (confirm('Tem certeza que deseja sair do sistema?')) {
+                    localStorage.removeItem('holding_user');
+                    window.location.href = '/login';
+                  }
+                }}
+                title="Sair"
+              >
+                <div className="w-5 h-5">
+                  <LogOut size={20} />
+                </div>
+                {sidebarExpanded && (
+                  <span className="ml-3 text-sm font-medium">Sair</span>
+                )}
+              </Button>
+            </div>
+          </nav>
+        </div>
+      )}
 
       {/* Conteúdo Principal */}
       <div
-        className={`transition-all duration-300 ${sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}
+        className={`transition-all duration-300 ${isEditMode ? 'p-8' : sidebarExpanded ? 'pl-80' : 'pl-24'} p-8 space-y-8`}
       >
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-holding-white">
-                Cadastro de Pessoa Física
+                {isEditMode ? 'Editar Usuário' : 'Cadastro de Pessoa Física'}
               </h1>
               <p className="text-holding-accent-light mt-2">
-                Preencha os dados para cadastrar uma nova pessoa física
+                {isEditMode
+                  ? 'Edite os dados do usuário selecionado'
+                  : 'Preencha os dados para cadastrar uma nova pessoa física'}
               </p>
             </div>
           </div>
@@ -642,14 +808,18 @@ export default function CadastroPessoaFisicaPage() {
               <Card className="glass-effect-accent border-holding-accent/30">
                 <CardHeader>
                   <CardTitle className="text-holding-white flex items-center space-x-3">
-                    <User className="w-5 h-5 text-holding-highlight" />
+                    <div className="w-5 h-5 text-holding-highlight">
+                      <User size={20} />
+                    </div>
                     <span>Dados Pessoais</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <User className="w-4 h-4" />
+                      <div className="w-4 h-4">
+                        <User size={16} />
+                      </div>
                       <span>Nome Completo</span>
                     </Label>
                     <Input
@@ -664,7 +834,9 @@ export default function CadastroPessoaFisicaPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                        <CreditCard className="w-4 h-4" />
+                        <div className="w-4 h-4">
+                          <CreditCard size={16} />
+                        </div>
                         <span>RG</span>
                       </Label>
                       <Input
@@ -677,7 +849,9 @@ export default function CadastroPessoaFisicaPage() {
 
                     <div>
                       <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                        <CreditCard className="w-4 h-4" />
+                        <div className="w-4 h-4">
+                          <CreditCard size={16} />
+                        </div>
                         <span>CPF</span>
                       </Label>
                       <Input
@@ -693,7 +867,9 @@ export default function CadastroPessoaFisicaPage() {
 
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <Calendar className="w-4 h-4" />
+                      <div className="w-4 h-4">
+                        <Calendar size={16} />
+                      </div>
                       <span>Data de Nascimento</span>
                     </Label>
                     <Input
@@ -709,7 +885,9 @@ export default function CadastroPessoaFisicaPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                        <Mail className="w-4 h-4" />
+                        <div className="w-4 h-4">
+                          <Mail size={16} />
+                        </div>
                         <span>Email</span>
                       </Label>
                       <Input
@@ -726,7 +904,9 @@ export default function CadastroPessoaFisicaPage() {
 
                     <div>
                       <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                        <Phone className="w-4 h-4" />
+                        <div className="w-4 h-4">
+                          <Phone size={16} />
+                        </div>
                         <span>Telefone</span>
                       </Label>
                       <Input
@@ -748,14 +928,18 @@ export default function CadastroPessoaFisicaPage() {
               <Card className="glass-effect-accent border-holding-accent/30">
                 <CardHeader>
                   <CardTitle className="text-holding-white flex items-center space-x-3">
-                    <MapPin className="w-5 h-5 text-holding-highlight" />
+                    <div className="w-5 h-5 text-holding-highlight">
+                      <MapPin size={20} />
+                    </div>
                     <span>Endereço</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <MapPin className="w-4 h-4" />
+                      <div className="w-4 h-4">
+                        <MapPin size={16} />
+                      </div>
                       <span>CEP</span>
                     </Label>
                     <div className="flex space-x-2">
@@ -780,7 +964,9 @@ export default function CadastroPessoaFisicaPage() {
 
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <MapPin className="w-4 h-4" />
+                      <div className="w-4 h-4">
+                        <MapPin size={16} />
+                      </div>
                       <span>Endereço</span>
                     </Label>
                     <Input
@@ -873,14 +1059,18 @@ export default function CadastroPessoaFisicaPage() {
               <Card className="glass-effect-accent border-holding-accent/30">
                 <CardHeader>
                   <CardTitle className="text-holding-white flex items-center space-x-3">
-                    <Building className="w-5 h-5 text-holding-highlight" />
+                    <div className="w-5 h-5 text-holding-highlight">
+                      <Building size={20} />
+                    </div>
                     <span>Dados Bancários</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <Building className="w-4 h-4" />
+                      <div className="w-4 h-4">
+                        <Building size={16} />
+                      </div>
                       <span>Banco</span>
                     </Label>
                     <select
@@ -902,7 +1092,9 @@ export default function CadastroPessoaFisicaPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                        <Building className="w-4 h-4" />
+                        <div className="w-4 h-4">
+                          <Building size={16} />
+                        </div>
                         <span>Agência</span>
                       </Label>
                       <Input
@@ -917,7 +1109,9 @@ export default function CadastroPessoaFisicaPage() {
 
                     <div>
                       <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                        <CreditCard className="w-4 h-4" />
+                        <div className="w-4 h-4">
+                          <CreditCard size={16} />
+                        </div>
                         <span>Conta com Dígito</span>
                       </Label>
                       <Input
@@ -931,7 +1125,9 @@ export default function CadastroPessoaFisicaPage() {
 
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <CreditCard className="w-4 h-4" />
+                      <div className="w-4 h-4">
+                        <CreditCard size={16} />
+                      </div>
                       <span>Tipo de Conta</span>
                     </Label>
                     <select
@@ -954,7 +1150,9 @@ export default function CadastroPessoaFisicaPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                        <Key className="w-4 h-4" />
+                        <div className="w-4 h-4">
+                          <Key size={16} />
+                        </div>
                         <span>Tipo do PIX</span>
                       </Label>
                       <select
@@ -977,7 +1175,9 @@ export default function CadastroPessoaFisicaPage() {
 
                     <div>
                       <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                        <Key className="w-4 h-4" />
+                        <div className="w-4 h-4">
+                          <Key size={16} />
+                        </div>
                         <span>Chave PIX</span>
                       </Label>
                       <Input
@@ -998,14 +1198,18 @@ export default function CadastroPessoaFisicaPage() {
               <Card className="glass-effect-accent border-holding-accent/30">
                 <CardHeader>
                   <CardTitle className="text-holding-white flex items-center space-x-3">
-                    <Key className="w-5 h-5 text-holding-highlight" />
+                    <div className="w-5 h-5 text-holding-highlight">
+                      <Key size={20} />
+                    </div>
                     <span>Dados de Acesso</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <Mail className="w-4 h-4" />
+                      <div className="w-4 h-4">
+                        <Mail size={16} />
+                      </div>
                       <span>Usuário</span>
                     </Label>
                     <Input
@@ -1021,7 +1225,9 @@ export default function CadastroPessoaFisicaPage() {
 
                   <div>
                     <Label className="text-holding-accent-light text-sm font-medium flex items-center space-x-2">
-                      <Key className="w-4 h-4" />
+                      <div className="w-4 h-4">
+                        <Key size={16} />
+                      </div>
                       <span>Senha</span>
                     </Label>
                     <Input
@@ -1043,9 +1249,24 @@ export default function CadastroPessoaFisicaPage() {
                 type="submit"
                 className="bg-holding-highlight hover:bg-holding-highlight-light text-holding-white px-8 py-3"
               >
-                <Save className="w-5 h-5 mr-2" />
-                Cadastrar Pessoa Física
+                <div className="w-5 h-5 mr-2">
+                  <Save size={20} />
+                </div>
+                {isEditMode ? 'Atualizar' : 'Cadastrar Pessoa Física'}
               </Button>
+
+              {isEditMode && (
+                <Button
+                  type="button"
+                  onClick={() => router.push('/usuarios/aprovacao')}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-3"
+                >
+                  <div className="w-5 h-5 mr-2">
+                    <X size={20} />
+                  </div>
+                  Cancelar
+                </Button>
+              )}
 
               {/* Botão de teste para debug */}
               <Button

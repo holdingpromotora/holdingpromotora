@@ -5,6 +5,7 @@ export interface Usuario {
   nome: string;
   email: string;
   perfil_id?: number;
+  tipo_acesso_id?: number;
   perfil_nome?: string;
   aprovado?: boolean;
   ativo?: boolean;
@@ -69,7 +70,8 @@ export class UsuariosService {
           id,
           nome,
           email,
-          perfil_id,
+          tipo_acesso_id,
+          perfil_nome,
           aprovado,
           ativo,
           data_cadastro,
@@ -110,7 +112,9 @@ export class UsuariosService {
       // Mapear dados do banco para a interface esperada
       usuarios = usuarios.map(usuario => ({
         ...usuario,
-        perfil_nome: getPerfilNome(usuario.perfil_id),
+        perfil_id: usuario.tipo_acesso_id, // Mapear tipo_acesso_id para perfil_id
+        perfil_nome:
+          usuario.perfil_nome || getPerfilNome(usuario.tipo_acesso_id), // Usar perfil_nome do banco ou fallback
         status: getStatusFromBanco(usuario.aprovado, usuario.ativo),
       }));
 

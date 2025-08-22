@@ -343,14 +343,16 @@ export default function NiveisAcessoPage() {
         setTiposAcesso(prev => [...prev, tipoConvertido]);
         setTipoAcessoForm({ nome: '', descricao: '', nivel: 1 });
         setShowTipoAcessoModal(false);
-        
+
         // Atualizar formulários automaticamente
-        const novaCategoria = tipoConvertido.nome.toLowerCase().replace(/\s+/g, '_');
+        const novaCategoria = tipoConvertido.nome
+          .toLowerCase()
+          .replace(/\s+/g, '_');
         if (!permissoes.some(p => p.categoria === novaCategoria)) {
           gerarPermissoesParaCategoria(novaCategoria);
           atualizarFormulariosComNovaCategoria(novaCategoria);
         }
-        
+
         carregarDados();
         showSuccessAlert('Tipo de acesso criado com sucesso!');
       } else {
@@ -380,7 +382,7 @@ export default function NiveisAcessoPage() {
 
     // Verificar se o nome foi alterado (pode afetar a categoria)
     const nomeAlterado = editandoTipoAcesso.nome !== tipoAcessoForm.nome;
-    
+
     setTiposAcesso(prev =>
       prev.map(tipo =>
         tipo.id === editandoTipoAcesso.id
@@ -391,7 +393,9 @@ export default function NiveisAcessoPage() {
 
     // Se o nome foi alterado, atualizar formulários
     if (nomeAlterado) {
-      const novaCategoria = tipoAcessoForm.nome.toLowerCase().replace(/\s+/g, '_');
+      const novaCategoria = tipoAcessoForm.nome
+        .toLowerCase()
+        .replace(/\s+/g, '_');
       if (!permissoes.some(p => p.categoria === novaCategoria)) {
         gerarPermissoesParaCategoria(novaCategoria);
         atualizarFormulariosComNovaCategoria(novaCategoria);
@@ -423,13 +427,17 @@ export default function NiveisAcessoPage() {
     };
 
     // Verificar se é uma nova categoria
-    const categoriaExiste = permissoes.some(p => p.categoria === permissaoForm.categoria);
-    
+    const categoriaExiste = permissoes.some(
+      p => p.categoria === permissaoForm.categoria
+    );
+
     if (!categoriaExiste) {
       // Se for nova categoria, gerar permissões padrão e atualizar formulários
       gerarPermissoesParaCategoria(permissaoForm.categoria);
       atualizarFormulariosComNovaCategoria(permissaoForm.categoria);
-      showSuccessAlert(`Nova categoria "${permissaoForm.categoria}" criada com permissões padrão!`);
+      showSuccessAlert(
+        `Nova categoria "${permissaoForm.categoria}" criada com permissões padrão!`
+      );
     } else {
       // Se categoria já existe, apenas adicionar a nova permissão
       setPermissoes(prev => [...prev, novaPermissao]);
@@ -458,8 +466,9 @@ export default function NiveisAcessoPage() {
     if (!editandoPermissao) return;
 
     // Verificar se a categoria foi alterada
-    const categoriaAlterada = editandoPermissao.categoria !== permissaoForm.categoria;
-    
+    const categoriaAlterada =
+      editandoPermissao.categoria !== permissaoForm.categoria;
+
     setPermissoes(prev =>
       prev.map(permissao =>
         permissao.id === editandoPermissao.id

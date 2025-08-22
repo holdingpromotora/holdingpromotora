@@ -6,7 +6,7 @@ const supabaseUrl =
   'https://ferlknesyqrhdvapqqso.supabase.co';
 const supabaseServiceKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZlcmxrbmVzeXFyaGR2YXBxcXNvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTEyMTA0NSwiZXhwIjoyMDcwNjk3MDQ1fQ.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZlcmxrbmVzeXFyaGR2YXBxcXNvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTEyMTA0NSwiZXhwIjoyMDcwNjk3MDQ1fQ.m_mjdyFYmuSB8yLjT43Aa5qz9jLx4KXeEnkLR7bgLoQ';
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 

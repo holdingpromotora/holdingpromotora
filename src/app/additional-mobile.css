@@ -1,0 +1,375 @@
+/* Melhorias Adicionais para Mobile - Holding Promotora */
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 480px) {
+  /* Sidebar ultra compacto */
+  .holding-sidebar {
+    width: 3rem;
+  }
+  
+  .holding-sidebar.expanded {
+    width: 100%;
+    max-width: 18rem;
+  }
+  
+  /* Conteúdo principal */
+  .transition-all.duration-300 {
+    padding-left: 3rem;
+  }
+  
+  .transition-all.duration-300.pl-64 {
+    padding-left: 3rem;
+  }
+  
+  .transition-all.duration-300.pl-80 {
+    padding-left: 3rem;
+  }
+  
+  /* Espaçamentos ultra compactos */
+  .p-8 {
+    padding: 0.5rem;
+  }
+  
+  .p-6 {
+    padding: 0.5rem;
+  }
+  
+  .p-4 {
+    padding: 0.5rem;
+  }
+  
+  /* Margens ultra compactas */
+  .mb-8 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .mb-6 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .mb-4 {
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Grid ultra compacto */
+  .gap-6 {
+    gap: 0.5rem;
+  }
+  
+  .gap-4 {
+    gap: 0.5rem;
+  }
+  
+  .gap-3 {
+    gap: 0.5rem;
+  }
+  
+  /* Títulos ultra compactos */
+  h1 {
+    font-size: 1.25rem;
+  }
+  
+  h2 {
+    font-size: 1.125rem;
+  }
+  
+  h3 {
+    font-size: 1rem;
+  }
+  
+  /* Cards ultra compactos */
+  .holding-stat-card .p-6 {
+    padding: 0.5rem;
+  }
+  
+  .holding-stat-card .p-8 {
+    padding: 0.5rem;
+  }
+  
+  /* Ícones ultra compactos */
+  .w-16.h-16 {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .w-12.h-12 {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  
+  .w-8.h-8 {
+    width: 1rem;
+    height: 1rem;
+  }
+  
+  .w-6.h-6 {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  
+  .w-5.h-5 {
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  
+  /* Textos ultra compactos */
+  .text-3xl {
+    font-size: 1.25rem;
+  }
+  
+  .text-2xl {
+    font-size: 1.125rem;
+  }
+  
+  .text-xl {
+    font-size: 1rem;
+  }
+  
+  .text-lg {
+    font-size: 0.875rem;
+  }
+  
+  .text-sm {
+    font-size: 0.75rem;
+  }
+  
+  .text-xs {
+    font-size: 0.625rem;
+  }
+}
+
+/* Ajustes para orientação landscape em mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .holding-sidebar {
+    width: 4rem;
+  }
+  
+  .transition-all.duration-300 {
+    padding-left: 4rem;
+  }
+  
+  .transition-all.duration-300.pl-64 {
+    padding-left: 4rem;
+  }
+  
+  .transition-all.duration-300.pl-80 {
+    padding-left: 4rem;
+  }
+  
+  .p-8 {
+    padding: 0.75rem;
+  }
+  
+  .p-6 {
+    padding: 0.75rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 0.75rem;
+  }
+  
+  .mb-6 {
+    margin-bottom: 0.75rem;
+  }
+  
+  .gap-6 {
+    gap: 0.75rem;
+  }
+  
+  .gap-4 {
+    gap: 0.75rem;
+  }
+}
+
+/* Ajustes para dispositivos com tela alta */
+@media (max-width: 768px) and (min-height: 800px) {
+  .holding-layout {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  .p-3 {
+    padding: 1rem;
+  }
+  
+  .p-4 {
+    padding: 1rem;
+  }
+  
+  .p-6 {
+    padding: 1rem;
+  }
+  
+  .mb-4 {
+    margin-bottom: 1.5rem;
+  }
+  
+  .mb-6 {
+    margin-bottom: 1.5rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Ajustes para dispositivos com tela baixa */
+@media (max-width: 768px) and (max-height: 600px) {
+  .holding-layout {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  
+  .p-3 {
+    padding: 0.5rem;
+  }
+  
+  .p-4 {
+    padding: 0.5rem;
+  }
+  
+  .p-6 {
+    padding: 0.5rem;
+  }
+  
+  .p-8 {
+    padding: 0.5rem;
+  }
+  
+  .mb-4 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .mb-6 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .py-8 {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  
+  .space-y-6 {
+    row-gap: 0.5rem;
+  }
+  
+  .space-y-4 {
+    row-gap: 0.5rem;
+  }
+  
+  .space-y-2 {
+    row-gap: 0.25rem;
+  }
+}
+
+/* Ajustes específicos para componentes em mobile */
+@media (max-width: 768px) {
+  /* Botões de ação */
+  .h-24 {
+    height: 4rem;
+  }
+  
+  /* Cards de estatísticas */
+  .holding-stat-card .p-6 {
+    padding: 0.75rem;
+  }
+  
+  .holding-stat-card .p-8 {
+    padding: 0.75rem;
+  }
+  
+  /* Inputs e filtros */
+  .pl-12 {
+    padding-left: 2.5rem;
+  }
+  
+  /* Navegação */
+  .space-x-6 {
+    column-gap: 1rem;
+  }
+  
+  .space-x-4 {
+    column-gap: 0.75rem;
+  }
+  
+  .space-x-3 {
+    column-gap: 0.5rem;
+  }
+  
+  .space-x-2 {
+    column-gap: 0.5rem;
+  }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 640px) {
+  /* Layout ainda mais compacto */
+  .holding-layout {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  
+  /* Sidebar ainda menor */
+  .holding-sidebar {
+    width: 3.5rem;
+  }
+  
+  .transition-all.duration-300 {
+    padding-left: 3.5rem;
+  }
+  
+  .transition-all.duration-300.pl-64 {
+    padding-left: 3.5rem;
+  }
+  
+  .transition-all.duration-300.pl-80 {
+    padding-left: 3.5rem;
+  }
+  
+  /* Espaçamentos ainda menores */
+  .p-3 {
+    padding: 0.5rem;
+  }
+  
+  .p-4 {
+    padding: 0.5rem;
+  }
+  
+  .p-6 {
+    padding: 0.5rem;
+  }
+  
+  .p-8 {
+    padding: 0.5rem;
+  }
+  
+  /* Margens ainda menores */
+  .mb-4 {
+    margin-bottom: 0.75rem;
+  }
+  
+  .mb-6 {
+    margin-bottom: 0.75rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Grid ainda mais compacto */
+  .gap-3 {
+    gap: 0.5rem;
+  }
+  
+  .gap-4 {
+    gap: 0.5rem;
+  }
+  
+  .gap-6 {
+    gap: 0.5rem;
+  }
+}
